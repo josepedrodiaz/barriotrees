@@ -93,10 +93,11 @@
 
   <div id="map"></div>
   <div class="maptools">
+    <button class="btn btn-primary btn-sm" id="addGps" style="flex:1">➕ Árbol en mi GPS</button>
     <button class="btn btn-ghost btn-sm" id="locate">📍 Centrar en mí</button>
     <button class="btn btn-ghost btn-sm" id="baseBtn">Vista: satélite</button>
   </div>
-  <p class="hint" id="hint">Tocá el mapa para poner un árbol. Arrastrá el pin para ajustarlo. Tocá un pin para editarlo o borrarlo.</p>
+  <p class="hint" id="hint">El GPS sugiere la posición al tocar <b>Árbol en mi GPS</b>; después arrastrá el pin para dejarlo justo sobre el árbol. También podés tocar el mapa para ponerlo a mano. Tocá un pin para editar o borrar.</p>
 
   <div class="card">
     <span class="sect-title">Los pines nuevos usan</span>
@@ -234,19 +235,33 @@
   }
   function refreshMarker(rec) { var m = markers[rec.id]; if (m) m.setIcon(pinIcon(rec, selId === rec.id)); }
 
-  // ---- create on map tap ----
-  map.on("click", function (e) {
+  // ---- create ----
+  function bumpNext() { var n = parseInt($("nextNum").value, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
+  function createTree(lat, lng, src) {
     var rec = {
       id: Date.now() + "-" + Math.floor(Math.random() * 1000),
       etiqueta: "", especie: $("defEspecie").value, cientifico: sciFor($("defEspecie").value),
-      sector: $("defSector").value, nota: "", lat: e.latlng.lat, lng: e.latlng.lng, acc: null, src: "mapa", ts: new Date().toISOString()
+      sector: $("defSector").value, nota: "", lat: lat, lng: lng, acc: null, src: src, ts: new Date().toISOString()
     };
     if ($("autoNum").checked) { rec.etiqueta = String($("nextNum").value || "").trim(); bumpNext(); }
-    data.push(rec); persist(); addMarker(rec); renderList();
-    select(rec.id, true);
-    toast("Árbol " + (rec.etiqueta ? "#" + rec.etiqueta : data.length) + " puesto");
+    data.push(rec); persist(); addMarker(rec); renderList(); select(rec.id, true);
+    return rec;
+  }
+  map.on("click", function (e) { var r = createTree(e.latlng.lat, e.latlng.lng, "mapa"); toast("Árbol " + (r.etiqueta ? "#" + r.etiqueta : data.length) + " puesto"); });
+
+  function meIcon() { return L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }); }
+  function showMe(ll) { if (!meMarker) meMarker = L.marker(ll, { icon: meIcon(), interactive: false }).addTo(map); else meMarker.setLatLng(ll); }
+
+  $("addGps").addEventListener("click", function () {
+    if (!navigator.geolocation) { toast("Sin GPS en este navegador — tocá el mapa"); return; }
+    toast("Ubicándote…");
+    navigator.geolocation.getCurrentPosition(function (p) {
+      var ll = [p.coords.latitude, p.coords.longitude];
+      showMe(ll); map.setView(ll, Math.max(map.getZoom(), 19));
+      createTree(ll[0], ll[1], "gps");
+      toast("Puesto en tu GPS (±" + Math.round(p.coords.accuracy) + " m). Arrastralo al árbol.");
+    }, function () { toast("No pude leer el GPS — tocá el mapa"); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
-  function bumpNext() { var n = parseInt($("nextNum").value, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
 
   // ---- selection / editor ----
   function select(id, keepOpenList) {
@@ -283,9 +298,7 @@
     toast("Buscando tu ubicación…");
     navigator.geolocation.getCurrentPosition(function (p) {
       var ll = [p.coords.latitude, p.coords.longitude];
-      map.setView(ll, 19);
-      if (!meMarker) meMarker = L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false }).addTo(map);
-      else meMarker.setLatLng(ll);
+      map.setView(ll, 19); showMe(ll);
     }, function () { toast("No pude leer el GPS"); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
 
