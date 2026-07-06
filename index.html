@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6B4FBF">
+<title>Relevamiento — Plaza Gigante del Oeste</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --card: #FFFFFF;
+    --ink: #1C1A22;
+    --muted: #6A6675;
+    --hair: #E4E0D8;
+    --accent: #6B4FBF;        /* jacarandá */
+    --accent-strong: #57399F;
+    --good: #2E9E5B;
+    --warn: #E0912F;
+    --crit: #CC4433;
+    --good-bg: #E7F5EC;
+    --warn-bg: #FBF0DF;
+    --crit-bg: #FaE7E4;
+    --shadow: 0 1px 2px rgba(28,26,34,.06), 0 4px 16px rgba(28,26,34,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 0 14px 96px; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(246,244,239,.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--hair);
+    padding: 12px 14px 10px;
+    margin: 0 -14px 14px;
+  }
+  header .hwrap { max-width: 620px; margin: 0 auto; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  h1 { font-size: 17px; margin: 0; letter-spacing: -.01em; font-weight: 700; }
+  h1 small { display:block; font-weight: 500; font-size: 12px; color: var(--muted); letter-spacing: 0; margin-top: 1px; }
+  .count { font-size: 13px; font-weight: 700; color: var(--accent-strong); background: #EFEAFb; border: 1px solid #E0D8F5; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; }
+  .sect-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+
+  /* GPS panel */
+  .gps { display: flex; align-items: center; gap: 12px; }
+  .gps-coords { flex: 1; min-width: 0; }
+  .gps-coords .co { font-size: 15px; font-weight: 600; }
+  .gps-coords .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.good { color: var(--good); background: var(--good-bg); }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .pill.crit { color: var(--crit); background: var(--crit-bg); }
+  .pill.off  { color: var(--muted); background: #EEEBE4; }
+
+  input, select, textarea {
+    width: 100%; font: inherit; color: var(--ink);
+    background: #FCFBF9; border: 1px solid var(--hair); border-radius: 10px;
+    padding: 11px 12px; -webkit-appearance: none; appearance: none;
+  }
+  select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%236A6675' stroke-width='1.6' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+  textarea { min-height: 58px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .field { margin-bottom: 11px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+  button { font: inherit; cursor: pointer; border: none; border-radius: 10px; }
+  .btn { padding: 12px 14px; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:active { background: var(--accent-strong); }
+  .btn-primary:disabled { background: #CFC7E6; cursor: not-allowed; }
+  .btn-ghost { background: #F0EDE6; color: var(--ink); }
+  .btn-ghost:active { background: #E7E3DA; }
+  .btn-sm { width: auto; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* list */
+  ul.trees { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tree { border: 1px solid var(--hair); border-radius: 11px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; }
+  .tree .sw { width: 12px; height: 12px; border-radius: 3px; margin-top: 4px; flex: none; }
+  .tree .body { flex: 1; min-width: 0; }
+  .tree .sp { font-weight: 700; font-size: 14px; }
+  .tree .tag { font-weight: 600; color: var(--accent-strong); }
+  .tree .meta { font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-word; }
+  .tree .acc { font-size: 11px; font-weight: 700; }
+  .tree .acc.good { color: var(--good); } .tree .acc.warn { color: var(--warn); } .tree .acc.crit { color: var(--crit); }
+  .tree .acts { display: flex; flex-direction: column; gap: 6px; flex: none; }
+  .iconbtn { background: #F0EDE6; color: var(--muted); font-size: 12px; font-weight: 700; padding: 6px 9px; border-radius: 8px; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 18px 8px; }
+
+  canvas { width: 100%; height: 260px; display: block; border: 1px solid var(--hair); border-radius: 10px; background: #FCFBF9; touch-action: none; }
+  .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  details > summary { cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "▸ "; }
+  details[open] > summary::before { content: "▾ "; }
+  .banner { font-size: 13px; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; display: none; }
+  .banner.crit { background: var(--crit-bg); color: #8f2b20; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; transition: all .25s; pointer-events: none; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hwrap">
+      <h1>Relevamiento de arbolado<small>Plaza Gigante del Oeste · BarrioTrees</small></h1>
+      <span class="count" id="count">0</span>
+    </div>
+  </header>
+
+  <div class="banner" id="geobanner"></div>
+
+  <div class="card">
+    <span class="label">Tu posición GPS</span>
+    <div class="gps">
+      <div class="gps-coords">
+        <div class="co mono" id="coords">—</div>
+        <div class="sub" id="gpssub">Esperando señal…</div>
+      </div>
+      <span class="pill off" id="accpill"><span class="dot"></span><span id="acctxt">GPS</span></span>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-ghost btn-sm" id="toggleGps">Pausar GPS</button>
+      <button class="btn btn-ghost btn-sm" id="manualToggle">Cargar coords a mano</button>
+    </div>
+    <div id="manualBox" style="display:none; margin-top:11px">
+      <div class="row2">
+        <div><span class="label">Lat</span><input class="mono" id="mlat" inputmode="decimal" placeholder="-34.9…"></div>
+        <div><span class="label">Lng</span><input class="mono" id="mlng" inputmode="decimal" placeholder="-57.9…"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="sect-title" id="formTitle">Nuevo árbol</span>
+    <div class="field">
+      <span class="label">Especie</span>
+      <select id="especie"></select>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <span class="label">N.º / etiqueta</span>
+        <input id="etiqueta" placeholder="ej: 12 o A-3">
+      </div>
+      <div class="field">
+        <span class="label">Sector</span>
+        <select id="sector"></select>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label">Altura estimada (m)</span>
+      <input id="altura" inputmode="decimal" placeholder="ej: 2.5">
+    </div>
+    <div class="field">
+      <span class="label">Nota</span>
+      <textarea id="nota" placeholder="Observaciones, ¿coincide con el plano?, estado…"></textarea>
+    </div>
+    <button class="btn btn-primary" id="save" disabled>Guardar árbol acá</button>
+    <button class="btn btn-ghost btn-sm" id="cancelEdit" style="display:none; margin-top:8px">Cancelar edición</button>
+  </div>
+
+  <div class="card">
+    <span class="sect-title">Árboles relevados (<span id="count2">0</span>)</span>
+    <ul class="trees" id="list"></ul>
+    <div class="empty" id="empty">Todavía no marcaste ningún árbol. Pará al lado de uno, elegí la especie y tocá <b>Guardar árbol acá</b>.</div>
+  </div>
+
+  <div class="card">
+    <details id="mapDetails">
+      <summary>Mapa de lo relevado (validar contra el plano)</summary>
+      <div style="margin-top:10px">
+        <canvas id="map"></canvas>
+        <p class="hint">Puntos relativos por GPS. Sirve para comparar la <b>forma</b> de lo que cargaste contra el plano. El violeta es jacarandá.</p>
+        <div class="legend" id="legend"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <span class="sect-title">Datos</span>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" id="expJson">Descargar JSON</button>
+      <button class="btn btn-ghost btn-sm" id="expCsv">Descargar CSV</button>
+      <button class="btn btn-ghost btn-sm" id="copyJson">Copiar JSON</button>
+    </div>
+    <div style="margin-top:10px">
+      <span class="label">Importar / restaurar (pegá un JSON y tocá cargar)</span>
+      <textarea id="impBox" class="mono" placeholder='[{"especie":"Jacarandá",…}]' style="min-height:44px"></textarea>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-ghost btn-sm" id="impBtn">Cargar JSON</button>
+        <button class="btn btn-ghost btn-sm" id="clearAll" style="color:var(--crit)">Borrar todo</button>
+      </div>
+    </div>
+    <p class="hint">Se guarda solo en este teléfono (localStorage). Descargá el JSON seguido para no perder el relevamiento.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "bt_relevamiento_v1";
+
+  var SPECIES = [
+    { c: "Jacarandá", s: "Jacaranda mimosifolia", col: "#6B4FBF" },
+    { c: "Lapacho rosado", s: "Tabebuia impetiginosa", col: "#D46A9F" },
+    { c: "Fresno rojo", s: "Fraxinus pennsylvanica", col: "#C0533B" },
+    { c: "Tipa", s: "Tipuana tipu", col: "#E0A32E" },
+    { c: "Kiri", s: "Paulownia tomentosa", col: "#8E7CC3" },
+    { c: "Liquidámbar", s: "Liquidambar styraciflua", col: "#B5482E" },
+    { c: "Pezuña de vaca", s: "Bauhinia forficata", col: "#4C9A6A" },
+    { c: "Pezuña de vaca rosa", s: "Bauhinia variegata", col: "#D67AB0" },
+    { c: "Palmera washingtonia", s: "Washingtonia filifera", col: "#7A8B4A" },
+    { c: "Ciruelo de jardín", s: "Prunus cerasifera", col: "#7E3F52" },
+    { c: "Mandarino", s: "Citrus reticulata", col: "#E88A2E" },
+    { c: "Naranjo", s: "Citrus x sinensis", col: "#E4761F" },
+    { c: "Pomelo", s: "Citrus x paradisi", col: "#E0B23A" },
+    { c: "Damasco", s: "Prunus armeniaca", col: "#D98C4A" },
+    { c: "Ginkgo", s: "Ginkgo biloba", col: "#C9A227" },
+    { c: "Preexistencia / otro", s: "", col: "#8A8676" },
+    { c: "Desconocida", s: "", col: "#B0ABA0" }
+  ];
+  var SECTORS = ["Sector A", "Sector B", "Galería central (jacarandás)", "Perimetral 49 bis", "Perimetral 50", "Perimetral 174 bis", "Perimetral 175 bis", "Otro"];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var data = load();
+  var cur = null;      // {lat,lng,acc}
+  var editingId = null;
+  var gpsOn = true;
+  var watchId = null;
+
+  // ---- populate selects ----
+  SPECIES.forEach(function (sp) {
+    var o = document.createElement("option");
+    o.value = sp.c; o.textContent = sp.c + (sp.s ? "  ·  " + sp.s : "");
+    $("especie").appendChild(o);
+  });
+  SECTORS.forEach(function (s) {
+    var o = document.createElement("option"); o.value = s; o.textContent = s;
+    $("sector").appendChild(o);
+  });
+  $("sector").value = "Galería central (jacarandás)";
+
+  function colorFor(common) {
+    for (var i = 0; i < SPECIES.length; i++) if (SPECIES[i].c === common) return SPECIES[i].col;
+    return "#8A8676";
+  }
+  function sciFor(common) {
+    for (var i = 0; i < SPECIES.length; i++) if (SPECIES[i].c === common) return SPECIES[i].s;
+    return "";
+  }
+
+  // ---- storage ----
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+
+  // ---- geolocation ----
+  function accClass(a) { return a == null ? "off" : a <= 10 ? "good" : a <= 25 ? "warn" : "crit"; }
+  function startGps() {
+    if (!("geolocation" in navigator)) { geoError({ code: -1 }); return; }
+    watchId = navigator.geolocation.watchPosition(function (p) {
+      cur = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+      $("coords").textContent = cur.lat.toFixed(6) + ", " + cur.lng.toFixed(6);
+      $("gpssub").textContent = "Señal en vivo · tocá Guardar para fijar este punto";
+      var cl = accClass(cur.acc);
+      var pill = $("accpill"); pill.className = "pill " + cl;
+      $("acctxt").textContent = "±" + Math.round(cur.acc) + " m";
+      $("geobanner").className = "banner";
+      refreshSaveState();
+    }, geoError, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+  }
+  function stopGps() { if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; } }
+  function geoError(e) {
+    var b = $("geobanner"); b.className = "banner crit";
+    if (e && e.code === 1) b.textContent = "El GPS está bloqueado. Dale permiso de ubicación al sitio, o cargá las coordenadas a mano.";
+    else if (e && e.code === -1) b.textContent = "Este navegador no expone GPS acá. Cargá las coordenadas a mano (botón de arriba).";
+    else b.textContent = "No pude leer el GPS todavía. Probá moverte a cielo abierto, o cargá coords a mano.";
+    $("accpill").className = "pill off"; $("acctxt").textContent = "sin GPS";
+  }
+
+  function manualCoords() {
+    var la = parseFloat($("mlat").value), ln = parseFloat($("mlng").value);
+    if (isFinite(la) && isFinite(ln)) return { lat: la, lng: ln, acc: null };
+    return null;
+  }
+  function activeFix() {
+    if ($("manualBox").style.display !== "none") { var m = manualCoords(); if (m) return m; }
+    return cur;
+  }
+  function refreshSaveState() { $("save").disabled = !activeFix(); }
+
+  // ---- render ----
+  function fmtCoord(t) { return t.lat.toFixed(6) + ", " + t.lng.toFixed(6); }
+  function render() {
+    $("count").textContent = data.length;
+    $("count2").textContent = data.length;
+    $("empty").style.display = data.length ? "none" : "block";
+    var ul = $("list"); ul.innerHTML = "";
+    data.slice().reverse().forEach(function (t) {
+      var li = document.createElement("li"); li.className = "tree";
+      var ac = accClass(t.acc);
+      var accHtml = t.acc == null ? '<span class="acc">coords a mano</span>' : '<span class="acc ' + ac + '">±' + Math.round(t.acc) + ' m</span>';
+      li.innerHTML =
+        '<span class="sw" style="background:' + colorFor(t.especie) + '"></span>' +
+        '<div class="body">' +
+          '<div class="sp">' + esc(t.especie) + (t.etiqueta ? ' <span class="tag">#' + esc(t.etiqueta) + '</span>' : '') + '</div>' +
+          '<div class="meta mono">' + fmtCoord(t) + '</div>' +
+          '<div class="meta">' + esc(t.sector || '') + (t.altura ? ' · ' + esc(t.altura) + ' m' : '') + ' · ' + accHtml + '</div>' +
+          (t.nota ? '<div class="meta">“' + esc(t.nota) + '”</div>' : '') +
+        '</div>' +
+        '<div class="acts">' +
+          '<button class="iconbtn" data-ed="' + t.id + '">editar</button>' +
+          '<button class="iconbtn" data-del="' + t.id + '">borrar</button>' +
+        '</div>';
+      ul.appendChild(li);
+    });
+    if ($("mapDetails").open) drawMap();
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---- actions ----
+  function saveTree() {
+    var fix = activeFix();
+    if (!fix) { toast("No hay posición todavía"); return; }
+    var rec = {
+      id: editingId || (Date.now() + "-" + Math.floor(Math.random() * 1000)),
+      etiqueta: $("etiqueta").value.trim(),
+      especie: $("especie").value,
+      cientifico: sciFor($("especie").value),
+      sector: $("sector").value,
+      altura: $("altura").value.trim(),
+      nota: $("nota").value.trim(),
+      lat: fix.lat, lng: fix.lng, acc: fix.acc,
+      ts: new Date().toISOString()
+    };
+    if (editingId) {
+      for (var i = 0; i < data.length; i++) if (data[i].id === editingId) { data[i] = rec; break; }
+      toast("Árbol actualizado");
+    } else { data.push(rec); toast("Árbol #" + data.length + " guardado"); }
+    persist(); resetForm(); render();
+  }
+  function resetForm() {
+    editingId = null;
+    $("etiqueta").value = ""; $("altura").value = ""; $("nota").value = "";
+    $("formTitle").textContent = "Nuevo árbol";
+    $("save").textContent = "Guardar árbol acá";
+    $("cancelEdit").style.display = "none";
+  }
+  function editTree(id) {
+    var t = data.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    editingId = id;
+    $("especie").value = t.especie; $("etiqueta").value = t.etiqueta || "";
+    $("sector").value = t.sector || SECTORS[0]; $("altura").value = t.altura || ""; $("nota").value = t.nota || "";
+    $("formTitle").textContent = "Editando árbol";
+    $("save").textContent = "Guardar cambios"; $("cancelEdit").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function delTree(id) {
+    if (!confirm("¿Borrar este árbol del relevamiento?")) return;
+    data = data.filter(function (x) { return x.id !== id; });
+    if (editingId === id) resetForm();
+    persist(); render();
+  }
+
+  // ---- export / import ----
+  function download(name, text, mime) {
+    var a = document.createElement("a");
+    a.href = "data:" + mime + ";charset=utf-8," + encodeURIComponent(text);
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+  function toCsv() {
+    var cols = ["etiqueta", "especie", "cientifico", "sector", "lat", "lng", "acc", "altura", "nota", "ts"];
+    var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [cols.join(",")];
+    data.forEach(function (t) { lines.push(cols.map(function (c) { return q(t[c]); }).join(",")); });
+    return lines.join("\n");
+  }
+
+  // ---- map ----
+  function drawMap() {
+    var cv = $("map"), pts = data.filter(function (t) { return isFinite(t.lat) && isFinite(t.lng); });
+    var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = 260;
+    cv.width = W * dpr; cv.height = H * dpr;
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (pts.length < 1) { ctx.fillStyle = "#9a968c"; ctx.font = "13px system-ui"; ctx.textAlign = "center"; ctx.fillText("Marcá al menos un árbol", W / 2, H / 2); return; }
+    var latR = pts.map(function (p) { return p.lat; }), lngR = pts.map(function (p) { return p.lng; });
+    var minLa = Math.min.apply(null, latR), maxLa = Math.max.apply(null, latR);
+    var minLn = Math.min.apply(null, lngR), maxLn = Math.max.apply(null, lngR);
+    var midLa = (minLa + maxLa) / 2, k = Math.cos(midLa * Math.PI / 180);
+    var pad = 26;
+    var spanLa = Math.max(maxLa - minLa, 1e-6), spanLn = Math.max((maxLn - minLn) * k, 1e-6);
+    var sc = Math.min((W - 2 * pad) / spanLn, (H - 2 * pad) / spanLa);
+    var ox = (W - spanLn * sc) / 2, oy = (H - spanLa * sc) / 2;
+    function X(ln) { return ox + (ln - minLn) * k * sc; }
+    function Y(la) { return H - (oy + (la - minLa) * sc); }
+    pts.forEach(function (p) {
+      ctx.beginPath(); ctx.arc(X(p.lng), Y(p.lat), 6, 0, 7); ctx.fillStyle = colorFor(p.especie); ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = "#fff"; ctx.stroke();
+      if (p.etiqueta) { ctx.fillStyle = "#1C1A22"; ctx.font = "700 10px ui-monospace,monospace"; ctx.textAlign = "center"; ctx.fillText(p.etiqueta, X(p.lng), Y(p.lat) - 9); }
+    });
+    var used = {}; data.forEach(function (t) { used[t.especie] = 1; });
+    var lg = $("legend"); lg.innerHTML = "";
+    Object.keys(used).forEach(function (c) { lg.innerHTML += '<span><i style="background:' + colorFor(c) + '"></i>' + esc(c) + '</span>'; });
+  }
+
+  function toast(m) { var t = $("toast"); t.textContent = m; t.className = "toast show"; setTimeout(function () { t.className = "toast"; }, 1600); }
+
+  // ---- wire up ----
+  $("save").addEventListener("click", saveTree);
+  $("cancelEdit").addEventListener("click", resetForm);
+  $("list").addEventListener("click", function (e) {
+    var ed = e.target.getAttribute("data-ed"), dl = e.target.getAttribute("data-del");
+    if (ed) editTree(ed); if (dl) delTree(dl);
+  });
+  $("toggleGps").addEventListener("click", function () {
+    gpsOn = !gpsOn;
+    if (gpsOn) { startGps(); this.textContent = "Pausar GPS"; }
+    else { stopGps(); this.textContent = "Reanudar GPS"; $("gpssub").textContent = "GPS en pausa"; }
+  });
+  $("manualToggle").addEventListener("click", function () {
+    var b = $("manualBox"); var show = b.style.display === "none";
+    b.style.display = show ? "block" : "none"; this.textContent = show ? "Usar GPS" : "Cargar coords a mano";
+    refreshSaveState();
+  });
+  $("mlat").addEventListener("input", refreshSaveState);
+  $("mlng").addEventListener("input", refreshSaveState);
+  $("expJson").addEventListener("click", function () { download("barriotrees-relevamiento.json", JSON.stringify(data, null, 2), "application/json"); });
+  $("expCsv").addEventListener("click", function () { download("barriotrees-relevamiento.csv", toCsv(), "text/csv"); });
+  $("copyJson").addEventListener("click", function () {
+    var txt = JSON.stringify(data, null, 2);
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("JSON copiado"); }, function () { toast("No pude copiar"); });
+    else toast("Copiá desde Descargar JSON");
+  });
+  $("impBtn").addEventListener("click", function () {
+    try {
+      var arr = JSON.parse($("impBox").value);
+      if (!Array.isArray(arr)) throw 0;
+      arr.forEach(function (r) { if (!r.id) r.id = Date.now() + "-" + Math.floor(Math.random() * 1000); });
+      data = arr; persist(); render(); $("impBox").value = ""; toast("Importados " + arr.length);
+    } catch (e) { toast("JSON inválido"); }
+  });
+  $("clearAll").addEventListener("click", function () {
+    if (!data.length) return;
+    if (confirm("¿Borrar TODO el relevamiento de este teléfono? Descargá el JSON antes si querés conservarlo.")) { data = []; persist(); resetForm(); render(); }
+  });
+  $("mapDetails").addEventListener("toggle", function () { if (this.open) drawMap(); });
+  window.addEventListener("resize", function () { if ($("mapDetails").open) drawMap(); });
+
+  render();
+  startGps();
+})();
+</script>
+
+</body>
+</html>
