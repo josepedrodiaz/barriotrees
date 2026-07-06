@@ -217,14 +217,14 @@
       <button class="btn btn-ghost btn-sm" id="copyJson">Copiar JSON</button>
     </div>
     <div style="margin-top:10px">
-      <span class="label">Importar / restaurar (pegá un JSON y tocá cargar)</span>
+      <span class="label">Combinar relevamientos (pegá el JSON de otra persona)</span>
       <textarea id="impBox" class="mono" placeholder='[{"especie":"Jacarandá",…}]' style="min-height:44px"></textarea>
       <div class="btn-row" style="margin-top:8px">
-        <button class="btn btn-ghost btn-sm" id="impBtn">Cargar JSON</button>
+        <button class="btn btn-ghost btn-sm" id="impBtn">Combinar (une sin duplicar)</button>
         <button class="btn btn-ghost btn-sm" id="clearAll" style="color:var(--crit)">Borrar todo</button>
       </div>
     </div>
-    <p class="hint">Se guarda solo en este teléfono (localStorage). Descargá el JSON seguido para no perder el relevamiento.</p>
+    <p class="hint">Une por N.º de plano y por cercanía (&lt;4m), sin pisar lo que ya tenés. Se guarda solo en este teléfono; descargá el JSON seguido para respaldar.</p>
   </div>
 </div>
 
@@ -519,12 +519,32 @@
     if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("JSON copiado"); }, function () { toast("No pude copiar"); });
     else toast("Copiá desde Descargar JSON");
   });
+  function normEt(t) { return (t.etiqueta || "").trim().toLowerCase(); }
+  function isDupOf(r) {
+    for (var i = 0; i < data.length; i++) {
+      var e = data[i];
+      if (e.id === r.id) return true;
+      if (e.especie === r.especie) {
+        var et = normEt(r);
+        if (et && et === normEt(e)) return true;
+        if (isFinite(e.lat) && isFinite(e.lng) && distM(r.lat, r.lng, e.lat, e.lng) <= 4) return true;
+      }
+    }
+    return false;
+  }
   $("impBtn").addEventListener("click", function () {
     try {
       var arr = JSON.parse($("impBox").value);
       if (!Array.isArray(arr)) throw 0;
-      arr.forEach(function (r) { if (!r.id) r.id = Date.now() + "-" + Math.floor(Math.random() * 1000); });
-      data = arr; persist(); render(); $("impBox").value = ""; toast("Importados " + arr.length);
+      var added = 0, skipped = 0;
+      arr.forEach(function (r) {
+        if (!r || !isFinite(r.lat) || !isFinite(r.lng)) { skipped++; return; }
+        if (!r.id) r.id = Date.now() + "-" + Math.floor(Math.random() * 1000);
+        if (isDupOf(r)) { skipped++; return; }
+        data.push(r); added++;
+      });
+      persist(); render(); updateNearest(); $("impBox").value = "";
+      toast("Combinados: +" + added + (skipped ? " · " + skipped + " duplicados" : ""));
     } catch (e) { toast("JSON inválido"); }
   });
   $("clearAll").addEventListener("click", function () {
