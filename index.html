@@ -65,6 +65,9 @@
   .pin { width: 26px; height: 26px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
   .pin span { transform: rotate(45deg); color: #fff; font-size: 11px; font-weight: 800; font-family: ui-monospace, monospace; text-shadow: 0 1px 1px rgba(0,0,0,.4); }
   .pin.sel { outline: 3px solid #fff; outline-offset: 1px; box-shadow: 0 0 0 3px var(--accent); }
+  .pin.draft { box-shadow: 0 0 0 4px rgba(107,79,191,.4), 0 2px 6px rgba(0,0,0,.45); animation: pindrop .45s ease; }
+  @keyframes pindrop { 0% { transform: rotate(-45deg) scale(.3); } 60% { transform: rotate(-45deg) scale(1.15); } 100% { transform: rotate(-45deg) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .pin.draft { animation: none; } }
   .me-dot { width: 16px; height: 16px; border-radius: 50%; background: #2b7de9; border: 3px solid #fff; box-shadow: 0 0 0 3px rgba(43,125,233,.3); }
 
   ul.trees { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
@@ -97,7 +100,7 @@
     <button class="btn btn-ghost btn-sm" id="locate">📍 Centrar en mí</button>
     <button class="btn btn-ghost btn-sm" id="baseBtn">Vista: satélite</button>
   </div>
-  <p class="hint" id="hint">El GPS sugiere la posición al tocar <b>Árbol en mi GPS</b>; después arrastrá el pin para dejarlo justo sobre el árbol. También podés tocar el mapa para ponerlo a mano. Tocá un pin para editar o borrar.</p>
+  <p class="hint" id="hint">Poné un pin de <b>prueba</b> con "Árbol en mi GPS" (lo sugiere el GPS) o tocando el mapa. <b>No se guarda</b> hasta que toques Guardar. Movelo tocando otro lado o arrastrándolo; <b>Cancelar</b> lo descarta. Tocá un pin ya guardado para editarlo.</p>
 
   <div class="card">
     <span class="sect-title">Los pines nuevos usan</span>
@@ -115,7 +118,6 @@
   <div class="card" id="editor">
     <div class="edhead">
       <span class="sw"><i id="edsw"></i><span id="edtitle">Árbol</span></span>
-      <button class="btn btn-ghost btn-sm" id="edClose">Listo</button>
     </div>
     <div class="row2">
       <div class="field"><span class="label">Especie</span><select id="edEspecie"></select></div>
@@ -124,7 +126,12 @@
     <div class="field"><span class="label">Sector</span><select id="edSector"></select></div>
     <div class="field"><span class="label">Nota</span><textarea id="edNota" placeholder="Observaciones…"></textarea></div>
     <div class="field mono" id="edCoords" style="font-size:12px;color:var(--muted)"></div>
-    <button class="btn btn-ghost btn-full" id="edDel" style="color:var(--crit)">Borrar este árbol</button>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="edSave" style="flex:1">Guardar árbol</button>
+      <button class="btn btn-ghost" id="edCancel" style="flex:1">Cancelar</button>
+      <button class="btn btn-ghost" id="edClose" style="flex:1">Listo</button>
+      <button class="btn btn-ghost" id="edDel" style="flex:1;color:var(--crit)">Borrar</button>
+    </div>
   </div>
 
   <div class="card">
@@ -235,61 +242,84 @@
   }
   function refreshMarker(rec) { var m = markers[rec.id]; if (m) m.setIcon(pinIcon(rec, selId === rec.id)); }
 
-  // ---- create ----
-  function bumpNext() { var n = parseInt($("nextNum").value, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
-  function createTree(lat, lng, src) {
-    var rec = {
-      id: Date.now() + "-" + Math.floor(Math.random() * 1000),
-      etiqueta: "", especie: $("defEspecie").value, cientifico: sciFor($("defEspecie").value),
-      sector: $("defSector").value, nota: "", lat: lat, lng: lng, acc: null, src: src, ts: new Date().toISOString()
-    };
-    if ($("autoNum").checked) { rec.etiqueta = String($("nextNum").value || "").trim(); bumpNext(); }
-    data.push(rec); persist(); addMarker(rec); renderList(); select(rec.id, true);
-    return rec;
+  // ---- draft (pin de prueba, no guardado) + edición ----
+  var draft = null, draftMarker = null;
+
+  function draftIcon() {
+    return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 29],
+      html: '<div class="pin draft" style="background:' + colorFor(draft.especie) + '"><span>' + esc(draft.etiqueta || "") + '</span></div>' });
   }
-  map.on("click", function (e) { var r = createTree(e.latlng.lat, e.latlng.lng, "mapa"); toast("Árbol " + (r.etiqueta ? "#" + r.etiqueta : data.length) + " puesto"); });
+  function startDraft(lat, lng, src) {
+    closeEditor();
+    draft = { especie: $("defEspecie").value, sector: $("defSector").value,
+      etiqueta: $("autoNum").checked ? String($("nextNum").value || "").trim() : "",
+      nota: "", lat: lat, lng: lng, src: src };
+    draftMarker = L.marker([lat, lng], { icon: draftIcon(), draggable: true, zIndexOffset: 1000 });
+    draftMarker.on("dragend", function () { var ll = draftMarker.getLatLng(); draft.lat = ll.lat; draft.lng = ll.lng; showCoords(draft); });
+    draftMarker.addTo(map);
+    openEditor(draft, true);
+  }
+  function moveDraft(lat, lng) { draft.lat = lat; draft.lng = lng; draftMarker.setLatLng([lat, lng]); showCoords(draft); }
+  function saveDraft() {
+    if (!draft) return;
+    var rec = { id: Date.now() + "-" + Math.floor(Math.random() * 1000),
+      etiqueta: (draft.etiqueta || "").trim(), especie: draft.especie, cientifico: sciFor(draft.especie),
+      sector: draft.sector, nota: draft.nota, lat: draft.lat, lng: draft.lng, acc: null, src: draft.src, ts: new Date().toISOString() };
+    data.push(rec); persist(); addMarker(rec); renderList();
+    if ($("autoNum").checked) { var n = parseInt(rec.etiqueta, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
+    closeEditor();
+    toast("Árbol " + (rec.etiqueta ? "#" + rec.etiqueta : data.length) + " guardado");
+  }
+
+  function select(id) {
+    closeEditor();
+    selId = id; var rec = byId(id); if (!rec) return;
+    refreshMarker(rec); openEditor(rec, false); map.panTo([rec.lat, rec.lng]);
+  }
+  function closeEditor() {
+    if (draftMarker) { map.removeLayer(draftMarker); draftMarker = null; } draft = null;
+    if (selId && byId(selId)) refreshMarker(byId(selId)); selId = null;
+    $("editor").classList.remove("on");
+  }
+  function showCoords(o) { $("edCoords").textContent = o.lat.toFixed(6) + ", " + o.lng.toFixed(6); }
+  function openEditor(obj, isDraft) {
+    $("editor").classList.add("on");
+    $("edEspecie").value = obj.especie; $("edEtiqueta").value = obj.etiqueta || "";
+    $("edSector").value = obj.sector || SECTORS[0]; $("edNota").value = obj.nota || "";
+    $("edsw").style.background = colorFor(obj.especie);
+    $("edtitle").textContent = isDraft ? "Nuevo árbol · sin guardar" : (obj.etiqueta ? "Árbol #" + obj.etiqueta : "Árbol sin número");
+    showCoords(obj);
+    $("edSave").style.display = isDraft ? "" : "none";
+    $("edCancel").style.display = isDraft ? "" : "none";
+    $("edClose").style.display = isDraft ? "none" : "";
+    $("edDel").style.display = isDraft ? "none" : "";
+    $("editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function curObj() { return draft ? draft : byId(selId); }
+  function afterEdit(o) { if (draft) draftMarker.setIcon(draftIcon()); else { persist(); refreshMarker(o); renderList(); } }
+  $("edEspecie").addEventListener("change", function () { var o = curObj(); if (!o) return; o.especie = this.value; o.cientifico = sciFor(this.value); $("defEspecie").value = this.value; $("edsw").style.background = colorFor(this.value); afterEdit(o); });
+  $("edEtiqueta").addEventListener("input", function () { var o = curObj(); if (!o) return; o.etiqueta = this.value.trim(); if (!draft) $("edtitle").textContent = o.etiqueta ? "Árbol #" + o.etiqueta : "Árbol sin número"; afterEdit(o); });
+  $("edSector").addEventListener("change", function () { var o = curObj(); if (!o) return; o.sector = this.value; $("defSector").value = this.value; if (!draft) { persist(); renderList(); } });
+  $("edNota").addEventListener("input", function () { var o = curObj(); if (!o) return; o.nota = this.value; if (!draft) persist(); });
+  $("edSave").addEventListener("click", saveDraft);
+  $("edCancel").addEventListener("click", function () { closeEditor(); toast("Descartado"); });
+  $("edClose").addEventListener("click", closeEditor);
+  $("edDel").addEventListener("click", function () { var o = byId(selId); if (!o) return; if (!confirm("¿Borrar este árbol?")) return; if (markers[o.id]) { map.removeLayer(markers[o.id]); delete markers[o.id]; } data = data.filter(function (x) { return x.id !== o.id; }); closeEditor(); persist(); renderList(); });
 
   function meIcon() { return L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }); }
   function showMe(ll) { if (!meMarker) meMarker = L.marker(ll, { icon: meIcon(), interactive: false }).addTo(map); else meMarker.setLatLng(ll); }
 
+  map.on("click", function (e) { if (draft) moveDraft(e.latlng.lat, e.latlng.lng); else startDraft(e.latlng.lat, e.latlng.lng, "mapa"); });
   $("addGps").addEventListener("click", function () {
     if (!navigator.geolocation) { toast("Sin GPS en este navegador — tocá el mapa"); return; }
     toast("Ubicándote…");
     navigator.geolocation.getCurrentPosition(function (p) {
       var ll = [p.coords.latitude, p.coords.longitude];
       showMe(ll); map.setView(ll, Math.max(map.getZoom(), 19));
-      createTree(ll[0], ll[1], "gps");
-      toast("Puesto en tu GPS (±" + Math.round(p.coords.accuracy) + " m). Arrastralo al árbol.");
+      if (draft) moveDraft(ll[0], ll[1]); else startDraft(ll[0], ll[1], "gps");
+      toast("Sugerido por GPS (±" + Math.round(p.coords.accuracy) + " m). Arrastralo y Guardá.");
     }, function () { toast("No pude leer el GPS — tocá el mapa"); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-  });
-
-  // ---- selection / editor ----
-  function select(id, keepOpenList) {
-    if (selId && markers[selId]) refreshMarker(byId(selId));
-    selId = id; var rec = byId(id); if (!rec) return;
-    refreshMarker(rec);
-    $("editor").classList.add("on");
-    $("edEspecie").value = rec.especie; $("edEtiqueta").value = rec.etiqueta || "";
-    $("edSector").value = rec.sector || SECTORS[0]; $("edNota").value = rec.nota || "";
-    $("edsw").style.background = colorFor(rec.especie); $("edtitle").textContent = rec.etiqueta ? "Árbol #" + rec.etiqueta : "Árbol sin número";
-    showCoords(rec);
-    if (!keepOpenList) map.panTo([rec.lat, rec.lng]);
-    $("editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-  function showCoords(rec) { $("edCoords").textContent = rec.lat.toFixed(6) + ", " + rec.lng.toFixed(6); }
-  function deselect() { if (selId && byId(selId)) refreshMarker(byId(selId)); selId = null; $("editor").classList.remove("on"); }
-
-  $("edEspecie").addEventListener("change", function () { var r = byId(selId); if (!r) return; r.especie = this.value; r.cientifico = sciFor(this.value); $("defEspecie").value = this.value; $("edsw").style.background = colorFor(this.value); persist(); refreshMarker(r); renderList(); });
-  $("edEtiqueta").addEventListener("input", function () { var r = byId(selId); if (!r) return; r.etiqueta = this.value.trim(); $("edtitle").textContent = r.etiqueta ? "Árbol #" + r.etiqueta : "Árbol sin número"; persist(); refreshMarker(r); renderList(); });
-  $("edSector").addEventListener("change", function () { var r = byId(selId); if (!r) return; r.sector = this.value; $("defSector").value = this.value; persist(); renderList(); });
-  $("edNota").addEventListener("input", function () { var r = byId(selId); if (!r) return; r.nota = this.value; persist(); });
-  $("edClose").addEventListener("click", deselect);
-  $("edDel").addEventListener("click", function () {
-    var r = byId(selId); if (!r) return;
-    if (!confirm("¿Borrar este árbol?")) return;
-    if (markers[r.id]) { map.removeLayer(markers[r.id]); delete markers[r.id]; }
-    data = data.filter(function (x) { return x.id !== r.id; });
-    deselect(); persist(); renderList();
   });
 
   // ---- locate ----
@@ -358,7 +388,7 @@
     if (!data.length) return;
     if (!confirm("¿Borrar TODO el relevamiento de este teléfono? Descargá el JSON antes si querés conservarlo.")) return;
     Object.keys(markers).forEach(function (id) { map.removeLayer(markers[id]); }); markers = {};
-    data = []; deselect(); persist(); renderList();
+    data = []; closeEditor(); persist(); renderList();
   });
 
   function toast(m) { var t = $("toast"); t.textContent = m; t.className = "toast show"; setTimeout(function () { t.className = "toast"; }, 1600); }
