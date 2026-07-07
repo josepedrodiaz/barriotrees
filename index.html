@@ -81,6 +81,11 @@
   .tree .meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
   .iconbtn { background: #F0EDE6; color: var(--muted); font-size: 12px; font-weight: 700; padding: 6px 9px; border-radius: 8px; }
   .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 14px 8px; }
+  .sp-row { border: 1px solid var(--hair); border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+  .sp-row .sp-c { font-weight: 700; margin-bottom: 6px; }
+  .sp-row .r1 { display: flex; gap: 6px; align-items: center; }
+  .sp-row .r1 input[type=color] { width: 40px; height: 38px; flex: none; padding: 2px; border-radius: 8px; }
+  .sp-row .sp-del { flex: none; background: #F7E7E4; color: var(--crit); font-weight: 800; padding: 9px 12px; border-radius: 8px; }
   details > summary { cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); list-style: none; }
   details > summary::-webkit-details-marker { display: none; }
   details > summary::before { content: "▸ "; } details[open] > summary::before { content: "▾ "; }
@@ -154,6 +159,15 @@
   </div>
 
   <div class="card">
+    <details id="spDetails">
+      <summary>Especies · agregar, editar o borrar</summary>
+      <div id="spList" style="margin-top:10px"></div>
+      <button class="btn btn-ghost btn-sm" id="spAdd" style="margin-top:6px">+ Agregar especie</button>
+      <p class="hint">Son los nombres que aparecen al elegir especie. Renombrar también actualiza los árboles ya cargados; borrar no los toca (quedan con el nombre viejo). El color es el del pin en el mapa.</p>
+    </details>
+  </div>
+
+  <div class="card">
     <span class="sect-title">Datos</span>
     <div class="btn-row">
       <button class="btn btn-ghost btn-sm" id="expJson">Descargar JSON</button>
@@ -182,7 +196,7 @@
   function activeKey() { return testMode ? KEY_TEST : KEY_REAL; }
   var DEFAULT_CENTER = [-34.9298, -57.9920], DEFAULT_ZOOM = 18;
 
-  var SPECIES = [
+  function defaultSpecies() { return [
     { c: "Jacarandá", s: "Jacaranda mimosifolia", col: "#6B4FBF" },
     { c: "Lapacho rosado", s: "Tabebuia impetiginosa", col: "#D46A9F" },
     { c: "Fresno rojo", s: "Fraxinus pennsylvanica", col: "#C0533B" },
@@ -200,7 +214,10 @@
     { c: "Ginkgo", s: "Ginkgo biloba", col: "#C9A227" },
     { c: "Preexistencia / otro", s: "", col: "#8A8676" },
     { c: "Desconocida", s: "", col: "#B0ABA0" }
-  ];
+  ]; }
+  function loadSpecies() { try { var d = JSON.parse(localStorage.getItem("bt_especies_v1")); if (d && d.length) return d; } catch (e) {} return defaultSpecies(); }
+  function saveSpecies() { try { localStorage.setItem("bt_especies_v1", JSON.stringify(SPECIES)); } catch (e) {} }
+  var SPECIES = loadSpecies();
   var SECTORS = ["Galería central (jacarandás)", "Sector A", "Sector B", "Perimetral 49 bis", "Perimetral 50", "Perimetral 174 bis", "Perimetral 175 bis", "Otro"];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -223,9 +240,14 @@
 
   // ---- selects ----
   function fillSelect(el, arr) { arr.forEach(function (v) { var o = document.createElement("option"); o.value = v; o.textContent = v; el.appendChild(o); }); }
-  SPECIES.forEach(function (sp) {
-    [$("defEspecie"), $("edEspecie")].forEach(function (el) { var o = document.createElement("option"); o.value = sp.c; o.textContent = sp.c + (sp.s ? "  ·  " + sp.s : ""); el.appendChild(o); });
-  });
+  function refillSpecies() {
+    [$("defEspecie"), $("edEspecie")].forEach(function (el) {
+      var keep = el.value; el.innerHTML = "";
+      SPECIES.forEach(function (sp) { var o = document.createElement("option"); o.value = sp.c; o.textContent = sp.c + (sp.s ? "  ·  " + sp.s : ""); el.appendChild(o); });
+      if (keep) { for (var i = 0; i < el.options.length; i++) if (el.options[i].value === keep) { el.value = keep; break; } }
+    });
+  }
+  refillSpecies();
   fillSelect($("defSector"), SECTORS); fillSelect($("edSector"), SECTORS);
   $("defEspecie").value = "Jacarandá"; $("defSector").value = "Galería central (jacarandás)";
 
@@ -421,11 +443,49 @@
     clearMarkers(); data = []; closeEditor(); persist(); renderList();
   });
 
+  // ---- ABM de especies ----
+  function refreshAllMarkers() { data.forEach(function (r) { if (markers[r.id]) markers[r.id].setIcon(pinIcon(r, selId === r.id)); }); }
+  function renderSpManager() {
+    var box = $("spList"); box.innerHTML = "";
+    SPECIES.forEach(function (sp, i) {
+      var row = document.createElement("div"); row.className = "sp-row"; row.setAttribute("data-i", i);
+      row.innerHTML =
+        '<input class="sp-c" placeholder="Nombre común" value="' + esc(sp.c) + '">' +
+        '<div class="r1">' +
+          '<input class="sp-s" placeholder="Nombre científico (opcional)" value="' + esc(sp.s || "") + '">' +
+          '<input type="color" class="sp-col" value="' + (/^#[0-9a-fA-F]{6}$/.test(sp.col || "") ? sp.col : "#8A8676") + '">' +
+          '<button class="sp-del" title="Borrar">✕</button>' +
+        '</div>';
+      box.appendChild(row);
+    });
+  }
+  $("spAdd").addEventListener("click", function () { SPECIES.push({ c: "Nueva especie", s: "", col: "#4C9A6A" }); saveSpecies(); renderSpManager(); refillSpecies(); });
+  $("spList").addEventListener("change", function (e) {
+    var row = e.target.closest(".sp-row"); if (!row) return;
+    var i = +row.getAttribute("data-i"), sp = SPECIES[i]; if (!sp) return;
+    if (e.target.classList.contains("sp-c")) {
+      var old = sp.c, nv = e.target.value.trim() || old;
+      if (nv !== old) { data.forEach(function (r) { if (r.especie === old) r.especie = nv; }); if ($("defEspecie").value === old) $("defEspecie").value = nv; sp.c = nv; persist(); }
+    } else if (e.target.classList.contains("sp-s")) {
+      sp.s = e.target.value.trim(); data.forEach(function (r) { if (r.especie === sp.c) r.cientifico = sp.s; }); persist();
+    } else if (e.target.classList.contains("sp-col")) { sp.col = e.target.value; }
+    saveSpecies(); refillSpecies(); refreshAllMarkers(); renderList();
+  });
+  $("spList").addEventListener("click", function (e) {
+    if (!e.target.classList.contains("sp-del")) return;
+    var row = e.target.closest(".sp-row"), i = +row.getAttribute("data-i"), sp = SPECIES[i]; if (!sp) return;
+    var used = data.filter(function (r) { return r.especie === sp.c; }).length;
+    if (!confirm('¿Borrar la especie "' + sp.c + '" de la lista?' + (used ? "\n" + used + " árbol(es) cargados la usan y quedan con ese nombre igual." : ""))) return;
+    SPECIES.splice(i, 1); if (!SPECIES.length) SPECIES = defaultSpecies();
+    saveSpecies(); renderSpManager(); refillSpecies();
+  });
+
   function toast(m) { var t = $("toast"); t.textContent = m; t.className = "toast show"; setTimeout(function () { t.className = "toast"; }, 1600); }
 
   // ---- init ----
   data.forEach(addMarker);
   renderList();
+  renderSpManager();
   if (data.length) { var g = L.featureGroup(Object.keys(markers).map(function (id) { return markers[id]; })); try { map.fitBounds(g.getBounds().pad(0.3)); } catch (e) {} }
   else if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function (p) { map.setView([p.coords.latitude, p.coords.longitude], 19); }, function () {}, { enableHighAccuracy: true, timeout: 12000 });
 })();
