@@ -78,6 +78,8 @@
   .card2 .k { color: var(--muted); } .card2 .v { font-weight: 700; }
   .checks { display: flex; flex-direction: column; gap: 6px; background: var(--fel-bg); border: 1px solid #CDE9D6; border-radius: 14px; padding: 12px 14px; margin: 12px 0; }
   .checks div { font-size: 13.5px; font-weight: 700; color: var(--good); display: flex; align-items: center; gap: 8px; }
+  .checks.fail { background: var(--sed-bg); border-color: #F0C9C2; }
+  .checks .bad { color: var(--crit); }
   .water { width: 100%; padding: 17px; font-size: 17px; font-weight: 800; color: #fff; background: var(--violet); border-radius: 18px; box-shadow: 0 6px 18px rgba(107,79,191,.4); display: flex; align-items: center; justify-content: center; gap: 9px; }
   .water:active { background: var(--violet-strong); }
   .water.done { background: var(--good); box-shadow: none; }
@@ -146,10 +148,12 @@
   function levelFor(p) { var l = LEVELS[0]; for (var i = 0; i < LEVELS.length; i++) if (p >= LEVELS[i].min) l = LEVELS[i]; return l; }
   function nextLevel(p) { for (var i = 0; i < LEVELS.length; i++) if (p < LEVELS[i].min) return LEVELS[i]; return null; }
 
-  var SEED = [ { id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 } ];
+  var SEED = [ { id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 },
+    { id: 99, days: 4, far: true } /* ÁRBOL DE PRUEBA GPS (lejos) — borrar esta línea después del sábado */ ];
   var state, trees, wateredToday, welcomed;
-  function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; welcomed = false; trees = SEED.map(function (t) { return { id: t.id, days: t.days }; }); show("home"); renderHome(); }
+  function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; welcomed = false; trees = SEED.map(function (t) { return { id: t.id, days: t.days, far: t.far }; }); show("home"); renderHome(); }
 
+  function nameOf(t) { return t.far ? "🧪 Prueba GPS (lejos)" : "Jacarandá #" + t.id; }
   function stateOf(days) {
     if (days <= 1) return { label: "Feliz", cls: "fel", health: 1, urg: 0 };
     if (days <= 2) return { label: "Bien", cls: "ok", health: .68, urg: 1 };
@@ -191,7 +195,7 @@
     function row(t) {
       var s = stateOf(t.days);
       return '<div class="trow" data-id="' + t.id + '"><div class="mini">' + treeSVG(s.health, 46) + '</div>' +
-        '<div class="info"><div class="nm">Jacarandá #' + t.id + '</div>' +
+        '<div class="info"><div class="nm">' + nameOf(t) + '</div>' +
         '<div class="st"><span class="chip ' + s.cls + '">' + s.label + '</span> <span style="color:var(--muted);font-size:12px"> · hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</span></div></div><span class="go">›</span></div>';
     }
     $("#home").innerHTML = me + stat +
@@ -246,12 +250,13 @@
     var t = trees.filter(function (x) { return x.id === curId; })[0], s = stateOf(t.days);
     var bonus = s.urg >= 3 ? 25 : s.urg === 2 ? 15 : s.urg === 1 ? 5 : 0;
     var action;
-    if (s.urg === 0 && scanned) action = '<div class="checks"><div>✓ QR válido · Jacarandá #' + t.id + '</div><div>✓ Estás a 4 m del árbol</div></div><button class="water locked" disabled>Este ya está feliz 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
+    if (scanned && t.far) action = '<div class="checks fail"><div class="ok">✓ QR válido</div><div class="bad">✗ Estás lejos del árbol (~3,2 km)</div></div><button class="water locked" disabled>No podés regar de lejos</button><div class="lockmsg">El riego solo cuenta si estás <b>en el árbol</b>. Acercate y volvé a escanear.</div>';
+    else if (s.urg === 0 && scanned) action = '<div class="checks"><div>✓ QR válido · Jacarandá #' + t.id + '</div><div>✓ Estás a 4 m del árbol</div></div><button class="water locked" disabled>Este ya está feliz 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
     else if (scanned) action = '<div class="checks"><div>✓ QR válido · Jacarandá #' + t.id + '</div><div>✓ Estás a 4 m del árbol</div></div><button class="water" id="water">💧 Confirmar riego (+' + (10 + bonus) + ')</button>';
     else action = '<button class="water locked" id="scanHere">📷 Escaneá el QR para regar</button><div class="lockmsg">No se puede regar desde acá. Andá al árbol y escaneá su chapita.</div>';
 
     $("#detail").innerHTML = '<button class="back" id="back">‹ Volver</button>' +
-      '<div class="hero"><div class="big" id="bigtree">' + treeSVG(s.health, 190) + '</div><h2>Jacarandá #' + t.id + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
+      '<div class="hero"><div class="big" id="bigtree">' + treeSVG(s.health, 190) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
       '<div class="statline"><span class="chip ' + s.cls + '" style="font-size:13px;padding:5px 12px">' + s.label + '</span>' +
       '<div class="days" id="days">Último riego: hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</div></div>' +
       '<div class="card2"><div class="row"><span class="k">Legend de este árbol</span><span class="v" style="color:var(--muted)">— próximamente 🚩</span></div>' +
