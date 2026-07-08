@@ -273,6 +273,8 @@
 
   $("#reset").addEventListener("click", reset);
   reset();
+  var tp = parseInt(new URLSearchParams(location.search).get("t"), 10);
+  if (isFinite(tp) && trees.some(function (x) { return x.id === tp; })) openTree(tp, true);
 })();
 </script>
 </body>
