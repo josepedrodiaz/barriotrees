@@ -147,8 +147,8 @@
   function nextLevel(p) { for (var i = 0; i < LEVELS.length; i++) if (p < LEVELS[i].min) return LEVELS[i]; return null; }
 
   var SEED = [ { id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 } ];
-  var state, trees, wateredToday;
-  function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; trees = SEED.map(function (t) { return { id: t.id, days: t.days }; }); show("home"); renderHome(); }
+  var state, trees, wateredToday, welcomed;
+  function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; welcomed = false; trees = SEED.map(function (t) { return { id: t.id, days: t.days }; }); show("home"); renderHome(); }
 
   function stateOf(days) {
     if (days <= 1) return { label: "Feliz", cls: "fel", health: 1, urg: 0 };
@@ -283,6 +283,13 @@
   function hasBadge(n) { return state.badges.some(function (b) { return b.name === n; }); }
   function levelCopy(n) { return n === "Cuidador" ? "Ya no sos visita. Sos Cuidador de la plaza." : n === "Gran Cuidador" ? "La plaza empieza a ser tuya. Gran Cuidador." : n === "Alma de la Plaza" ? "Sos parte del lugar. Alma de la Plaza." : "¡Seguí así!"; }
 
+  function welcomeModal() {
+    $("#modal").innerHTML = '<div class="medal">🌳</div><h3>Bienvenido a BarrioTrees</h3><div class="name">Escaneaste un árbol de verdad</div>' +
+      '<p>Es un jacarandá jovencito de la plaza y <b>tiene sed</b>. Llenás el balde en el bebedero, lo regás, y acá lo ves reverdecer y sumás puntos. Así, entre vecinos, hacemos crecer la plaza.</p>' +
+      '<button class="close" id="wclose">Conocer mi árbol 🌱</button>';
+    $("#scrim").className = "scrim on";
+    $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
+  }
   function modal(medal, kicker, name, copy, isPin) {
     $("#modal").innerHTML = '<div class="medal">' + medal + '</div><h3>' + kicker + '</h3><div class="name">' + name + '</div><p>' + copy + '</p>' + (isPin ? '<div class="pin">📌 Este logro se entrega como pin real</div>' : "") + '<button class="close" id="mclose">Genial</button>';
     $("#scrim").className = "scrim on";
@@ -295,7 +302,7 @@
   $("#reset").addEventListener("click", reset);
   reset();
   var tp = parseInt(new URLSearchParams(location.search).get("t"), 10);
-  if (isFinite(tp) && trees.some(function (x) { return x.id === tp; })) openTree(tp, true);
+  if (isFinite(tp) && trees.some(function (x) { return x.id === tp; })) { openTree(tp, true); if (!welcomed) { welcomed = true; welcomeModal(); } }
 })();
 </script>
 </body>
