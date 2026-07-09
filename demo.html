@@ -3,302 +3,320 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#6B4FBF">
+<meta name="theme-color" content="#241F33">
 <title>Árboles Gigantes — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
-    --paper: #F4F1EA; --card: #FFFFFF; --ink: #1E1B26; --muted: #6E697A; --hair: #E7E2D8;
-    --violet: #6B4FBF; --violet-strong: #543399; --violet-soft: #EFEAFB;
-    --good: #2E9E5B; --warn: #E0912F; --crit: #CC4433;
-    --sed-bg: #FBEAE7; --ok-bg: #FBF3E2; --fel-bg: #E8F5EC;
-    --shadow: 0 1px 2px rgba(30,27,38,.05), 0 8px 24px rgba(30,27,38,.07);
+    --sky1: #7FC5E8; --sky2: #A9E0F2; --grass: #6BBE4A;
+    --panel: #2B2542; --panel2: #221C36; --edge-d: #14101F; --edge-l: #4A3F6E;
+    --ink: #F3EEFF; --dim: #B9AEE0;
+    --violet: #7C5CD0; --violet-d: #5A3FA6; --violet-l: #A98CE8;
+    --gold: #F5C542; --sed: #E5484D; --bien: #EBA53B; --feliz: #46C36A; --water: #3FA9F5;
+    --pixel: 'Press Start 2P', monospace; --read: 'VT323', 'Courier New', monospace;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; line-height: 1.45; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
-  .app { max-width: 460px; margin: 0 auto; min-height: 100vh; }
-  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
-  button { font: inherit; cursor: pointer; border: none; border-radius: 14px; }
+  body { margin: 0; font-family: var(--read); font-size: 20px; color: var(--ink);
+    background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 46%, #C7ECC0 46.2%, #A9DE9E 100%);
+    background-attachment: fixed; min-height: 100vh; line-height: 1.2; }
+  .app { max-width: 460px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
+  .px { font-family: var(--pixel); }
+  button { font: inherit; cursor: pointer; border: none; }
+  svg { image-rendering: pixelated; }
 
-  .top { position: sticky; top: 0; z-index: 20; background: rgba(244,241,234,.93); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .brand { font-weight: 800; font-size: 16px; letter-spacing: -.02em; display: flex; align-items: center; gap: 7px; }
-  .maqueta { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border: 1px solid var(--hair); border-radius: 999px; padding: 3px 8px; }
-  .reset { font-size: 12px; font-weight: 700; color: var(--muted); background: none; padding: 4px; }
+  /* panels + buttons: pixel bevel */
+  .panel { background: var(--panel); border: 3px solid var(--edge-d);
+    box-shadow: inset 3px 3px 0 var(--edge-l), inset -3px -3px 0 #1a1528, 0 4px 0 rgba(0,0,0,.25); }
+  .btn { font-family: var(--pixel); font-size: 11px; color: #fff; background: var(--violet);
+    border: 3px solid var(--edge-d); padding: 13px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: inset 3px 3px 0 var(--violet-l), inset -3px -3px 0 var(--violet-d), 0 5px 0 #2c1f52; }
+  .btn:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 var(--violet-l), inset -3px -3px 0 var(--violet-d), 0 2px 0 #2c1f52; }
+  .btn.wide { width: 100%; }
+  .btn.ghost { background: #4B4270; box-shadow: inset 3px 3px 0 #6a5f96, inset -3px -3px 0 #322a4f, 0 5px 0 #201a33; }
+  .btn.ghost:active { transform: translateY(3px); box-shadow: inset 3px 3px 0 #6a5f96, inset -3px -3px 0 #322a4f, 0 2px 0 #201a33; }
+  .btn.gold { background: var(--gold); color: #3a2c00; box-shadow: inset 3px 3px 0 #ffe08a, inset -3px -3px 0 #c99a1e, 0 5px 0 #8a6a10; }
+  .btn.green { background: var(--feliz); box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 5px 0 #1c6437; }
+  .btn.red { background: var(--sed); box-shadow: inset 3px 3px 0 #ff8a8d, inset -3px -3px 0 #a82c30, 0 5px 0 #7a2023; }
+  .btn.sm { font-size: 9px; padding: 10px; box-shadow: inset 2px 2px 0 var(--violet-l), inset -2px -2px 0 var(--violet-d), 0 4px 0 #2c1f52; }
+  .btn[disabled] { opacity: .55; }
 
-  .view { padding: 16px; display: none; }
-  .view.on { display: block; animation: fade .3s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  /* top HUD */
+  .top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 12px; background: var(--panel2); border-bottom: 4px solid var(--edge-d); }
+  .logo { font-family: var(--pixel); font-size: 12px; color: var(--feliz); text-shadow: 2px 2px 0 #0d3d1f; display: flex; gap: 6px; align-items: center; }
+  .logo b { color: var(--violet-l); text-shadow: 2px 2px 0 #2c1f52; }
+  .tag { font-family: var(--pixel); font-size: 7px; color: var(--dim); border: 2px solid var(--edge-l); padding: 4px 6px; }
+  .reset { font-family: var(--pixel); font-size: 8px; color: var(--dim); background: none; border: 2px solid var(--edge-l); padding: 6px 7px; }
 
-  .me { background: linear-gradient(135deg, var(--violet) 0%, #8A6BE0 100%); color: #fff; border-radius: 20px; padding: 16px 18px; box-shadow: var(--shadow); }
-  .me .lvl { font-size: 12px; font-weight: 700; opacity: .9; text-transform: uppercase; letter-spacing: .06em; }
-  .me .pts { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 2px 0 10px; }
-  .me .pts small { font-size: 14px; font-weight: 600; opacity: .85; }
-  .bar { height: 8px; background: rgba(255,255,255,.28); border-radius: 999px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; background: #fff; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
-  .me .next { font-size: 11.5px; opacity: .9; margin-top: 6px; }
-  .badges { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-  .badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.18); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+  .view { padding: 14px; display: none; }
+  .view.on { display: block; }
 
-  /* stat + scan CTA */
+  /* player HUD */
+  .me { padding: 14px; }
+  .me .lvl { font-family: var(--pixel); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 #6b4e08; }
+  .me .pts { font-family: var(--pixel); font-size: 22px; margin: 10px 0; color: #fff; text-shadow: 3px 3px 0 #000; }
+  .me .pts small { font-family: var(--read); font-size: 18px; color: var(--dim); }
+  .xp { height: 18px; background: #171225; border: 3px solid var(--edge-d); padding: 2px; }
+  .xp > i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--feliz) 0 8px, #3bb35f 8px 10px); transition: width .5s steps(8); }
+  .me .next { font-size: 17px; color: var(--dim); margin-top: 7px; }
+  .badges { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+  .badge { font-family: var(--pixel); font-size: 8px; color: #3a2c00; background: var(--gold); border: 2px solid #8a6a10; padding: 6px 8px; display: inline-flex; gap: 5px; align-items: center; box-shadow: inset 2px 2px 0 #ffe08a; }
+  .badge.empty { background: #3a3355; color: var(--dim); border-color: var(--edge-l); box-shadow: none; }
+
   .stat { display: flex; gap: 10px; margin: 14px 0 12px; }
-  .stat .box { flex: 1; background: var(--card); border: 1px solid var(--hair); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow); }
-  .stat .box .num { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
-  .stat .box.sed .num { color: var(--crit); }
-  .stat .box.fel .num { color: var(--good); }
-  .stat .box .lab { font-size: 12px; color: var(--muted); font-weight: 600; }
-  .scan-cta { width: 100%; padding: 17px; font-size: 17px; font-weight: 800; color: #fff; background: var(--violet); border-radius: 18px; box-shadow: 0 6px 18px rgba(107,79,191,.4); display: flex; align-items: center; justify-content: center; gap: 9px; }
-  .scan-cta:active { background: var(--violet-strong); }
-  .cta-note { text-align: center; font-size: 12px; color: var(--muted); margin: 8px 4px 0; }
+  .stat .box { flex: 1; padding: 12px; text-align: center; }
+  .stat .num { font-family: var(--pixel); font-size: 22px; }
+  .stat .num.sed { color: var(--sed); } .stat .num.fel { color: var(--feliz); }
+  .stat .lab { font-size: 16px; color: var(--dim); margin-top: 6px; }
+  .cta-note { text-align: center; font-size: 16px; color: #2c4a1e; margin: 9px 4px 0; }
 
-  .section-h { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 4px 10px; display: flex; align-items: center; gap: 8px; }
-  .section-h .n { color: var(--crit); }
+  .section-h { font-family: var(--pixel); font-size: 10px; color: #234a12; margin: 20px 4px 10px; text-shadow: 1px 1px 0 rgba(255,255,255,.4); }
+  .section-h .n { color: var(--sed); }
 
-  .trow { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--hair); border-radius: 16px; padding: 11px 13px; margin-bottom: 9px; box-shadow: var(--shadow); cursor: pointer; transition: transform .1s; }
-  .trow:active { transform: scale(.985); }
-  .trow .mini { width: 46px; height: 46px; flex: none; }
+  .trow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer; }
+  .trow:active { transform: translateY(2px); }
+  .trow .mini { width: 52px; height: 52px; flex: none; }
   .trow .info { flex: 1; min-width: 0; }
-  .trow .nm { font-weight: 800; font-size: 15px; }
-  .trow .st { font-size: 12.5px; margin-top: 1px; }
-  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
-  .chip.sed { color: var(--crit); background: var(--sed-bg); }
-  .chip.ok { color: #a9701a; background: var(--ok-bg); }
-  .chip.fel { color: var(--good); background: var(--fel-bg); }
-  .trow .go { color: var(--muted); font-size: 20px; flex: none; }
+  .trow .nm { font-family: var(--pixel); font-size: 10px; color: #fff; }
+  .trow .st { margin-top: 6px; }
+  .chip { font-family: var(--pixel); font-size: 7px; padding: 4px 7px; border: 2px solid; display: inline-block; }
+  .chip.sed { color: var(--sed); border-color: var(--sed); }
+  .chip.ok { color: var(--bien); border-color: var(--bien); }
+  .chip.fel { color: var(--feliz); border-color: var(--feliz); }
+  .trow .days { font-size: 15px; color: var(--dim); margin-left: 6px; }
+  .trow .go { font-family: var(--pixel); font-size: 12px; color: var(--violet-l); }
+  .empty { text-align: center; color: #2c4a1e; padding: 16px; font-size: 17px; }
 
-  .back { background: none; color: var(--muted); font-weight: 700; font-size: 14px; padding: 4px 0; margin-bottom: 6px; }
-  .hero { text-align: center; padding: 8px 0 4px; }
-  .hero .big { width: 190px; height: 190px; margin: 0 auto; }
-  .hero h2 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 2px; }
-  .hero .sci { font-size: 13px; color: var(--muted); font-style: italic; }
+  /* detail */
+  .back { font-family: var(--pixel); font-size: 9px; color: #234a12; background: none; border: none; padding: 6px 0; margin-bottom: 4px; }
+  .hero { text-align: center; padding: 4px 0; }
+  .hero .big { width: 190px; height: 190px; margin: 0 auto; filter: drop-shadow(4px 6px 0 rgba(0,0,0,.18)); }
+  .hero h2 { font-family: var(--pixel); font-size: 16px; margin: 6px 0 6px; color: #fff; text-shadow: 3px 3px 0 #000; }
+  .hero .sci { font-size: 16px; color: #2c4a1e; font-style: italic; }
   .statline { text-align: center; margin: 12px 0; }
-  .statline .days { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
-  .card2 { background: var(--card); border: 1px solid var(--hair); border-radius: 16px; padding: 14px 16px; margin: 14px 0; box-shadow: var(--shadow); }
-  .card2 .row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; padding: 5px 0; }
-  .card2 .row + .row { border-top: 1px solid var(--hair); }
-  .card2 .k { color: var(--muted); } .card2 .v { font-weight: 700; }
-  .checks { display: flex; flex-direction: column; gap: 6px; background: var(--fel-bg); border: 1px solid #CDE9D6; border-radius: 14px; padding: 12px 14px; margin: 12px 0; }
-  .checks div { font-size: 13.5px; font-weight: 700; color: var(--good); display: flex; align-items: center; gap: 8px; }
-  .checks.fail { background: var(--sed-bg); border-color: #F0C9C2; }
-  .checks .bad { color: var(--crit); }
-  .water { width: 100%; padding: 17px; font-size: 17px; font-weight: 800; color: #fff; background: var(--violet); border-radius: 18px; box-shadow: 0 6px 18px rgba(107,79,191,.4); display: flex; align-items: center; justify-content: center; gap: 9px; }
-  .water:active { background: var(--violet-strong); }
-  .water.done { background: var(--good); box-shadow: none; }
-  .water.locked { background: #E7E2D8; color: var(--muted); box-shadow: none; }
-  .lockmsg { text-align: center; font-size: 12.5px; color: var(--muted); margin: 8px 4px 0; }
+  .days2 { font-size: 17px; color: var(--dim); margin-top: 8px; }
+  .card2 { padding: 12px 14px; margin: 14px 0; }
+  .card2 .row { display: flex; justify-content: space-between; align-items: center; padding: 7px 2px; font-size: 17px; }
+  .card2 .row + .row { border-top: 2px solid var(--edge-l); }
+  .card2 .k { color: var(--dim); } .card2 .v { color: #fff; }
+  .checks { padding: 12px; margin: 12px 0; }
+  .checks div { font-family: var(--pixel); font-size: 9px; color: var(--feliz); padding: 5px 0; line-height: 1.5; }
+  .checks.fail div.ok { color: var(--feliz); } .checks.fail div.bad { color: var(--sed); }
+  .lockmsg { text-align: center; font-size: 16px; color: #2c4a1e; margin: 9px 4px 0; }
 
-  /* scan view */
+  /* scan */
   #scan { padding: 0; }
-  .cam { position: relative; height: 78vh; min-height: 420px; background: radial-gradient(circle at 50% 42%, #2a2733, #14121b); overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .frame { width: 220px; height: 220px; border-radius: 26px; position: relative; }
-  .frame::before, .frame::after, .frame > i::before, .frame > i::after { content: ""; position: absolute; width: 40px; height: 40px; border: 4px solid #fff; }
-  .frame::before { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 16px 0 0 0; }
-  .frame::after { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 16px 0 0; }
-  .frame > i::before { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 16px; }
-  .frame > i::after { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 16px 0; }
-  .laser { position: absolute; left: 8px; right: 8px; height: 3px; background: #6B4FBF; box-shadow: 0 0 12px 2px #6B4FBF; border-radius: 2px; animation: scan 1.6s ease-in-out infinite; }
-  @keyframes scan { 0%,100% { top: 10px; } 50% { top: 205px; } }
-  .qrghost { position: absolute; inset: 40px; opacity: .18; background: repeating-conic-gradient(#fff 0 25%, transparent 0 50%) 0 0/22px 22px; border-radius: 6px; }
-  .camtext { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; color: #fff; font-weight: 700; font-size: 15px; }
-  .camtext small { display: block; opacity: .7; font-weight: 500; font-size: 12.5px; margin-top: 4px; }
-  .camx { position: absolute; top: 16px; left: 16px; color: #fff; background: rgba(255,255,255,.15); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
-  .camskip { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); color: #fff; background: rgba(255,255,255,.16); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 13px; }
-  #reader { width: 100%; max-width: 340px; border-radius: 16px; overflow: hidden; }
-  #reader video { border-radius: 16px; }
+  .cam { position: relative; min-height: 82vh; background: #0c0a14; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+  #reader { width: 100%; max-width: 320px; border: 4px solid var(--feliz); box-shadow: 0 0 0 4px var(--edge-d); }
+  .camtitle { font-family: var(--pixel); font-size: 11px; color: var(--feliz); margin-bottom: 16px; text-align: center; text-shadow: 2px 2px 0 #0d3d1f; }
+  .camtext { color: var(--dim); font-size: 17px; text-align: center; margin-top: 16px; max-width: 300px; }
+  .camrow { display: flex; gap: 8px; margin-top: 18px; }
 
-  .scrim { position: fixed; inset: 0; background: rgba(30,27,38,.55); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 60; }
-  .scrim.on { display: flex; animation: fade .25s ease; }
-  .modal { background: var(--card); border-radius: 24px; padding: 26px 22px; max-width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: pop .4s cubic-bezier(.2,1.3,.4,1); }
-  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .modal .medal { font-size: 60px; line-height: 1; }
-  .modal h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--violet-strong); margin: 12px 0 4px; font-weight: 800; }
-  .modal .name { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 10px; }
-  .modal p { font-size: 15px; color: var(--ink); margin: 0 0 8px; line-height: 1.5; }
-  .modal .pin { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--violet-strong); background: var(--violet-soft); border: 1px solid #DCD2F4; padding: 7px 12px; border-radius: 999px; margin: 8px 0 16px; }
-  .modal .close { width: 100%; padding: 14px; font-weight: 800; color: #fff; background: var(--violet); border-radius: 14px; }
+  /* watering overlay */
+  .wtr { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; padding: 22px;
+    background: linear-gradient(180deg, #1a2740, #0e1826); }
+  .wtr.on { display: flex; }
+  .wtr-box { text-align: center; max-width: 360px; width: 100%; }
+  .wtr-tree { width: 150px; height: 150px; margin: 0 auto 8px; }
+  .wtr-title { font-family: var(--pixel); font-size: 14px; color: var(--water); text-shadow: 2px 2px 0 #0a2c4a; }
+  .drops { height: 20px; margin: 8px 0 14px; font-size: 18px; letter-spacing: 6px; color: var(--water); }
+  .wtr-bar { height: 20px; background: #0c1524; border: 3px solid #000; padding: 2px; }
+  .wtr-bar > i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--water) 0 8px, #2b86cc 8px 10px); }
+  .dialog { margin-top: 18px; padding: 14px; background: var(--panel); border: 3px solid #000; box-shadow: inset 3px 3px 0 var(--edge-l), inset -3px -3px 0 #14101f; }
+  .dialog .who { font-family: var(--pixel); font-size: 8px; color: var(--feliz); margin-bottom: 8px; }
+  .dialog .tip { font-size: 19px; min-height: 48px; color: var(--ink); }
+  .wtr-note { font-size: 15px; color: var(--dim); margin-top: 14px; }
 
-  .wtr { position: fixed; inset: 0; background: linear-gradient(160deg, #6B4FBF, #8A6BE0); color: #fff; display: none; align-items: center; justify-content: center; padding: 30px; z-index: 80; }
-  .wtr.on { display: flex; animation: fade .25s ease; }
-  .wtr-box { text-align: center; max-width: 340px; width: 100%; }
-  .wtr-emoji { font-size: 56px; animation: sway 1.2s ease-in-out infinite; }
-  @keyframes sway { 0%,100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
-  .wtr-title { font-size: 22px; font-weight: 800; margin: 12px 0 16px; }
-  .wtr-bar { height: 10px; background: rgba(255,255,255,.28); border-radius: 999px; overflow: hidden; }
-  .wtr-bar > i { display: block; height: 100%; width: 0; background: #fff; border-radius: 999px; }
-  .wtr-tip { font-size: 15px; margin: 18px 0 10px; min-height: 46px; line-height: 1.5; font-weight: 600; }
-  .wtr-note { font-size: 12px; opacity: .82; }
-  .petal { position: fixed; top: 40%; width: 12px; height: 12px; background: var(--violet); border-radius: 50% 50% 50% 0; pointer-events: none; z-index: 55; opacity: .9; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 700; opacity: 0; transition: all .25s; pointer-events: none; z-index: 70; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  /* modal */
+  .scrim { position: fixed; inset: 0; background: rgba(8,6,16,.78); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 80; }
+  .scrim.on { display: flex; }
+  .modal { max-width: 360px; width: 100%; padding: 24px 20px; text-align: center; }
+  .modal .medal { font-size: 56px; line-height: 1; animation: pixpop .5s steps(4); }
+  @keyframes pixpop { from { transform: scale(.2); } to { transform: scale(1); } }
+  .modal h3 { font-family: var(--pixel); font-size: 10px; color: var(--gold); margin: 14px 0 8px; text-shadow: 2px 2px 0 #6b4e08; }
+  .modal .name { font-family: var(--pixel); font-size: 15px; color: #fff; margin: 0 0 12px; text-shadow: 2px 2px 0 #000; }
+  .modal p { font-size: 19px; color: var(--ink); margin: 0 0 10px; line-height: 1.3; }
+  .modal .pin { font-family: var(--pixel); font-size: 8px; color: var(--gold); border: 2px dashed var(--gold); padding: 8px; margin: 10px 0 16px; }
+  .modal .close { width: 100%; }
+
+  .petal { position: fixed; width: 12px; height: 12px; background: var(--violet); pointer-events: none; z-index: 65; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); z-index: 90; opacity: 0; transition: all .2s steps(3);
+    font-family: var(--pixel); font-size: 9px; color: #fff; background: var(--panel2); border: 3px solid var(--edge-d); padding: 12px 16px; box-shadow: inset 2px 2px 0 var(--edge-l); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .foot { text-align: center; font-size: 11px; color: var(--muted); padding: 20px; }
+  .foot { text-align: center; font-size: 14px; color: #2c4a1e; padding: 18px; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <span class="brand">🌳 Árboles Gigantes</span>
-    <span class="maqueta">Maqueta</span>
-    <button class="reset" id="reset">↺ Reiniciar</button>
+    <span class="logo">🌳 ÁRBOLES <b>GIGANTES</b></span>
+    <span class="tag">MAQUETA</span>
+    <button class="reset" id="reset">↺</button>
   </div>
   <div class="view on" id="home"></div>
   <div class="view" id="detail"></div>
   <div class="view" id="scan"></div>
-  <div class="foot">Demo — Plaza Gigante del Oeste · datos de ejemplo</div>
+  <div class="foot">Demo · Plaza Gigante del Oeste · datos de ejemplo</div>
 </div>
 
 <div class="wtr" id="wtr"><div class="wtr-box">
-  <div class="wtr-emoji">🪣💧</div>
-  <div class="wtr-title">Regando…</div>
+  <div class="wtr-tree" id="wtrTree"></div>
+  <div class="wtr-title">REGANDO</div>
+  <div class="drops" id="drops">💧 💧 💧</div>
   <div class="wtr-bar"><i id="wtrBar"></i></div>
-  <div class="wtr-tip" id="wtrTip"></div>
-  <div class="wtr-note">Dejá correr el agua — el riego se registra al terminar</div>
+  <div class="dialog"><div class="who">SABÍAS QUE…</div><div class="tip" id="wtrTip"></div></div>
+  <div class="wtr-note">Dejá correr el agua — se registra al terminar</div>
 </div></div>
-<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+
+<div class="scrim" id="scrim"><div class="modal panel" id="modal"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 (function () {
   "use strict";
-  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $ = function (s) { return document.querySelector(s); };
 
-  var LEVELS = [ { n: "Aprendiz", min: 0 }, { n: "Cuidador", min: 50 }, { n: "Gran Cuidador", min: 150 }, { n: "Alma de la Plaza", min: 300 } ];
+  var LEVELS = [{ n: "APRENDIZ", min: 0 }, { n: "CUIDADOR", min: 50 }, { n: "GRAN CUIDADOR", min: 150 }, { n: "ALMA DE LA PLAZA", min: 300 }];
   function levelFor(p) { var l = LEVELS[0]; for (var i = 0; i < LEVELS.length; i++) if (p >= LEVELS[i].min) l = LEVELS[i]; return l; }
   function nextLevel(p) { for (var i = 0; i < LEVELS.length; i++) if (p < LEVELS[i].min) return LEVELS[i]; return null; }
 
-  var SEED = [ { id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 },
-    { id: 99, days: 4, far: true } /* ÁRBOL DE PRUEBA GPS (lejos) — borrar esta línea después del sábado */ ];
+  var SEED = [{ id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 },
+    { id: 99, days: 4, far: true } /* ÁRBOL DE PRUEBA GPS (lejos) — borrar esta línea después del sábado */];
   var state, trees, wateredToday, welcomed;
   function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; welcomed = false; trees = SEED.map(function (t) { return { id: t.id, days: t.days, far: t.far }; }); show("home"); renderHome(); }
 
-  function nameOf(t) { return t.far ? "🧪 Prueba GPS (lejos)" : "Jacarandá #" + t.id; }
+  function nameOf(t) { return t.far ? "PRUEBA GPS (LEJOS)" : "JACARANDÁ #" + t.id; }
   function stateOf(days) {
-    if (days <= 1) return { label: "Feliz", cls: "fel", health: 1, urg: 0 };
-    if (days <= 2) return { label: "Bien", cls: "ok", health: .68, urg: 1 };
-    if (days <= 4) return { label: "Sediento", cls: "sed", health: .42, urg: 2 };
-    return { label: "¡Muy sediento!", cls: "sed", health: .16, urg: 3 };
+    if (days <= 1) return { label: "FELIZ", cls: "fel", health: 1, urg: 0 };
+    if (days <= 2) return { label: "BIEN", cls: "ok", health: .68, urg: 1 };
+    if (days <= 4) return { label: "SEDIENTO", cls: "sed", health: .42, urg: 2 };
+    return { label: "MUY SEDIENTO", cls: "sed", health: .16, urg: 3 };
   }
-  function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
-  function leafColor(h) { return "rgb(" + lerp(150, 46, h) + "," + lerp(120, 139, h) + "," + lerp(70, 87, h) + ")"; }
-  function treeSVG(h, size) {
-    var col = leafColor(h), r = 26 + 8 * h, cy = 40 - 3 * h, blooms = "";
-    if (h > 0.85) { [[36, 30], [64, 32], [50, 22], [42, 44], [60, 46]].forEach(function (p) { blooms += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.4" fill="#6B4FBF" opacity=".9"/>'; }); }
-    var droop = h < 0.35 ? '<path d="M50 58 q-10 8 -16 4" stroke="' + col + '" stroke-width="3" fill="none" opacity=".6"/>' : "";
-    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<ellipse cx="50" cy="92" rx="26" ry="5" fill="#000" opacity=".07"/>' +
-      '<rect x="46.5" y="' + (cy + r - 6) + '" width="7" height="' + (92 - (cy + r - 6)) + '" rx="3" fill="#8a6a4a"/>' +
-      '<circle cx="' + (50 - r * .45) + '" cy="' + (cy + 6) + '" r="' + (r * .72) + '" fill="' + col + '"/>' +
-      '<circle cx="' + (50 + r * .45) + '" cy="' + (cy + 6) + '" r="' + (r * .72) + '" fill="' + col + '"/>' +
-      '<circle cx="50" cy="' + cy + '" r="' + r + '" fill="' + col + '"/>' + droop + blooms + '</svg>';
+
+  // ---- árbol voxel isométrico ----
+  function lerpHex(a, b, t) {
+    function v(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+    var A = v(a), B = v(b), r = [];
+    for (var i = 0; i < 3; i++) r.push(Math.round(A[i] + (B[i] - A[i]) * t));
+    return "rgb(" + r[0] + "," + r[1] + "," + r[2] + ")";
+  }
+  function shade(col, f) {
+    var m = col.match(/\d+/g); if (!m) return col;
+    return "rgb(" + Math.round(m[0] * f) + "," + Math.round(m[1] * f) + "," + Math.round(m[2] * f) + ")";
+  }
+  function hx(h) { return "rgb(" + parseInt(h.slice(1, 3), 16) + "," + parseInt(h.slice(3, 5), 16) + "," + parseInt(h.slice(5, 7), 16) + ")"; }
+  function isoTree(h, px) {
+    var S = 12, W = S, H = S / 2, V = S, ox = 50, oy = 58;
+    var grass = hx("#6BBE4A"), dirt = hx("#7A4F2A"), trunk = hx("#6E4326"), violet = hx("#7C5CD0");
+    var leaf = lerpHex("#B58A3E", "#3FA34D", h);
+    var B = [];
+    B.push({ x: 0, y: 0, z: 0, top: grass, side: dirt });
+    B.push({ x: 0, y: 0, z: 1, top: trunk });
+    B.push({ x: 0, y: 0, z: 2, top: trunk });
+    var L = [[0, 0, 3]];
+    if (h > 0.28) L.push([1, 0, 3], [-1, 0, 3], [0, 1, 3], [0, -1, 3]);
+    if (h > 0.7) L.push([1, 1, 3], [-1, -1, 3], [1, -1, 3], [-1, 1, 3]);
+    if (h > 0.5) L.push([0, 0, 4]);
+    L.forEach(function (c) { B.push({ x: c[0], y: c[1], z: c[2], top: leaf }); });
+    if (h > 0.82) [[0, 0, 5], [1, 0, 4], [-1, 0, 4]].forEach(function (c) { B.push({ x: c[0], y: c[1], z: c[2], top: violet }); });
+    B.sort(function (a, b) { return (a.x + a.y) - (b.x + b.y) || a.z - b.z; });
+    var out = "";
+    B.forEach(function (bk) {
+      var cx = ox + (bk.x - bk.y) * W, cy = oy + (bk.x + bk.y) * H - bk.z * V;
+      var side = bk.side || bk.top;
+      out += '<path d="M' + cx + ' ' + (cy - H) + ' L' + (cx + W) + ' ' + cy + ' L' + cx + ' ' + (cy + H) + ' L' + (cx - W) + ' ' + cy + ' Z" fill="' + bk.top + '"/>' +
+        '<path d="M' + (cx - W) + ' ' + cy + ' L' + cx + ' ' + (cy + H) + ' L' + cx + ' ' + (cy + H + V) + ' L' + (cx - W) + ' ' + (cy + V) + ' Z" fill="' + shade(side, .72) + '"/>' +
+        '<path d="M' + (cx + W) + ' ' + cy + ' L' + cx + ' ' + (cy + H) + ' L' + cx + ' ' + (cy + H + V) + ' L' + (cx + W) + ' ' + (cy + V) + ' Z" fill="' + shade(side, .52) + '"/>';
+    });
+    return '<svg viewBox="0 0 100 100" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg">' + out + '</svg>';
   }
 
   function renderHome() {
     var lv = levelFor(state.pts), nx = nextLevel(state.pts);
     var pct = nx ? Math.round((state.pts - lv.min) / (nx.min - lv.min) * 100) : 100;
-    var badges = state.badges.length ? state.badges.map(function (b) { return '<span class="badge">📌 ' + b.icon + ' ' + b.name + '</span>'; }).join("") : '<span class="badge" style="opacity:.75">Sin logros todavía — escaneá tu primer árbol</span>';
-    var me = '<div class="me"><div class="lvl">Cuidador · ' + lv.n + '</div><div class="pts">' + state.pts + ' <small>puntos</small></div>' +
-      '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
-      (nx ? '<div class="next">Te faltan ' + (nx.min - state.pts) + ' para <b>' + nx.n + '</b></div>' : '<div class="next">Nivel máximo 🌟</div>') +
+    var badges = state.badges.length ? state.badges.map(function (b) { return '<span class="badge">' + b.icon + ' ' + b.name + '</span>'; }).join("") : '<span class="badge empty">SIN LOGROS — ESCANEÁ TU 1ER ÁRBOL</span>';
+    var me = '<div class="me panel"><div class="lvl">NIVEL: ' + lv.n + '</div><div class="pts">' + state.pts + ' <small>PTS</small></div>' +
+      '<div class="xp"><i style="width:' + pct + '%"></i></div>' +
+      (nx ? '<div class="next">Faltan ' + (nx.min - state.pts) + ' para ' + nx.n + '</div>' : '<div class="next">¡NIVEL MÁXIMO!</div>') +
       '<div class="badges">' + badges + '</div></div>';
 
     var sorted = trees.slice().sort(function (a, b) { return stateOf(b.days).urg - stateOf(a.days).urg || a.id - b.id; });
     var thirsty = sorted.filter(function (t) { return stateOf(t.days).urg >= 2; });
     var rest = sorted.filter(function (t) { return stateOf(t.days).urg < 2; });
-
-    var stat = '<div class="stat"><div class="box sed"><div class="num">' + thirsty.length + '</div><div class="lab">con sed ahora</div></div>' +
-      '<div class="box fel"><div class="num">' + wateredToday + '</div><div class="lab">regados hoy</div></div></div>' +
-      '<button class="scan-cta" id="scanBtn">📷 Escanear QR de un árbol</button>' +
-      '<div class="cta-note">Para sumar hay que estar en el árbol y escanear su QR. Tocar la lista solo muestra info.</div>';
+    var stat = '<div class="stat"><div class="box panel"><div class="num sed">' + thirsty.length + '</div><div class="lab">CON SED</div></div>' +
+      '<div class="box panel"><div class="num fel">' + wateredToday + '</div><div class="lab">REGADOS HOY</div></div></div>' +
+      '<button class="btn wide" id="scanBtn">📷 ESCANEAR QR</button>' +
+      '<div class="cta-note">Para sumar hay que estar en el árbol y escanear su QR.</div>';
 
     function row(t) {
       var s = stateOf(t.days);
-      return '<div class="trow" data-id="' + t.id + '"><div class="mini">' + treeSVG(s.health, 46) + '</div>' +
-        '<div class="info"><div class="nm">' + nameOf(t) + '</div>' +
-        '<div class="st"><span class="chip ' + s.cls + '">' + s.label + '</span> <span style="color:var(--muted);font-size:12px"> · hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</span></div></div><span class="go">›</span></div>';
+      return '<div class="trow panel" data-id="' + t.id + '"><div class="mini">' + isoTree(s.health, 52) + '</div>' +
+        '<div class="info"><div class="nm">' + nameOf(t) + '</div><div class="st"><span class="chip ' + s.cls + '">' + s.label + '</span><span class="days">' + t.days + 'd</span></div></div><span class="go">▶</span></div>';
     }
     $("#home").innerHTML = me + stat +
-      '<div class="section-h">💧 Necesitan agua ahora <span class="n">(' + thirsty.length + ')</span></div>' +
-      (thirsty.length ? thirsty.map(row).join("") : '<div style="color:var(--muted);font-size:14px;padding:6px 4px">Ninguno urgente 🎉</div>') +
-      (rest.length ? '<div class="section-h">Ya están bien</div>' + rest.map(row).join("") : "");
+      '<div class="section-h">💧 NECESITAN AGUA <span class="n">(' + thirsty.length + ')</span></div>' +
+      (thirsty.length ? thirsty.map(row).join("") : '<div class="empty">Ninguno urgente 🎉</div>') +
+      (rest.length ? '<div class="section-h">YA ESTÁN BIEN</div>' + rest.map(row).join("") : "");
     $("#scanBtn").addEventListener("click", function () { scanFlow(null); });
     Array.prototype.forEach.call(document.querySelectorAll(".trow"), function (el) { el.addEventListener("click", function () { openTree(+el.getAttribute("data-id"), false); }); });
   }
 
   function mostUrgentUnwatered() {
-    var s = trees.slice().filter(function (t) { return t.days > 1; }).sort(function (a, b) { return stateOf(b.days).urg - stateOf(a.days).urg || a.id - b.id; });
+    var s = trees.slice().filter(function (t) { return t.days > 1 && !t.far; }).sort(function (a, b) { return stateOf(b.days).urg - stateOf(a.days).urg || a.id - b.id; });
     return (s[0] || trees[0]).id;
   }
 
-  // ---- ESCANEO (acción central) ----
+  // ---- escaneo real ----
   var qrScanner = null;
-  function stopScanner(cb) {
-    if (qrScanner) { var s = qrScanner; qrScanner = null; s.stop().then(function () { try { s.clear(); } catch (e) {} if (cb) cb(); }).catch(function () { if (cb) cb(); }); }
-    else if (cb) cb();
-  }
-  function extractId(text) {
-    try { var u = new URL(text); var t = parseInt(u.searchParams.get("t"), 10); if (isFinite(t)) return t; } catch (e) {}
-    var n = parseInt(text, 10); return isFinite(n) ? n : null;
-  }
+  function stopScanner(cb) { if (qrScanner) { var s = qrScanner; qrScanner = null; s.stop().then(function () { try { s.clear(); } catch (e) {} if (cb) cb(); }).catch(function () { if (cb) cb(); }); } else if (cb) cb(); }
+  function extractId(text) { try { var u = new URL(text); var t = parseInt(u.searchParams.get("t"), 10); if (isFinite(t)) return t; } catch (e) {} var n = parseInt(text, 10); return isFinite(n) ? n : null; }
   function scanFlow(targetId) {
     var fallbackId = targetId || mostUrgentUnwatered();
-    $("#scan").innerHTML =
-      '<div class="cam"><button class="camx" id="camx">✕ Cancelar</button>' +
-      '<div id="reader"></div>' +
-      '<button class="camskip" id="camskip">No tengo QR — simular</button>' +
-      '<div class="camtext">Apuntá al QR de la chapita<small>La app lee el QR y confirma que estás cerca</small></div></div>';
+    $("#scan").innerHTML = '<div class="cam"><div class="camtitle">▚ ESCANEÁ EL QR ▚</div><div id="reader"></div>' +
+      '<div class="camtext">Apuntá al QR de la chapita. La app lee el código y confirma que estás cerca.</div>' +
+      '<div class="camrow"><button class="btn ghost sm" id="camx">✕ SALIR</button><button class="btn ghost sm" id="camskip">SIN QR: SIMULAR</button></div></div>';
     show("scan");
     $("#camx").addEventListener("click", function () { stopScanner(function () { show("home"); renderHome(); }); });
     $("#camskip").addEventListener("click", function () { stopScanner(function () { openTree(fallbackId, true); }); });
-    if (typeof Html5Qrcode === "undefined") { toast("No cargó el lector — usá Simular"); return; }
+    if (typeof Html5Qrcode === "undefined") { toast("NO CARGÓ EL LECTOR"); return; }
     qrScanner = new Html5Qrcode("reader", { verbose: false });
-    qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 220 } },
-      function (text) {
-        var id = extractId(text);
-        stopScanner(function () {
-          if (id && trees.some(function (x) { return x.id === id; })) openTree(id, true);
-          else { toast("QR no reconocido"); show("home"); renderHome(); }
-        });
-      }, function () {}
-    ).catch(function () { toast("No pude abrir la cámara — tocá Simular"); });
+    qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 210, height: 210 } },
+      function (text) { var id = extractId(text); stopScanner(function () { if (id && trees.some(function (x) { return x.id === id; })) openTree(id, true); else { toast("QR NO RECONOCIDO"); show("home"); renderHome(); } }); },
+      function () {}).catch(function () { toast("NO PUDE ABRIR LA CÁMARA"); });
   }
 
   var curId = null;
-  function openTree(id, scanned) { curId = id; renderDetail(scanned); show("detail"); window.scrollTo(0, 0); }
+  function openTree(id, scanned) { curId = id; renderDetail(scanned); show("detail"); window.scrollTo(0, 0); if (scanned && !welcomed) { welcomed = true; welcomeModal(); } }
   function renderDetail(scanned) {
     var t = trees.filter(function (x) { return x.id === curId; })[0], s = stateOf(t.days);
     var bonus = s.urg >= 3 ? 25 : s.urg === 2 ? 15 : s.urg === 1 ? 5 : 0;
     var action;
-    if (scanned && t.far) action = '<div class="checks fail"><div class="ok">✓ QR válido</div><div class="bad">✗ Estás lejos del árbol (~3,2 km)</div></div><button class="water locked" disabled>No podés regar de lejos</button><div class="lockmsg">El riego solo cuenta si estás <b>en el árbol</b>. Acercate y volvé a escanear.</div>';
-    else if (s.urg === 0 && scanned) action = '<div class="checks"><div>✓ QR válido · Jacarandá #' + t.id + '</div><div>✓ Estás a 4 m del árbol</div></div><button class="water locked" disabled>Este ya está feliz 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
-    else if (scanned) action = '<div class="checks"><div>✓ QR válido · Jacarandá #' + t.id + '</div><div>✓ Estás a 4 m del árbol</div></div><button class="water" id="water">💧 Confirmar riego (+' + (10 + bonus) + ')</button>';
-    else action = '<button class="water locked" id="scanHere">📷 Escaneá el QR para regar</button><div class="lockmsg">No se puede regar desde acá. Andá al árbol y escaneá su chapita.</div>';
-
-    $("#detail").innerHTML = '<button class="back" id="back">‹ Volver</button>' +
-      '<div class="hero"><div class="big" id="bigtree">' + treeSVG(s.health, 190) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
-      '<div class="statline"><span class="chip ' + s.cls + '" style="font-size:13px;padding:5px 12px">' + s.label + '</span>' +
-      '<div class="days" id="days">Último riego: hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</div></div>' +
-      '<div class="card2"><div class="row"><span class="k">Leyenda de este árbol</span><span class="v" style="color:var(--muted)">— próximamente 🚩</span></div>' +
-      '<div class="row"><span class="k">Sector</span><span class="v">Galería central</span></div></div>' + action;
+    if (scanned && t.far) action = '<div class="checks panel fail"><div class="ok">✓ QR VÁLIDO</div><div class="bad">✗ ESTÁS LEJOS (~3,2 KM)</div></div><button class="btn red wide" disabled>NO PODÉS REGAR DE LEJOS</button><div class="lockmsg">El riego solo cuenta si estás EN el árbol. Acercate y volvé a escanear.</div>';
+    else if (s.urg === 0 && scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn ghost wide" disabled>ESTE YA ESTÁ FELIZ 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
+    else if (scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn green wide" id="water">💧 REGAR (+' + (10 + bonus) + ')</button>';
+    else action = '<button class="btn ghost wide" id="scanHere">📷 ESCANEÁ PARA REGAR</button><div class="lockmsg">No se riega desde acá. Andá al árbol y escaneá su chapita.</div>';
+    $("#detail").innerHTML = '<button class="back" id="back">◀ VOLVER</button>' +
+      '<div class="hero"><div class="big">' + isoTree(s.health, 190) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
+      '<div class="statline"><span class="chip ' + s.cls + '" style="font-size:9px;padding:6px 10px">' + s.label + '</span><div class="days2">Último riego: hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</div></div>' +
+      '<div class="card2 panel"><div class="row"><span class="k">Leyenda del árbol</span><span class="v" style="color:var(--dim)">— pronto 🚩</span></div><div class="row"><span class="k">Sector</span><span class="v">Galería central</span></div></div>' + action;
     $("#back").addEventListener("click", function () { show("home"); renderHome(); });
     if ($("#water")) $("#water").addEventListener("click", startWatering);
     if ($("#scanHere")) $("#scanHere").addEventListener("click", function () { scanFlow(t.id); });
   }
 
-  var TIPS = [
-    "Los jacarandás jóvenes toman agua cada ~2 días en verano.",
-    "Regá despacio y en la base: así el agua llega a la raíz, no se escurre.",
-    "Con un balde alcanza. De más no ayuda a un arbolito joven.",
-    "En primavera florece violeta — por eso La Plata es la ciudad de los jacarandás.",
-    "Mejor a la mañana temprano o al atardecer, no al sol del mediodía."
-  ];
+  var TIPS = ["Los jacarandás jóvenes toman agua cada ~2 días en verano.", "Regá en la base: así el agua llega a la raíz.", "Con un balde alcanza. De más no ayuda a un arbolito.", "En primavera florece violeta — por eso La Plata es su ciudad.", "Mejor temprano o al atardecer, no al sol del mediodía."];
   function startWatering() {
-    var DUR = 5000, bar = $("#wtrBar"), tip = $("#wtrTip");
-    var i = Math.floor(Math.random() * TIPS.length);
-    tip.textContent = TIPS[i];
-    $("#wtr").className = "wtr on";
-    bar.style.transition = "none"; bar.style.width = "0%";
-    var iv = setInterval(function () { i = (i + 1) % TIPS.length; tip.textContent = TIPS[i]; }, 1700);
-    setTimeout(function () { bar.style.transition = "width " + DUR + "ms linear"; bar.style.width = "100%"; }, 40);
-    setTimeout(function () { clearInterval(iv); $("#wtr").className = "wtr"; applyWater(); }, DUR + 80);
+    var DUR = 5000, bar = $("#wtrBar"), tip = $("#wtrTip"), i = Math.floor(Math.random() * TIPS.length);
+    $("#wtrTree").innerHTML = isoTree(.16, 150);
+    tip.textContent = TIPS[i]; $("#wtr").className = "wtr on"; bar.style.transition = "none"; bar.style.width = "0%";
+    var grow = 0, gi = setInterval(function () { grow += .1; if (grow > 1) grow = 1; $("#wtrTree").innerHTML = isoTree(.16 + .84 * grow, 150); }, 500);
+    var ti = setInterval(function () { i = (i + 1) % TIPS.length; tip.textContent = TIPS[i]; }, 1700);
+    setTimeout(function () { bar.style.transition = "width " + DUR + "ms steps(20)"; bar.style.width = "100%"; }, 40);
+    setTimeout(function () { clearInterval(ti); clearInterval(gi); $("#wtr").className = "wtr"; applyWater(); }, DUR + 80);
   }
   function applyWater() {
     var t = trees.filter(function (x) { return x.id === curId; })[0], s = stateOf(t.days);
@@ -306,42 +324,32 @@
     var wasFirst = state.watered === 0, wasRescate = s.urg >= 3;
     state.watered++; wateredToday++; if (wasRescate) state.rescates++;
     var before = state.pts; state.pts += gained; t.days = 0;
-
-    petals();
-    var btn = $("#water"); btn.className = "water done"; btn.textContent = "✓ Regado · +" + gained + " pts"; btn.disabled = true;
-    $("#bigtree").innerHTML = treeSVG(1, 190); $("#days").textContent = "Recién regado · ¡gracias!";
-    toast("+" + gained + " puntos" + (wasRescate ? " · ¡Rescate! 💪" : ""));
-
+    petals(); openTree(curId, true); toast("+" + gained + " PTS" + (wasRescate ? " · ¡RESCATE!" : ""));
     var lvBefore = levelFor(before).n, lvAfter = levelFor(state.pts).n;
     setTimeout(function () {
-      if (wasFirst && !hasBadge("Primer riego")) { state.badges.push({ icon: "💧", name: "Primer riego" }); modal("💧", "Nuevo logro", "Primer riego", "Regaste tu primer árbol. Chiquito el gesto, enorme para ese jacarandá. Bienvenido, Cuidador.", true); }
-      else if (lvAfter !== lvBefore) modal("⭐", "Subiste de nivel", lvAfter, levelCopy(lvAfter), false);
-      else if (wasRescate) modal("🚑", "Nuevo logro en camino", "Rescatista " + state.rescates + "/5", "Regaste un árbol al borde de secarse. Cinco rescates y te ganás el pin de Rescatista.", false);
-    }, 750);
+      if (wasFirst && !state.badges.some(function (b) { return b.name === "PRIMER RIEGO"; })) { state.badges.push({ icon: "💧", name: "PRIMER RIEGO" }); modal("💧", "¡LOGRO NUEVO!", "PRIMER RIEGO", "Regaste tu primer árbol. Chiquito el gesto, enorme para ese jacarandá. ¡Bienvenido, Cuidador!", true); }
+      else if (lvAfter !== lvBefore) modal("⭐", "¡SUBISTE DE NIVEL!", lvAfter, levelCopy(lvAfter), false);
+      else if (wasRescate) modal("🚑", "LOGRO EN CAMINO", "RESCATISTA " + state.rescates + "/5", "Salvaste un árbol al borde de secarse. Cinco rescates y te ganás el pin de Rescatista.", false);
+    }, 720);
   }
-  function hasBadge(n) { return state.badges.some(function (b) { return b.name === n; }); }
-  function levelCopy(n) { return n === "Cuidador" ? "Ya no sos visita. Sos Cuidador de la plaza." : n === "Gran Cuidador" ? "La plaza empieza a ser tuya. Gran Cuidador." : n === "Alma de la Plaza" ? "Sos parte del lugar. Alma de la Plaza." : "¡Seguí así!"; }
+  function levelCopy(n) { return n === "CUIDADOR" ? "Ya no sos visita. Sos Cuidador de la plaza." : n === "GRAN CUIDADOR" ? "La plaza empieza a ser tuya. Gran Cuidador." : n === "ALMA DE LA PLAZA" ? "Sos parte del lugar. Alma de la Plaza." : "¡Seguí así!"; }
 
   function welcomeModal() {
-    $("#modal").innerHTML = '<div class="medal">🌳</div><h3>Bienvenido a Árboles Gigantes</h3><div class="name">Escaneaste un árbol de verdad</div>' +
-      '<p>Es un jacarandá jovencito de la plaza y <b>tiene sed</b>. Llenás el balde en el bebedero, lo regás, y acá lo ves reverdecer y sumás puntos. Así, entre vecinos, hacemos crecer la plaza.</p>' +
-      '<button class="close" id="wclose">Conocer mi árbol 🌱</button>';
-    $("#scrim").className = "scrim on";
-    $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
+    $("#modal").innerHTML = '<div class="medal">🌳</div><h3>BIENVENIDO A</h3><div class="name">ÁRBOLES GIGANTES</div><p>Escaneaste un jacarandá real de la plaza. Es chiquito y tiene sed: llenás el balde, lo regás, y acá lo ves crecer y sumás puntos. Entre todos los hacemos gigantes.</p><button class="btn gold close" id="wclose">¡EMPEZAR! 🌱</button>';
+    $("#scrim").className = "scrim on"; $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
   }
   function modal(medal, kicker, name, copy, isPin) {
-    $("#modal").innerHTML = '<div class="medal">' + medal + '</div><h3>' + kicker + '</h3><div class="name">' + name + '</div><p>' + copy + '</p>' + (isPin ? '<div class="pin">📌 Este logro se entrega como pin real</div>' : "") + '<button class="close" id="mclose">Genial</button>';
-    $("#scrim").className = "scrim on";
-    $("#mclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
+    $("#modal").innerHTML = '<div class="medal">' + medal + '</div><h3>' + kicker + '</h3><div class="name">' + name + '</div><p>' + copy + '</p>' + (isPin ? '<div class="pin">📌 SE ENTREGA COMO PIN REAL</div>' : "") + '<button class="btn gold close" id="mclose">GENIAL</button>';
+    $("#scrim").className = "scrim on"; $("#mclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
   }
-  function petals() { for (var i = 0; i < 10; i++) { var p = document.createElement("div"); p.className = "petal"; p.style.left = (30 + Math.random() * 40) + "%"; p.style.top = "38%"; document.body.appendChild(p); var dx = (Math.random() * 2 - 1) * 120, dy = 120 + Math.random() * 120, rot = Math.random() * 360; p.animate([{ transform: "translate(0,0) rotate(0)", opacity: .95 }, { transform: "translate(" + dx + "px," + dy + "px) rotate(" + rot + "deg)", opacity: 0 }], { duration: 900 + Math.random() * 500, easing: "cubic-bezier(.3,.7,.4,1)" }); (function (el) { setTimeout(function () { el.remove(); }, 1500); })(p); } }
+  function petals() { for (var i = 0; i < 12; i++) { var p = document.createElement("div"); p.className = "petal"; p.style.left = (28 + Math.random() * 44) + "%"; p.style.top = "36%"; document.body.appendChild(p); var dx = (Math.random() * 2 - 1) * 130, dy = 130 + Math.random() * 130; p.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: "translate(" + dx + "px," + dy + "px)", opacity: 0 }], { duration: 900 + Math.random() * 500, easing: "steps(8)" }); (function (el) { setTimeout(function () { el.remove(); }, 1500); })(p); } }
   var tt; function toast(m) { var t = $("#toast"); t.textContent = m; t.className = "toast show"; clearTimeout(tt); tt = setTimeout(function () { t.className = "toast"; }, 1900); }
   function show(v) { Array.prototype.forEach.call(document.querySelectorAll(".view"), function (el) { el.className = "view" + (el.id === v ? " on" : ""); }); }
 
   $("#reset").addEventListener("click", reset);
   reset();
   var tp = parseInt(new URLSearchParams(location.search).get("t"), 10);
-  if (isFinite(tp) && trees.some(function (x) { return x.id === tp; })) { openTree(tp, true); if (!welcomed) { welcomed = true; welcomeModal(); } }
+  if (isFinite(tp) && trees.some(function (x) { return x.id === tp; })) openTree(tp, true);
 })();
 </script>
 </body>
