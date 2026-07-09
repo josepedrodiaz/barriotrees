@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6B4FBF">
-<title>BarrioTrees — Demo</title>
+<title>Árboles Gigantes — Demo</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
@@ -136,7 +136,7 @@
 <body>
 <div class="app">
   <div class="top">
-    <span class="brand">🌳 BarrioTrees</span>
+    <span class="brand">🌳 Árboles Gigantes</span>
     <span class="maqueta">Maqueta</span>
     <button class="reset" id="reset">↺ Reiniciar</button>
   </div>
@@ -323,7 +323,7 @@
   function levelCopy(n) { return n === "Cuidador" ? "Ya no sos visita. Sos Cuidador de la plaza." : n === "Gran Cuidador" ? "La plaza empieza a ser tuya. Gran Cuidador." : n === "Alma de la Plaza" ? "Sos parte del lugar. Alma de la Plaza." : "¡Seguí así!"; }
 
   function welcomeModal() {
-    $("#modal").innerHTML = '<div class="medal">🌳</div><h3>Bienvenido a BarrioTrees</h3><div class="name">Escaneaste un árbol de verdad</div>' +
+    $("#modal").innerHTML = '<div class="medal">🌳</div><h3>Bienvenido a Árboles Gigantes</h3><div class="name">Escaneaste un árbol de verdad</div>' +
       '<p>Es un jacarandá jovencito de la plaza y <b>tiene sed</b>. Llenás el balde en el bebedero, lo regás, y acá lo ves reverdecer y sumás puntos. Así, entre vecinos, hacemos crecer la plaza.</p>' +
       '<button class="close" id="wclose">Conocer mi árbol 🌱</button>';
     $("#scrim").className = "scrim on";
