@@ -346,9 +346,19 @@
     if (n === 1) {
       $("#modal").innerHTML = '<div class="medal">🌳</div><h3>BIENVENIDO A</h3><div class="name">ÁRBOLES GIGANTES</div>' +
         '<p>Escaneaste un jacarandá real de la plaza. Es un juego del barrio para cuidar entre todos los árboles jóvenes: los regás y crecen. 🌱</p>' +
-        '<div class="dots"><i class="on"></i><i></i></div>' +
+        '<div class="dots"><i class="on"></i><i></i><i></i></div>' +
         '<button class="btn gold close" id="wnext">SIGUIENTE ▶</button>';
       $("#wnext").addEventListener("click", function () { welcomeStep(2); });
+    } else if (n === 2) {
+      $("#modal").innerHTML = '<div class="medal">🏅</div><h3>REGÁS Y GANÁS</h3><div class="name">PREMIOS DE VERDAD</div>' +
+        '<div class="wsteps">' +
+        '<div class="wstep"><span class="em">🏅</span><span class="tx"><b>Insignias</b> para siempre — ¡se entregan como <b>pin real</b>! 📌</span></div>' +
+        '<div class="wstep"><span class="em">🚩</span><span class="tx"><b>Banderas</b>: sé la leyenda del árbol que más regás</span></div>' +
+        '<div class="wstep"><span class="em">👨‍👩‍👧</span><span class="tx">Jugá <b>en familia</b> y compitan con otras cuadras</span></div>' +
+        '</div>' +
+        '<div class="dots"><i></i><i class="on"></i><i></i></div>' +
+        '<button class="btn gold close" id="wnext2">SIGUIENTE ▶</button>';
+      $("#wnext2").addEventListener("click", function () { welcomeStep(3); });
     } else {
       $("#modal").innerHTML = '<div class="medal">💧</div><h3>TU MISIÓN AHORA</h3><div class="name">REGÁ ESTE ÁRBOL</div>' +
         '<div class="wsteps">' +
@@ -356,7 +366,7 @@
         '<div class="wstep"><span class="em">🌳</span><span class="tx"><b>Regá</b> este arbolito con el agua</span></div>' +
         '<div class="wstep"><span class="em">⭐</span><span class="tx">Recién <b>después de regarlo</b>, tocá REGAR y sumás <b>tus primeros puntos</b></span></div>' +
         '</div>' +
-        '<div class="dots"><i></i><i class="on"></i></div>' +
+        '<div class="dots"><i></i><i></i><i class="on"></i></div>' +
         '<button class="btn gold close" id="wclose">¡EMPEZAR! 🌱</button>';
       $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
     }
