@@ -212,15 +212,14 @@
   function isoTree(h, px) {
     var S = 12, W = S, H = S / 2, V = S, ox = 50, oy = 58;
     var grass = hx("#6BBE4A"), dirt = hx("#7A4F2A"), trunk = hx("#6E4326"), violet = hx("#7C5CD0");
-    var leaf = lerpHex("#B58A3E", "#3FA34D", h);
+    var leaf = lerpHex("#B5772E", "#3FA34D", h);
     var B = [];
     B.push({ x: 0, y: 0, z: 0, top: grass, side: dirt });
     B.push({ x: 0, y: 0, z: 1, top: trunk });
     B.push({ x: 0, y: 0, z: 2, top: trunk });
-    var L = [[0, 0, 3]];
-    if (h > 0.28) L.push([1, 0, 3], [-1, 0, 3], [0, 1, 3], [0, -1, 3]);
-    if (h > 0.7) L.push([1, 1, 3], [-1, -1, 3], [1, -1, 3], [-1, 1, 3]);
-    if (h > 0.5) L.push([0, 0, 4]);
+    var L = [[0, 0, 3], [1, 0, 3], [-1, 0, 3], [0, 1, 3], [0, -1, 3]];
+    if (h > 0.5) L.push([1, 1, 3], [-1, -1, 3], [1, -1, 3], [-1, 1, 3]);
+    if (h > 0.6) L.push([0, 0, 4]);
     L.forEach(function (c) { B.push({ x: c[0], y: c[1], z: c[2], top: leaf }); });
     if (h > 0.82) [[0, 0, 5], [1, 0, 4], [-1, 0, 4]].forEach(function (c) { B.push({ x: c[0], y: c[1], z: c[2], top: violet }); });
     B.sort(function (a, b) { return (a.x + a.y) - (b.x + b.y) || a.z - b.z; });
