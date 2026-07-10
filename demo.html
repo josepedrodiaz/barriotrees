@@ -107,13 +107,26 @@
   .checks.fail div.ok { color: var(--feliz); } .checks.fail div.bad { color: var(--sed); }
   .lockmsg { text-align: center; font-size: 16px; color: #2c4a1e; margin: 9px 4px 0; }
   /* box de validacion gamificado */
-  .magic { padding: 13px 14px; margin: 10px 0; border-color: var(--feliz); box-shadow: inset 3px 3px 0 rgba(70,195,106,.25), inset -3px -3px 0 #14101f; }
+  .magic { position: relative; overflow: hidden; padding: 13px 14px; margin: 10px 0; border-color: var(--feliz); box-shadow: inset 3px 3px 0 rgba(70,195,106,.25), inset -3px -3px 0 #14101f; }
+  .magic:not(.fail) { animation: magicglow 1.6s steps(2) infinite; }
+  @keyframes magicglow {
+    0%,100% { box-shadow: inset 3px 3px 0 rgba(70,195,106,.25), inset -3px -3px 0 #14101f, 0 0 0 rgba(70,195,106,0); }
+    50% { box-shadow: inset 3px 3px 0 rgba(70,195,106,.45), inset -3px -3px 0 #14101f, 0 0 16px rgba(70,195,106,.55); }
+  }
   .magic.fail { border-color: var(--sed); box-shadow: inset 3px 3px 0 rgba(229,72,77,.22), inset -3px -3px 0 #14101f; }
-  .magic .mh { font-family: var(--pixel); font-size: 9px; color: var(--feliz); text-shadow: 2px 2px 0 #14401f; text-align: center; margin-bottom: 10px; line-height: 1.5; }
+  .magic .mh { position: relative; z-index: 2; font-family: var(--pixel); font-size: 9px; color: var(--feliz); text-shadow: 2px 2px 0 #14401f; text-align: center; margin-bottom: 10px; line-height: 1.5; }
+  .magic:not(.fail) .mh { animation: twinkle .8s steps(2) infinite; }
+  @keyframes twinkle { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.55); } }
   .magic.fail .mh { color: var(--sed); text-shadow: 2px 2px 0 #400f10; }
-  .magic .mr { display: flex; gap: 11px; align-items: center; font-size: 16px; color: var(--ink); padding: 4px 0; }
+  .magic .mr { position: relative; z-index: 2; display: flex; gap: 11px; align-items: center; font-size: 16px; color: var(--ink); padding: 4px 0; }
   .magic .mr .e { font-size: 21px; width: 28px; text-align: center; flex: none; }
   .magic .mr.no { color: var(--dim); }
+  .magic .spark { position: absolute; z-index: 1; color: var(--gold); font-size: 13px; opacity: 0; pointer-events: none; text-shadow: 0 0 5px var(--gold); }
+  .magic .spark.s1 { top: 7px; left: 11px; animation: sparkle 1.5s steps(3) infinite; }
+  .magic .spark.s2 { top: 40px; right: 14px; animation: sparkle 1.5s steps(3) .5s infinite; }
+  .magic .spark.s3 { bottom: 10px; left: 42%; animation: sparkle 1.5s steps(3) 1s infinite; }
+  .magic .spark.s4 { top: 12px; right: 44%; animation: sparkle 1.3s steps(3) .8s infinite; }
+  @keyframes sparkle { 0%,100% { opacity: 0; transform: scale(.3); } 50% { opacity: 1; transform: scale(1); } }
   /* boton de accion protagonico */
   .btn.act { font-size: 14px; padding: 20px 14px; box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 7px 0 #1c6437; animation: actpulse 1.3s steps(2) infinite; }
   .btn.act:active { transform: translateY(4px); box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 3px 0 #1c6437; animation: none; }
@@ -326,9 +339,10 @@
         '<button class="btn ghost wide" disabled>NO NECESITA AGUA AHORA</button>' +
         '<div class="lockmsg">Regarlo de más no suma. Buscá uno sediento 👉</div>';
     else if (scanned) action = '<div class="magic panel">' +
-        '<div class="mh">✨ ¡ESTE RIEGO CUENTA!</div>' +
-        '<div class="mr"><span class="e">🌳</span>Es este jacarandá real, no otro</div>' +
-        '<div class="mr"><span class="e">📍</span>Y estás parado a su lado</div></div>' +
+        '<span class="spark s1">✦</span><span class="spark s2">✦</span><span class="spark s3">✦</span><span class="spark s4">✦</span>' +
+        '<div class="mh">✨ EL ÁRBOL TE RECONOCIÓ ✨</div>' +
+        '<div class="mr"><span class="e">🌳</span>Sabe que sos vos, en este jacarandá</div>' +
+        '<div class="mr"><span class="e">📍</span>Y siente que estás a su lado</div></div>' +
         '<button class="btn green wide act" id="water">💧 YA LO REGUÉ &nbsp;+' + (10 + bonus) + '</button>' +
         '<div class="lockmsg">Tocá recién cuando terminaste de regarlo</div>';
     else action = '<div class="magic panel fail">' +
