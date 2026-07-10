@@ -106,6 +106,18 @@
   .checks div { font-family: var(--pixel); font-size: 9px; color: var(--feliz); padding: 5px 0; line-height: 1.5; }
   .checks.fail div.ok { color: var(--feliz); } .checks.fail div.bad { color: var(--sed); }
   .lockmsg { text-align: center; font-size: 16px; color: #2c4a1e; margin: 9px 4px 0; }
+  /* box de validacion gamificado */
+  .magic { padding: 13px 14px; margin: 10px 0; border-color: var(--feliz); box-shadow: inset 3px 3px 0 rgba(70,195,106,.25), inset -3px -3px 0 #14101f; }
+  .magic.fail { border-color: var(--sed); box-shadow: inset 3px 3px 0 rgba(229,72,77,.22), inset -3px -3px 0 #14101f; }
+  .magic .mh { font-family: var(--pixel); font-size: 9px; color: var(--feliz); text-shadow: 2px 2px 0 #14401f; text-align: center; margin-bottom: 10px; line-height: 1.5; }
+  .magic.fail .mh { color: var(--sed); text-shadow: 2px 2px 0 #400f10; }
+  .magic .mr { display: flex; gap: 11px; align-items: center; font-size: 16px; color: var(--ink); padding: 4px 0; }
+  .magic .mr .e { font-size: 21px; width: 28px; text-align: center; flex: none; }
+  .magic .mr.no { color: var(--dim); }
+  /* boton de accion protagonico */
+  .btn.act { font-size: 14px; padding: 20px 14px; box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 7px 0 #1c6437; animation: actpulse 1.3s steps(2) infinite; }
+  .btn.act:active { transform: translateY(4px); box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 3px 0 #1c6437; animation: none; }
+  @keyframes actpulse { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.14); } }
 
   /* scan */
   #scan { padding: 0; }
@@ -302,14 +314,33 @@
     var t = trees.filter(function (x) { return x.id === curId; })[0], s = stateOf(t.days);
     var bonus = s.urg >= 3 ? 25 : s.urg === 2 ? 15 : s.urg === 1 ? 5 : 0;
     var action;
-    if (scanned && t.far) action = '<div class="checks panel fail"><div class="ok">✓ QR VÁLIDO</div><div class="bad">✗ ESTÁS LEJOS (~3,2 KM)</div></div><button class="btn red wide" disabled>NO PODÉS REGAR DE LEJOS</button><div class="lockmsg">El riego solo cuenta si estás EN el árbol. Acercate y volvé a escanear.</div>';
-    else if (s.urg === 0 && scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn ghost wide" disabled>ESTE YA ESTÁ FELIZ 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
-    else if (scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn green wide" id="water">💧 YA LO REGUÉ (+' + (10 + bonus) + ')</button><div class="lockmsg">Tocá recién cuando terminaste de regarlo</div>';
-    else action = '<button class="btn ghost wide" id="scanHere">📷 ESCANEÁ PARA REGAR</button><div class="lockmsg">No se riega desde acá. Andá al árbol y escaneá su chapita.</div>';
+    if (scanned && t.far) action = '<div class="magic panel fail">' +
+        '<div class="mh">🔒 ESTE RIEGO NO CONTARÍA</div>' +
+        '<div class="mr"><span class="e">🌳</span>Es este jacarandá real ✓</div>' +
+        '<div class="mr no"><span class="e">📍</span>Pero estás lejos (~3,2 km) ✗</div></div>' +
+        '<button class="btn red wide" disabled>💧 NO PODÉS DESDE ACÁ</button>' +
+        '<div class="lockmsg">Para que cuente tenés que estar al pie del árbol — así nadie suma puntos de mentira. Acercate y escaneá su chapita.</div>';
+    else if (s.urg === 0 && scanned) action = '<div class="magic panel">' +
+        '<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>' +
+        '<div class="mr"><span class="e">💧</span>Ya tomó suficiente agua</div></div>' +
+        '<button class="btn ghost wide" disabled>NO NECESITA AGUA AHORA</button>' +
+        '<div class="lockmsg">Regarlo de más no suma. Buscá uno sediento 👉</div>';
+    else if (scanned) action = '<div class="magic panel">' +
+        '<div class="mh">✨ ¡ESTE RIEGO CUENTA!</div>' +
+        '<div class="mr"><span class="e">🌳</span>Es este jacarandá real, no otro</div>' +
+        '<div class="mr"><span class="e">📍</span>Y estás parado a su lado</div></div>' +
+        '<button class="btn green wide act" id="water">💧 YA LO REGUÉ &nbsp;+' + (10 + bonus) + '</button>' +
+        '<div class="lockmsg">Tocá recién cuando terminaste de regarlo</div>';
+    else action = '<div class="magic panel fail">' +
+        '<div class="mh">🔒 PARA REGAR, ESCANEÁ SU CHAPITA</div>' +
+        '<div class="mr no"><span class="e">📷</span>El árbol te reconoce de cerca, no a distancia</div></div>' +
+        '<button class="btn ghost wide" id="scanHere">📷 ESCANEAR CHAPITA</button>' +
+        '<div class="lockmsg">Desde el sillón no se riega. Andá al árbol y escaneá.</div>';
     $("#detail").innerHTML = '<button class="back" id="back">◀ VOLVER</button>' +
-      '<div class="hero"><div class="big">' + isoTree(s.health, 190) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
+      '<div class="hero"><div class="big">' + isoTree(s.health, 150) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
       '<div class="statline"><span class="chip ' + s.cls + '" style="font-size:9px;padding:6px 10px">' + s.label + '</span><div class="days2">Último riego: hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</div></div>' +
-      '<div class="card2 panel"><div class="row"><span class="k">Leyenda del árbol</span><span class="v" style="color:var(--dim)">— pronto 🚩</span></div><div class="row"><span class="k">Sector</span><span class="v">Galería central</span></div></div>' + action;
+      action +
+      '<div class="card2 panel"><div class="row"><span class="k">Leyenda del árbol</span><span class="v" style="color:var(--dim)">— pronto 🚩</span></div><div class="row"><span class="k">Sector</span><span class="v">Galería central</span></div></div>';
     $("#back").addEventListener("click", function () { show("home"); renderHome(); });
     if ($("#water")) $("#water").addEventListener("click", startWatering);
     if ($("#scanHere")) $("#scanHere").addEventListener("click", function () { scanFlow(t.id); });
