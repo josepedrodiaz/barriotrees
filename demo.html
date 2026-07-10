@@ -165,7 +165,12 @@
   .modal .name { font-family: var(--pixel); font-size: 15px; color: #fff; margin: 0 0 12px; text-shadow: 2px 2px 0 #000; }
   .modal p { font-size: 19px; color: var(--ink); margin: 0 0 10px; line-height: 1.3; }
   .modal .pin { font-family: var(--pixel); font-size: 8px; color: var(--gold); border: 2px dashed var(--gold); padding: 8px; margin: 10px 0 16px; }
+  .modal .pinbadge { animation: pixpop .5s steps(4); margin: 2px auto 2px; }
+  .modal .pinsvg { display: block; margin: 0 auto; animation: pinglow 1.6s ease-in-out infinite; }
+  @keyframes pinglow { 0%,100% { filter: drop-shadow(2px 3px 0 rgba(0,0,0,.3)) drop-shadow(0 0 3px rgba(245,197,66,.5)); } 50% { filter: drop-shadow(2px 3px 0 rgba(0,0,0,.3)) drop-shadow(0 0 13px rgba(245,197,66,.95)); } }
+  .modal .claim { font-size: 14px; color: var(--gold); border: 2px dashed var(--gold); background: rgba(245,197,66,.07); padding: 10px 11px; margin: 12px 0 16px; line-height: 1.35; }
   .modal .close { width: 100%; }
+  @keyframes tipin { from { opacity: .15; } to { opacity: 1; } }
   .modal .dots { display: flex; gap: 8px; justify-content: center; margin: 4px 0 14px; }
   .modal .dots i { width: 9px; height: 9px; background: #4a4066; display: inline-block; }
   .modal .dots i.on { background: var(--gold); box-shadow: inset 2px 2px 0 #ffe08a; }
@@ -360,14 +365,25 @@
     if ($("#scanHere")) $("#scanHere").addEventListener("click", function () { scanFlow(t.id); });
   }
 
-  var TIPS = ["Los jacarandás jóvenes toman agua cada ~2 días en verano.", "Regá en la base: así el agua llega a la raíz.", "Con un balde alcanza. De más no ayuda a un arbolito.", "En primavera florece violeta — por eso La Plata es su ciudad.", "Mejor temprano o al atardecer, no al sol del mediodía."];
+  var TIPS = [
+    "Los jacarandás jóvenes toman agua cada ~2 días en verano.",
+    "Regá despacio en la base: así el agua llega a la raíz.",
+    "Con un balde alcanza. De más no ayuda a un arbolito.",
+    "En primavera se llena de flores violeta. Por algo La Plata es su ciudad.",
+    "Mejor temprano o al atardecer, nunca al sol del mediodía.",
+    "El jacarandá es oriundo del noroeste argentino y de Bolivia.",
+    "Si la tierra está seca dos dedos abajo, tiene sed.",
+    "De grande llega a 10-15 metros. Hoy arranca chiquito, con vos.",
+    "Sus primeras flores tardan años: hoy plantás esa espera.",
+    "Un buen riego moja la tierra, no las hojas."
+  ];
   function startWatering() {
-    var DUR = 5000, bar = $("#wtrBar"), tip = $("#wtrTip"), i = Math.floor(Math.random() * TIPS.length);
+    var DUR = 7000, bar = $("#wtrBar"), tip = $("#wtrTip"), i = Math.floor(Math.random() * TIPS.length);
     $("#wtrTree").innerHTML = isoTree(.16, 150);
     tip.textContent = TIPS[i]; $("#wtr").className = "wtr on"; bar.style.transition = "none"; bar.style.width = "0%";
-    var grow = 0, gi = setInterval(function () { grow += .1; if (grow > 1) grow = 1; $("#wtrTree").innerHTML = isoTree(.16 + .84 * grow, 150); }, 500);
-    var ti = setInterval(function () { i = (i + 1) % TIPS.length; tip.textContent = TIPS[i]; }, 1700);
-    setTimeout(function () { bar.style.transition = "width " + DUR + "ms steps(20)"; bar.style.width = "100%"; }, 40);
+    var grow = 0, gi = setInterval(function () { grow += .075; if (grow > 1) grow = 1; $("#wtrTree").innerHTML = isoTree(.16 + .84 * grow, 150); }, 500);
+    var ti = setInterval(function () { var j; do { j = Math.floor(Math.random() * TIPS.length); } while (j === i); i = j; tip.style.animation = "none"; tip.offsetHeight; tip.style.animation = "tipin .35s steps(3)"; tip.textContent = TIPS[i]; }, 3400);
+    setTimeout(function () { bar.style.transition = "width " + DUR + "ms steps(28)"; bar.style.width = "100%"; }, 40);
     setTimeout(function () { clearInterval(ti); clearInterval(gi); $("#wtr").className = "wtr"; applyWater(); }, DUR + 80);
   }
   function applyWater() {
@@ -415,9 +431,36 @@
       $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
     }
   }
+  function pinSVG(px) {
+    var h = Math.round(px * 128 / 120);
+    return '<svg class="pinsvg" viewBox="0 0 120 128" width="' + px + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="56" y="6" width="8" height="15" rx="3" fill="#c99a1e"/>' +
+      '<circle cx="60" cy="9" r="6" fill="#F5C542" stroke="#8a6a10" stroke-width="2"/>' +
+      '<circle cx="60" cy="72" r="54" fill="#F5C542" stroke="#8a6a10" stroke-width="4"/>' +
+      '<circle cx="60" cy="72" r="54" fill="none" stroke="#ffe08a" stroke-width="3" opacity=".6"/>' +
+      '<circle cx="60" cy="72" r="43" fill="#2B2542" stroke="#14101f" stroke-width="3"/>' +
+      '<circle cx="60" cy="64" r="31" fill="#46C36A" opacity=".13"/>' +
+      '<path d="M60 33 C 50 47, 48 55, 60 58 C 72 55, 70 47, 60 33 Z" fill="#3FA9F5" stroke="#1c6bb0" stroke-width="2"/>' +
+      '<ellipse cx="56" cy="49" rx="2.4" ry="3.6" fill="#cdeaff"/>' +
+      '<rect x="57.5" y="61" width="5" height="24" fill="#2b9350"/>' +
+      '<path d="M60 71 C 46 64, 39 72, 51 78 C 60 79, 61 74, 60 71 Z" fill="#46C36A" stroke="#2b9350" stroke-width="1.5"/>' +
+      '<path d="M60 71 C 74 64, 81 72, 69 78 C 60 79, 59 74, 60 71 Z" fill="#46C36A" stroke="#2b9350" stroke-width="1.5"/>' +
+      '<circle cx="35" cy="80" r="7" fill="#E8B07A" stroke="#a86b3a" stroke-width="2"/>' +
+      '<circle cx="85" cy="80" r="7" fill="#E8B07A" stroke="#a86b3a" stroke-width="2"/>' +
+      '<path d="M30 80 Q60 106 90 80 Q60 93 30 80 Z" fill="#E8B07A" stroke="#a86b3a" stroke-width="2.5"/>' +
+      '<path d="M30 80 Q60 93 90 80" fill="none" stroke="#a86b3a" stroke-width="1.5" opacity=".55"/>' +
+      '<text x="27" y="48" font-size="13" fill="#fff" opacity=".9">✦</text>' +
+      '<text x="86" y="62" font-size="9" fill="#fff" opacity=".85">✦</text>' +
+      '<path d="M32 44 A54 54 0 0 1 90 40" fill="none" stroke="#fff" stroke-width="3" opacity=".3" stroke-linecap="round"/>' +
+      '</svg>';
+  }
   function modal(medal, kicker, name, copy, isPin) {
-    $("#modal").innerHTML = '<div class="medal">' + medal + '</div><h3>' + kicker + '</h3><div class="name">' + name + '</div><p>' + copy + '</p>' + (isPin ? '<div class="pin">📌 SE ENTREGA COMO PIN REAL</div>' : "") + '<button class="btn gold close" id="mclose">GENIAL</button>';
-    $("#scrim").className = "scrim on"; $("#mclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
+    var head = isPin ? '<div class="pinbadge">' + pinSVG(126) + '</div>' : '<div class="medal">' + medal + '</div>';
+    var tag = isPin ? '<div class="claim">🎁 No es un dibujo: este pin lo hace la pinera del barrio y te lo damos <b>en la mano</b></div>' : "";
+    var btn = isPin ? 'RECLAMAR MI PIN 📌' : 'GENIAL';
+    $("#modal").innerHTML = head + '<h3>' + kicker + '</h3><div class="name">' + name + '</div><p>' + copy + '</p>' + tag + '<button class="btn gold close" id="mclose">' + btn + '</button>';
+    $("#scrim").className = "scrim on";
+    $("#mclose").addEventListener("click", function () { $("#scrim").className = "scrim"; if (isPin) { petals(); toast("📌 ¡Tu pin te espera en la plaza!"); } });
   }
   function petals() { for (var i = 0; i < 12; i++) { var p = document.createElement("div"); p.className = "petal"; p.style.left = (28 + Math.random() * 44) + "%"; p.style.top = "36%"; document.body.appendChild(p); var dx = (Math.random() * 2 - 1) * 130, dy = 130 + Math.random() * 130; p.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: "translate(" + dx + "px," + dy + "px)", opacity: 0 }], { duration: 900 + Math.random() * 500, easing: "steps(8)" }); (function (el) { setTimeout(function () { el.remove(); }, 1500); })(p); } }
   var tt; function toast(m) { var t = $("#toast"); t.textContent = m; t.className = "toast show"; clearTimeout(tt); tt = setTimeout(function () { t.className = "toast"; }, 1900); }
