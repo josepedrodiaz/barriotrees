@@ -173,11 +173,11 @@
 
 <div class="wtr" id="wtr"><div class="wtr-box">
   <div class="wtr-tree" id="wtrTree"></div>
-  <div class="wtr-title">REGANDO</div>
+  <div class="wtr-title">GUARDANDO TU RIEGO</div>
   <div class="drops" id="drops">💧 💧 💧</div>
   <div class="wtr-bar"><i id="wtrBar"></i></div>
   <div class="dialog"><div class="who">SABÍAS QUE…</div><div class="tip" id="wtrTip"></div></div>
-  <div class="wtr-note">Dejá correr el agua — se registra al terminar</div>
+  <div class="wtr-note">Ya lo regaste ✓ — dale un segundo, lo estamos guardando 💧</div>
 </div></div>
 
 <div class="scrim" id="scrim"><div class="modal panel" id="modal"></div></div>
@@ -304,7 +304,7 @@
     var action;
     if (scanned && t.far) action = '<div class="checks panel fail"><div class="ok">✓ QR VÁLIDO</div><div class="bad">✗ ESTÁS LEJOS (~3,2 KM)</div></div><button class="btn red wide" disabled>NO PODÉS REGAR DE LEJOS</button><div class="lockmsg">El riego solo cuenta si estás EN el árbol. Acercate y volvé a escanear.</div>';
     else if (s.urg === 0 && scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn ghost wide" disabled>ESTE YA ESTÁ FELIZ 🌳</button><div class="lockmsg">Da 0 puntos: mejor buscá uno sediento 👉</div>';
-    else if (scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn green wide" id="water">💧 REGAR (+' + (10 + bonus) + ')</button>';
+    else if (scanned) action = '<div class="checks panel"><div class="ok">✓ QR VÁLIDO</div><div class="ok">✓ ESTÁS A 4 M</div></div><button class="btn green wide" id="water">💧 YA LO REGUÉ (+' + (10 + bonus) + ')</button><div class="lockmsg">Tocá recién cuando terminaste de regarlo</div>';
     else action = '<button class="btn ghost wide" id="scanHere">📷 ESCANEÁ PARA REGAR</button><div class="lockmsg">No se riega desde acá. Andá al árbol y escaneá su chapita.</div>';
     $("#detail").innerHTML = '<button class="back" id="back">◀ VOLVER</button>' +
       '<div class="hero"><div class="big">' + isoTree(s.health, 190) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
@@ -362,8 +362,8 @@
       $("#modal").innerHTML = '<div class="medal">💧</div><h3>TU MISIÓN AHORA</h3><div class="name">REGÁ ESTE ÁRBOL</div>' +
         '<div class="wsteps">' +
         '<div class="wstep"><span class="em">🪣</span><span class="tx"><b>Llená el balde</b> en el bebedero de la plaza</span></div>' +
-        '<div class="wstep"><span class="em">🌳</span><span class="tx"><b>Regá</b> este arbolito con el agua</span></div>' +
-        '<div class="wstep"><span class="em">⭐</span><span class="tx">Recién <b>después de regarlo</b>, tocá REGAR y sumás <b>tus primeros puntos</b></span></div>' +
+        '<div class="wstep"><span class="em">🌳</span><span class="tx"><b>Regá</b> este arbolito con el agua del balde</span></div>' +
+        '<div class="wstep"><span class="em">⭐</span><span class="tx">Cuando terminaste, marcá en la app que <b>ya lo regaste</b> y sumás <b>tus primeros puntos</b></span></div>' +
         '</div>' +
         '<div class="dots"><i></i><i></i><i class="on"></i></div>' +
         '<button class="btn gold close" id="wclose">¡EMPEZAR! 🌱</button>';
