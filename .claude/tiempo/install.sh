@@ -7,8 +7,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-# slug estable a partir del nombre del proyecto (para el Label de launchd)
-SLUG="$(basename "$PROJECT_ROOT" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/-\{1,\}/-/g; s/^-//; s/-$//')"
+# slug estable y legible: si el root es un nombre genérico (wp-content, public,
+# etc, típico de LocalWP), sube hasta el primer ancestro con nombre propio.
+GENERIC=" wp-content public htdocs www app httpdocs web "
+_d="$PROJECT_ROOT"; _name="$(basename "$_d")"
+while [[ "$GENERIC" == *" $_name "* && "$_d" != "/" ]]; do
+  _d="$(dirname "$_d")"; _name="$(basename "$_d")"
+done
+SLUG="$(echo "$_name" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/-\{1,\}/-/g; s/^-//; s/-$//')"
 LABEL="com.claude-tiempo.$SLUG"
 PLIST_DST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
