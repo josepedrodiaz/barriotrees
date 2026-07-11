@@ -56,6 +56,7 @@
 
   /* player HUD */
   .me { padding: 14px; }
+  .me .usr { font-family: var(--pixel); font-size: 12px; color: #fff; text-shadow: 2px 2px 0 #000; margin-bottom: 10px; }
   .me .lvl { font-family: var(--pixel); font-size: 10px; color: var(--gold); text-shadow: 2px 2px 0 #6b4e08; }
   .me .pts { font-family: var(--pixel); font-size: 22px; margin: 10px 0; color: #fff; text-shadow: 3px 3px 0 #000; }
   .me .pts small { font-family: var(--read); font-size: 18px; color: var(--dim); }
@@ -96,7 +97,9 @@
   .hero .big { width: 190px; height: 190px; margin: 0 auto; filter: drop-shadow(4px 6px 0 rgba(0,0,0,.18)); }
   .hero h2 { font-family: var(--pixel); font-size: 16px; margin: 6px 0 6px; color: #fff; text-shadow: 3px 3px 0 #000; }
   .hero .sci { font-size: 16px; color: #2c4a1e; font-style: italic; }
+  .hero .sector { font-size: 15px; color: #2c4a1e; margin-top: 5px; }
   .statline { text-align: center; margin: 12px 0; }
+  .statmsg { font-size: 19px; color: #1d3a12; }
   .days2 { font-size: 17px; color: var(--dim); margin-top: 8px; }
   .card2 { padding: 12px 14px; margin: 14px 0; }
   .card2 .row { display: flex; justify-content: space-between; align-items: center; padding: 7px 2px; font-size: 17px; }
@@ -128,7 +131,7 @@
   .magic .spark.s4 { top: 12px; right: 44%; animation: sparkle 1.3s steps(3) .8s infinite; }
   @keyframes sparkle { 0%,100% { opacity: 0; transform: scale(.3); } 50% { opacity: 1; transform: scale(1); } }
   /* boton de accion protagonico */
-  .btn.act { font-size: 14px; padding: 20px 14px; box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 7px 0 #1c6437; animation: actpulse 1.3s steps(2) infinite; }
+  .btn.act { font-size: 12px; padding: 20px 10px; box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 7px 0 #1c6437; animation: actpulse 1.3s steps(2) infinite; }
   .btn.act:active { transform: translateY(4px); box-shadow: inset 3px 3px 0 #7ee29a, inset -3px -3px 0 #2b9350, 0 3px 0 #1c6437; animation: none; }
   @keyframes actpulse { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.14); } }
 
@@ -224,6 +227,7 @@
 
   var SEED = [{ id: 1, days: 5 }, { id: 2, days: 4 }, { id: 3, days: 6 }, { id: 4, days: 1 }, { id: 5, days: 3 }, { id: 6, days: 2 }, { id: 7, days: 5 }, { id: 8, days: 0 }, { id: 9, days: 3 }, { id: 10, days: 2 },
     { id: 99, days: 4, far: true } /* ÁRBOL DE PRUEBA GPS (lejos) — borrar esta línea después del sábado */];
+  var LEYENDAS = { 1: "Marta", 2: "Coco", 3: "Vale", 4: "Marta", 5: "Tito", 6: "Susi", 7: "Coco", 8: "Naza", 9: "Rulo", 10: "Juli" };
   var state, trees, wateredToday, welcomed;
   function reset() { state = { pts: 0, watered: 0, rescates: 0, badges: [] }; wateredToday = 0; welcomed = false; trees = SEED.map(function (t) { return { id: t.id, days: t.days, far: t.far }; }); show("home"); renderHome(); }
 
@@ -269,14 +273,14 @@
         '<path d="M' + (cx - W) + ' ' + cy + ' L' + cx + ' ' + (cy + H) + ' L' + cx + ' ' + (cy + H + V) + ' L' + (cx - W) + ' ' + (cy + V) + ' Z" fill="' + shade(side, .72) + '"/>' +
         '<path d="M' + (cx + W) + ' ' + cy + ' L' + cx + ' ' + (cy + H) + ' L' + cx + ' ' + (cy + H + V) + ' L' + (cx + W) + ' ' + (cy + V) + ' Z" fill="' + shade(side, .52) + '"/>';
     });
-    return '<svg viewBox="0 0 100 100" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg">' + out + '</svg>';
+    return '<svg viewBox="0 -14 100 114" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg">' + out + '</svg>';
   }
 
   function renderHome() {
     var lv = levelFor(state.pts), nx = nextLevel(state.pts);
     var pct = nx ? Math.round((state.pts - lv.min) / (nx.min - lv.min) * 100) : 100;
     var badges = state.badges.length ? state.badges.map(function (b) { return '<span class="badge">' + b.icon + ' ' + b.name + '</span>'; }).join("") : '<span class="badge empty">SIN LOGROS — ESCANEÁ TU 1ER ÁRBOL</span>';
-    var me = '<div class="me panel"><div class="lvl">NIVEL: ' + lv.n + '</div><div class="pts">' + state.pts + ' <small>PTS</small></div>' +
+    var me = '<div class="me panel"><div class="usr">🙋 SOFI</div><div class="lvl">NIVEL: ' + lv.n + '</div><div class="pts">' + state.pts + ' <small>PTS</small></div>' +
       '<div class="xp"><i style="width:' + pct + '%"></i></div>' +
       (nx ? '<div class="next">Faltan ' + (nx.min - state.pts) + ' para ' + nx.n + '</div>' : '<div class="next">¡NIVEL MÁXIMO!</div>') +
       '<div class="badges">' + badges + '</div></div>';
@@ -331,6 +335,12 @@
   function renderDetail(scanned) {
     var t = trees.filter(function (x) { return x.id === curId; })[0], s = stateOf(t.days);
     var bonus = s.urg >= 3 ? 25 : s.urg === 2 ? 15 : s.urg === 1 ? 5 : 0;
+    var when = t.days === 0 ? "hoy" : t.days === 1 ? "ayer" : "hace " + t.days + " días";
+    var statmsg;
+    if (s.urg === 0) statmsg = 'Está <b style="color:#1c6437">feliz</b> porque fue regado ' + when + '.';
+    else if (s.urg === 1) statmsg = 'Está <b style="color:#8a5a10">bien</b>: fue regado ' + when + '.';
+    else if (s.urg === 2) statmsg = 'Está <b style="color:#a82c30">sediento</b>: hace ' + t.days + ' días que nadie lo riega.';
+    else statmsg = '¡Está <b style="color:#a82c30">muy sediento</b>! Hace ' + t.days + ' días que nadie lo riega.';
     var action;
     if (scanned && t.far) action = '<div class="magic panel fail">' +
         '<div class="mh">🔒 ESTE RIEGO NO CONTARÍA</div>' +
@@ -340,26 +350,26 @@
         '<div class="lockmsg">Para que cuente tenés que estar al pie del árbol — así nadie suma puntos de mentira. Acercate y escaneá su chapita.</div>';
     else if (s.urg === 0 && scanned) action = '<div class="magic panel">' +
         '<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>' +
-        '<div class="mr"><span class="e">💧</span>Ya tomó suficiente agua</div></div>' +
-        '<button class="btn ghost wide" disabled>NO NECESITA AGUA AHORA</button>' +
-        '<div class="lockmsg">Regarlo de más no suma. Buscá uno sediento 👉</div>';
+        '<div class="mr"><span class="e">💧</span>Fue regado ' + when + ' — ya tomó suficiente agua</div></div>' +
+        '<div class="lockmsg">🚫 Regarlo de más no suma. Buscá uno sediento 👉</div>';
     else if (scanned) action = '<div class="magic panel">' +
         '<span class="spark s1">✦</span><span class="spark s2">✦</span><span class="spark s3">✦</span><span class="spark s4">✦</span>' +
         '<div class="mh">✨ EL ÁRBOL TE RECONOCIÓ ✨</div>' +
         '<div class="mr"><span class="e">🌳</span>Sabe que sos vos, en este jacarandá</div>' +
         '<div class="mr"><span class="e">📍</span>Y siente que estás a su lado</div></div>' +
-        '<button class="btn green wide act" id="water">💧 YA LO REGUÉ &nbsp;+' + (10 + bonus) + '</button>' +
+        '<button class="btn green wide act" id="water">💧 YA REGUÉ ESTE ÁRBOL (+' + (10 + bonus) + ')</button>' +
         '<div class="lockmsg">Tocá recién cuando terminaste de regarlo</div>';
     else action = '<div class="magic panel fail">' +
         '<div class="mh">🔒 PARA REGAR, ESCANEÁ SU CHAPITA</div>' +
         '<div class="mr no"><span class="e">📷</span>El árbol te reconoce de cerca, no a distancia</div></div>' +
-        '<button class="btn ghost wide" id="scanHere">📷 ESCANEAR CHAPITA</button>' +
+        '<button class="btn ghost wide" id="scanHere">📷 ESCANEAR QR</button>' +
         '<div class="lockmsg">Desde el sillón no se riega. Andá al árbol y escaneá.</div>';
+    var hideStat = s.urg === 0 && scanned;
     $("#detail").innerHTML = '<button class="back" id="back">◀ VOLVER</button>' +
-      '<div class="hero"><div class="big">' + isoTree(s.health, 150) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div></div>' +
-      '<div class="statline"><span class="chip ' + s.cls + '" style="font-size:9px;padding:6px 10px">' + s.label + '</span><div class="days2">Último riego: hace ' + t.days + ' día' + (t.days === 1 ? "" : "s") + '</div></div>' +
+      '<div class="hero"><div class="big">' + isoTree(s.health, 150) + '</div><h2>' + nameOf(t) + '</h2><div class="sci">Jacaranda mimosifolia</div><div class="sector">📍 Galería central</div></div>' +
+      (hideStat ? '' : '<div class="statline"><div class="statmsg">' + statmsg + '</div></div>') +
       action +
-      '<div class="card2 panel"><div class="row"><span class="k">Leyenda del árbol</span><span class="v" style="color:var(--dim)">— pronto 🚩</span></div><div class="row"><span class="k">Sector</span><span class="v">Galería central</span></div></div>';
+      '<div class="card2 panel"><div class="row"><span class="k">Leyenda del árbol</span><span class="v">' + (LEYENDAS[t.id] ? '🚩 ' + LEYENDAS[t.id] : '<span style="color:var(--dim)">— pronto 🚩</span>') + '</span></div></div>';
     $("#back").addEventListener("click", function () { show("home"); renderHome(); });
     if ($("#water")) $("#water").addEventListener("click", startWatering);
     if ($("#scanHere")) $("#scanHere").addEventListener("click", function () { scanFlow(t.id); });
@@ -378,11 +388,11 @@
     "Un buen riego moja la tierra, no las hojas."
   ];
   function startWatering() {
-    var DUR = 7000, bar = $("#wtrBar"), tip = $("#wtrTip"), i = Math.floor(Math.random() * TIPS.length);
+    var DUR = 11000, bar = $("#wtrBar"), tip = $("#wtrTip"), i = Math.floor(Math.random() * TIPS.length);
     $("#wtrTree").innerHTML = isoTree(.16, 150);
     tip.textContent = TIPS[i]; $("#wtr").className = "wtr on"; bar.style.transition = "none"; bar.style.width = "0%";
-    var grow = 0, gi = setInterval(function () { grow += .075; if (grow > 1) grow = 1; $("#wtrTree").innerHTML = isoTree(.16 + .84 * grow, 150); }, 500);
-    var ti = setInterval(function () { var j; do { j = Math.floor(Math.random() * TIPS.length); } while (j === i); i = j; tip.style.animation = "none"; tip.offsetHeight; tip.style.animation = "tipin .35s steps(3)"; tip.textContent = TIPS[i]; }, 3400);
+    var grow = 0, gi = setInterval(function () { grow += .05; if (grow > 1) grow = 1; $("#wtrTree").innerHTML = isoTree(.16 + .84 * grow, 150); }, 500);
+    var ti = setInterval(function () { var j; do { j = Math.floor(Math.random() * TIPS.length); } while (j === i); i = j; tip.style.animation = "none"; tip.offsetHeight; tip.style.animation = "tipin .35s steps(3)"; tip.textContent = TIPS[i]; }, 5200);
     setTimeout(function () { bar.style.transition = "width " + DUR + "ms steps(28)"; bar.style.width = "100%"; }, 40);
     setTimeout(function () { clearInterval(ti); clearInterval(gi); $("#wtr").className = "wtr"; applyWater(); }, DUR + 80);
   }
@@ -405,31 +415,41 @@
   function welcomeModal() { welcomeStep(1); $("#scrim").className = "scrim on"; }
   function welcomeStep(n) {
     if (n === 1) {
-      $("#modal").innerHTML = '<div class="medal">🌳</div><h3>BIENVENIDO A</h3><div class="name">ÁRBOLES GIGANTES</div>' +
-        '<p>Escaneaste un jacarandá real de la plaza. Es un juego del barrio para cuidar entre todos los árboles jóvenes: los regás y crecen. 🌱</p>' +
+      $("#modal").innerHTML = '<div class="medal">🌳</div><h3>LLEGASTE A</h3><div class="name">ÁRBOLES GIGANTES</div>' +
+        '<p>Este es un juego del barrio para cuidar entre todos a los árboles y hacerlos crecer. 🌱</p>' +
         '<div class="dots"><i class="on"></i><i></i><i></i></div>' +
         '<button class="btn gold close" id="wnext">SIGUIENTE ▶</button>';
       $("#wnext").addEventListener("click", function () { welcomeStep(2); });
     } else if (n === 2) {
-      $("#modal").innerHTML = '<div class="medal">🏅</div><h3>REGÁS Y GANÁS</h3><div class="name">PREMIOS DE VERDAD</div>' +
+      var t = trees.filter(function (x) { return x.id === curId; })[0];
+      $("#modal").innerHTML = '<div class="medal">💧</div><h3>ESCANEASTE</h3><div class="name">' + (t ? nameOf(t) : "UN ÁRBOL") + '</div>' +
+        '<h3>TU MISIÓN AHORA ES</h3><div class="name" style="font-size:12px">REGAR ESTE ÁRBOL</div>' +
         '<div class="wsteps">' +
-        '<div class="wstep"><span class="em">📌</span><span class="tx">El <b>pin</b> que ganás en el juego <b>te lo damos en la vida real</b></span></div>' +
-        '<div class="wstep"><span class="em">🤝</span><span class="tx"><b>Logros</b>: sé el tutor del árbol que más cuidás</span></div>' +
+        '<div class="wstep"><span class="em">🪣</span><span class="tx"><b>Llená el balde</b> en el bebedero de la plaza</span></div>' +
+        '<div class="wstep"><span class="em">🌳</span><span class="tx"><b>Regá</b> este arbolito con el agua del balde</span></div>' +
+        '<div class="wstep"><span class="em">⭐</span><span class="tx">Cuando termines, tocá el botón <b>YA REGUÉ ESTE ÁRBOL</b>. Felicitaciones: ¡ya sumaste tus primeros puntos!</span></div>' +
         '</div>' +
         '<div class="dots"><i></i><i class="on"></i><i></i></div>' +
         '<button class="btn gold close" id="wnext2">SIGUIENTE ▶</button>';
       $("#wnext2").addEventListener("click", function () { welcomeStep(3); });
     } else {
-      $("#modal").innerHTML = '<div class="medal">💧</div><h3>TU MISIÓN AHORA</h3><div class="name">REGÁ ESTE ÁRBOL</div>' +
+      $("#modal").innerHTML = '<div class="pinbadge">' + pinSVG(96) + '</div><h3>REGÁS Y GANÁS</h3><div class="name">INSIGNIAS EN LA VIDA REAL</div>' +
         '<div class="wsteps">' +
-        '<div class="wstep"><span class="em">🪣</span><span class="tx"><b>Llená el balde</b> en el bebedero de la plaza</span></div>' +
-        '<div class="wstep"><span class="em">🌳</span><span class="tx"><b>Regá</b> este arbolito con el agua del balde</span></div>' +
-        '<div class="wstep"><span class="em">⭐</span><span class="tx">Cuando terminaste, marcá en la app que <b>ya lo regaste</b> y sumás <b>tus primeros puntos</b></span></div>' +
+        '<div class="wstep"><span class="em">' + handSproutSVG(32) + '</span><span class="tx">Cuando <b>cuidás los árboles</b> sumás puntos para lograr tu próxima insignia</span></div>' +
+        '<div class="wstep"><span class="em">' + pinSVG(26) + '</span><span class="tx">Cada insignia que ganes en el juego <b>te la damos en la vida real</b></span></div>' +
         '</div>' +
         '<div class="dots"><i></i><i></i><i class="on"></i></div>' +
         '<button class="btn gold close" id="wclose">¡EMPEZAR! 🌱</button>';
       $("#wclose").addEventListener("click", function () { $("#scrim").className = "scrim"; });
     }
+  }
+  function handSproutSVG(px) {
+    return '<svg viewBox="0 0 32 32" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="15" y="9" width="2" height="9" fill="#2b9350"/>' +
+      '<path d="M16 11 C 10 7, 5 11, 11 14 C 14 15, 16 13, 16 11 Z" fill="#46C36A" stroke="#2b9350" stroke-width="1"/>' +
+      '<path d="M16 10 C 22 6, 27 10, 21 13 C 18 14, 16 12, 16 10 Z" fill="#46C36A" stroke="#2b9350" stroke-width="1"/>' +
+      '<path d="M6 21 Q 5 18 8 19 L 13 20 Q 16 17 19 20 L 24 19 Q 27 18 26 21 L 25 26 Q 16 31 7 26 Z" fill="#E8B98A" stroke="#a97c4f" stroke-width="1.3"/>' +
+      '</svg>';
   }
   function pinSVG(px) {
     var h = Math.round(px * 128 / 120);
