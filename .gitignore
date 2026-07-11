@@ -1,0 +1,9 @@
+.DS_Store
+.playwright-mcp/
+.mcp.json
+.claude/settings.local.json
+.claude/tiempo/state.json
+.claude/tiempo/heartbeat.txt
+.claude/tiempo/daemon.out
+.claude/tiempo/daemon.err
+.claude/tiempo/daemon.log
