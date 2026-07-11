@@ -1,0 +1,5 @@
+state.json
+heartbeat.txt
+daemon.log
+daemon.out
+daemon.err
