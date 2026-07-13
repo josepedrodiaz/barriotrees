@@ -69,7 +69,7 @@ Tipo "Leyenda" de Strava: quien más regó un árbol / el barrio en los últimos
 
 ## Canje de pines
 
-Al ganar cualquier insignia (escalera o mérito), la app muestra un **QR de canje único**. El que entrega los pines (comisión) lo escanea con la herramienta validadora: válido → pin en mano → marcado como canjeado. Imposible cobrar dos veces. (A definir: validador en MVP para el evento del 21/09, o v1.1 con marcado manual en el admin.)
+Al ganar cualquier insignia (escalera o mérito), la app muestra un **QR de canje único**. El que entrega los pines (comisión) lo escanea con la herramienta validadora: válido → pin en mano → marcado como canjeado. Imposible cobrar dos veces. **Entra al MVP**: es la mecánica de entrega del evento del 21/09.
 
 ## Anti-trampa (los números)
 
@@ -88,4 +88,5 @@ Todo del lado del servidor: el cliente no puede otorgar puntos ni insignias.
 2. Umbrales de puntos de la escalera — ¿la curva se siente bien?
 3. Valores de puntos por riego — ¿25 por rescate es suficiente zanahoria?
 4. ¿Rescatista con N=5 está bien?
-5. ¿El validador de canje entra al MVP o marcamos a mano en el evento?
+
+(Resuelta: el validador de canje por QR entra al MVP — es la mecánica de entrega del evento.)
