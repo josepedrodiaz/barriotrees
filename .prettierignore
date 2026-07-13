@@ -1,0 +1,16 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Miscellaneous
+/static/
+
+# Legado pre-app (demo, QRs, planos) — no lo formatea Prettier
+/tools/
+/qr/
+/docs/
+/.claude/
+CLAUDE.md

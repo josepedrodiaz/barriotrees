@@ -1,0 +1,480 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-imageoverlay-rotated@0.2.0/Leaflet.ImageOverlay.Rotated.js"></script>
+
+<style>
+  :root {
+    --paper: #F4F1EA; --card: #FFFFFF; --ink: #1E1B26; --muted: #6E697A; --hair: #E5E0D6;
+    --accent: #6B4FBF; --accent-strong: #543399; --accent-soft: #EFEAFB; --accent-line: #DCD2F4;
+    --good: #2E9E5B; --warn: #E0912F; --crit: #CC4433;
+    --shadow: 0 1px 2px rgba(30,27,38,.05), 0 6px 20px rgba(30,27,38,.06);
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; line-height: 1.45; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 12px 110px; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+  header { position: sticky; top: 0; z-index: 1200; background: rgba(244,241,234,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); padding: 12px; margin: 0 -12px 12px; }
+  header .hwrap { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  h1 { font-size: 16px; margin: 0; letter-spacing: -.015em; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  h1 small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); letter-spacing: 0; margin-top: 1px; }
+  .count { font-size: 13px; font-weight: 800; color: var(--accent-strong); background: var(--accent-soft); border: 1px solid var(--accent-line); padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: var(--r); padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .card > .title { font-size: 15px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 2px; }
+  .card > .sub { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+  .label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 6px; }
+
+  #map { height: 54vh; min-height: 320px; width: 100%; border-radius: var(--r); border: 1px solid var(--hair); box-shadow: var(--shadow); background: #dfe3e6; }
+  .maptools { display: flex; gap: 8px; margin: 10px 0 2px; align-items: stretch; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 8px 2px 0; }
+  .hint b { color: var(--ink); font-weight: 700; }
+
+  input, select, textarea { width: 100%; font: inherit; color: var(--ink); background: #FBFAF7; border: 1.5px solid var(--hair); border-radius: 12px; padding: 11px 12px; -webkit-appearance: none; appearance: none; }
+  select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%236E697A' stroke-width='1.7' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+  textarea { min-height: 54px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .field { margin-bottom: 11px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .inline { display: flex; align-items: center; gap: 10px; }
+  .inline input[type=checkbox] { width: 22px; height: 22px; flex: none; accent-color: var(--accent); }
+  .inline .label { margin: 0; }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 8px; padding: 0; border: none; border-radius: 999px; background: var(--accent-line); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+
+  button { font: inherit; cursor: pointer; border: none; border-radius: 12px; }
+  .btn { padding: 12px 14px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(107,79,191,.3); }
+  .btn-primary:active { background: var(--accent-strong); }
+  .btn-ghost { background: #F1EEE7; color: var(--ink); } .btn-ghost:active { background: #E8E4DB; }
+  .btn-sm { padding: 9px 12px; font-size: 13px; font-weight: 600; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grow { flex: 1; }
+
+  .modebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--hair); border-radius: 12px; background: var(--card); margin-bottom: 12px; box-shadow: var(--shadow); }
+  .modebar.on { background: #FBF0DF; border-color: #F0DDBB; }
+  .modebar.on .label { color: #8a5a00; }
+
+  #editor { display: none; } #editor.on { display: block; }
+  .edhead { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+  .edhead i { width: 15px; height: 15px; border-radius: 5px; flex: none; }
+  .edhead b { font-size: 15px; font-weight: 800; }
+
+  .pin { width: 26px; height: 26px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; }
+  .pin span { transform: rotate(45deg); color: #fff; font-size: 11px; font-weight: 800; font-family: ui-monospace, monospace; text-shadow: 0 1px 1px rgba(0,0,0,.4); }
+  .pin.sel { box-shadow: 0 0 0 4px rgba(107,79,191,.55), 0 2px 5px rgba(0,0,0,.4); }
+  .pin.draft { box-shadow: 0 0 0 5px rgba(107,79,191,.4), 0 2px 6px rgba(0,0,0,.45); animation: drop .45s ease; }
+  @keyframes drop { 0% { transform: rotate(-45deg) scale(.3); } 60% { transform: rotate(-45deg) scale(1.15); } 100% { transform: rotate(-45deg) scale(1); } }
+  .me-dot { width: 16px; height: 16px; border-radius: 50%; background: #2b7de9; border: 3px solid #fff; box-shadow: 0 0 0 3px rgba(43,125,233,.3); }
+  .phandle { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 800; }
+  @media (prefers-reduced-motion: reduce) { .pin.draft { animation: none; } }
+
+  ul.trees { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .tree { border: 1px solid var(--hair); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+  .tree .sw { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .tree .body { flex: 1; min-width: 0; }
+  .tree .sp { font-weight: 700; font-size: 14px; } .tree .tag { color: var(--accent-strong); }
+  .tree .meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .iconbtn { background: #F1EEE7; color: var(--muted); font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 9px; }
+  .empty { color: var(--muted); font-size: 13.5px; text-align: center; padding: 14px 10px; line-height: 1.5; }
+  details > summary { cursor: pointer; font-weight: 800; font-size: 14px; letter-spacing: -.01em; list-style: none; display: flex; align-items: center; gap: 6px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "›"; font-size: 18px; color: var(--muted); transition: transform .2s; display: inline-block; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  .sp-row { border: 1px solid var(--hair); border-radius: 12px; padding: 9px; margin-bottom: 8px; }
+  .sp-row .sp-c { font-weight: 700; margin-bottom: 6px; }
+  .sp-row .r1 { display: flex; gap: 6px; align-items: center; }
+  .sp-row .r1 input[type=color] { width: 42px; height: 40px; flex: none; padding: 2px; border-radius: 9px; }
+  .sp-row .sp-del { flex: none; background: #F7E7E4; color: var(--crit); font-weight: 800; padding: 10px 13px; border-radius: 9px; }
+
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 13.5px; font-weight: 600; opacity: 0; transition: all .25s; pointer-events: none; z-index: 3000; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hwrap">
+      <h1>🌳 Relevamiento<small>Plaza Gigante del Oeste · Árboles Gigantes</small></h1>
+      <span class="count" id="count">0</span>
+    </div>
+  </header>
+
+  <div class="modebar" id="modebar">
+    <label class="inline" style="margin:0; cursor:pointer">
+      <input type="checkbox" id="testMode">
+      <span class="label" style="margin:0" id="modeText">Modo prueba — practicá sin ensuciar el relevamiento real</span>
+    </label>
+    <button class="btn btn-ghost btn-sm" id="clearTest" style="display:none">Vaciar prueba</button>
+  </div>
+
+  <div id="map"></div>
+  <div class="maptools">
+    <button class="btn btn-primary grow" id="addGps">➕ Poner árbol acá (GPS)</button>
+    <button class="btn btn-ghost btn-sm" id="locate" title="Centrar en mí">📍</button>
+    <button class="btn btn-ghost btn-sm" id="baseBtn">🛰️</button>
+  </div>
+  <p class="hint" id="hint">Poné un pin de <b>prueba</b> con el botón (lo sugiere el GPS) o tocando el mapa. <b>No se guarda</b> hasta que toques Guardar; movelo o arrastralo para dejarlo justo. Tocá un pin guardado para editarlo.</p>
+
+  <div class="card" id="planCard">
+    <p class="title">🗺️ Plano de la plaza</p>
+    <p class="sub">Superponé el plano sobre el satélite para saber qué especie es cada árbol.</p>
+    <label class="inline" style="cursor:pointer">
+      <input type="checkbox" id="planToggle">
+      <span class="label" style="margin:0">Mostrar el plano encima del mapa</span>
+    </label>
+    <div id="planCtl" style="display:none; margin-top:12px">
+      <span class="label">Transparencia</span>
+      <input type="range" id="planOpacity" min="10" max="100" value="55">
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-ghost btn-sm grow" id="planAdjust">Bloquear posición</button>
+      </div>
+      <p class="hint">Arrastrá las <b>3 esquinas violetas</b> (↖ ↗ ↙) para calzar el plano sobre la plaza real. Se guarda solo; lo hacés una vez.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="title">Los pines nuevos usan</p>
+    <p class="sub">Elegí una vez y todos los que pongas arrancan así.</p>
+    <div class="row2">
+      <div class="field"><span class="label">Especie</span><select id="defEspecie"></select></div>
+      <div class="field"><span class="label">Sector</span><select id="defSector"></select></div>
+    </div>
+    <label class="inline" style="cursor:pointer">
+      <input type="checkbox" id="autoNum" checked>
+      <span class="label" style="margin:0">Numerar automático · próximo N.º</span>
+      <input class="mono" id="nextNum" inputmode="numeric" value="1" style="width:70px; text-align:center">
+    </label>
+  </div>
+
+  <div class="card" id="editor">
+    <div class="edhead"><i id="edsw"></i><b id="edtitle">Árbol</b></div>
+    <div class="row2">
+      <div class="field"><span class="label">Especie</span><select id="edEspecie"></select></div>
+      <div class="field"><span class="label">N.º / etiqueta</span><input id="edEtiqueta"></div>
+    </div>
+    <div class="field"><span class="label">Sector</span><select id="edSector"></select></div>
+    <div class="field"><span class="label">Nota</span><textarea id="edNota" placeholder="Observaciones, dudas de especie…"></textarea></div>
+    <div class="field mono" id="edCoords" style="font-size:12px; color:var(--muted)"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary grow" id="edSave">✓ Guardar árbol</button>
+      <button class="btn btn-ghost grow" id="edCancel">Cancelar</button>
+      <button class="btn btn-ghost grow" id="edClose">Listo</button>
+      <button class="btn btn-ghost grow" id="edDel" style="color:var(--crit)">Borrar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <details id="listDetails">
+      <summary>Árboles cargados (<span id="count2">0</span>)</summary>
+      <ul class="trees" id="list" style="margin-top:12px"></ul>
+      <div class="empty" id="empty">Todavía no pusiste ningún árbol.<br>Tocá <b>➕ Poner árbol acá</b> para arrancar.</div>
+    </details>
+  </div>
+
+  <div class="card">
+    <details id="spDetails">
+      <summary>Especies</summary>
+      <p class="sub" style="margin:8px 0 4px">Agregá, renombrá, cambiá el color del pin o borrá.</p>
+      <div id="spList"></div>
+      <button class="btn btn-ghost btn-sm" id="spAdd" style="margin-top:4px">+ Agregar especie</button>
+      <p class="hint">Renombrar también actualiza los árboles ya cargados. Borrar no los toca.</p>
+    </details>
+  </div>
+
+  <div class="card">
+    <details id="dataDetails">
+      <summary>Guardar y compartir datos</summary>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm grow" id="expJson">⬇︎ JSON</button>
+        <button class="btn btn-ghost btn-sm grow" id="expCsv">⬇︎ CSV</button>
+        <button class="btn btn-ghost btn-sm grow" id="copyJson">Copiar</button>
+      </div>
+      <div style="margin-top:12px">
+        <span class="label">Combinar el JSON de otra persona</span>
+        <textarea id="impBox" class="mono" placeholder='[{"especie":"Jacarandá",…}]' style="min-height:44px"></textarea>
+        <div class="btn-row" style="margin-top:8px">
+          <button class="btn btn-ghost btn-sm grow" id="impBtn">Combinar (sin duplicar)</button>
+          <button class="btn btn-ghost btn-sm" id="clearAll" style="color:var(--crit)">Borrar todo</button>
+        </div>
+      </div>
+      <p class="hint">Se guarda solo en este teléfono. Descargá el JSON seguido para respaldar. El mapa y el plano necesitan internet.</p>
+    </details>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY_REAL = "bt_relevamiento_v2", KEY_TEST = "bt_relevamiento_test", KEY_SP = "bt_especies_v1", KEY_PLAN = "bt_plan_align_v1";
+  var testMode = false;
+  function activeKey() { return testMode ? KEY_TEST : KEY_REAL; }
+  var DEFAULT_CENTER = [-34.9298, -57.9920], DEFAULT_ZOOM = 18;
+  var PLAN_SRC = "plano.png", PLAN_AR = 3509 / 2482;
+
+  function defaultSpecies() { return [
+    { c: "Jacarandá", s: "Jacaranda mimosifolia", col: "#6B4FBF" },
+    { c: "Lapacho rosado", s: "Tabebuia impetiginosa", col: "#D46A9F" },
+    { c: "Fresno rojo", s: "Fraxinus pennsylvanica", col: "#C0533B" },
+    { c: "Tipa", s: "Tipuana tipu", col: "#E0A32E" },
+    { c: "Kiri", s: "Paulownia tomentosa", col: "#8E7CC3" },
+    { c: "Liquidámbar", s: "Liquidambar styraciflua", col: "#B5482E" },
+    { c: "Pezuña de vaca", s: "Bauhinia forficata", col: "#4C9A6A" },
+    { c: "Pezuña de vaca rosa", s: "Bauhinia variegata", col: "#D67AB0" },
+    { c: "Palmera washingtonia", s: "Washingtonia filifera", col: "#7A8B4A" },
+    { c: "Ciruelo de jardín", s: "Prunus cerasifera", col: "#7E3F52" },
+    { c: "Mandarino", s: "Citrus reticulata", col: "#E88A2E" },
+    { c: "Naranjo", s: "Citrus x sinensis", col: "#E4761F" },
+    { c: "Pomelo", s: "Citrus x paradisi", col: "#E0B23A" },
+    { c: "Damasco", s: "Prunus armeniaca", col: "#D98C4A" },
+    { c: "Ginkgo", s: "Ginkgo biloba", col: "#C9A227" },
+    { c: "Preexistencia / otro", s: "", col: "#8A8676" },
+    { c: "Desconocida", s: "", col: "#B0ABA0" }
+  ]; }
+  var SECTORS = ["Galería central (jacarandás)", "Sector A", "Sector B", "Perimetral 49 bis", "Perimetral 50", "Perimetral 174 bis", "Perimetral 175 bis", "Otro"];
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function loadSpecies() { try { var d = JSON.parse(localStorage.getItem(KEY_SP)); if (d && d.length) return d; } catch (e) {} return defaultSpecies(); }
+  function saveSpecies() { try { localStorage.setItem(KEY_SP, JSON.stringify(SPECIES)); } catch (e) {} }
+  function loadFor(k) {
+    try { var d = JSON.parse(localStorage.getItem(k)); if (d && d.length) return d; } catch (e) {}
+    if (k === KEY_REAL) { try { var o = JSON.parse(localStorage.getItem("bt_relevamiento_v1")); if (o && o.length) return o; } catch (e) {} }
+    return [];
+  }
+  function persist() { try { localStorage.setItem(activeKey(), JSON.stringify(data)); } catch (e) {} }
+  function byId(id) { for (var i = 0; i < data.length; i++) if (data[i].id === id) return data[i]; return null; }
+  function distM(la1, ln1, la2, ln2) { var R = 6371000, t = Math.PI / 180, dLa = (la2 - la1) * t, dLn = (ln2 - ln1) * t; var x = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(la1 * t) * Math.cos(la2 * t) * Math.sin(dLn / 2) * Math.sin(dLn / 2); return 2 * R * Math.asin(Math.sqrt(x)); }
+  function colorFor(c) { for (var i = 0; i < SPECIES.length; i++) if (SPECIES[i].c === c) return SPECIES[i].col; return "#8A8676"; }
+  function sciFor(c) { for (var i = 0; i < SPECIES.length; i++) if (SPECIES[i].c === c) return SPECIES[i].s; return ""; }
+
+  var SPECIES = loadSpecies();
+  var data = loadFor(KEY_REAL);
+  var markers = {}, selId = null, meMarker = null;
+
+  // ---- selects ----
+  function fillSelect(el, arr) { arr.forEach(function (v) { var o = document.createElement("option"); o.value = v; o.textContent = v; el.appendChild(o); }); }
+  function refillSpecies() {
+    [$("defEspecie"), $("edEspecie")].forEach(function (el) {
+      var keep = el.value; el.innerHTML = "";
+      SPECIES.forEach(function (sp) { var o = document.createElement("option"); o.value = sp.c; o.textContent = sp.c + (sp.s ? "  ·  " + sp.s : ""); el.appendChild(o); });
+      if (keep) { for (var i = 0; i < el.options.length; i++) if (el.options[i].value === keep) { el.value = keep; break; } }
+    });
+  }
+  refillSpecies();
+  fillSelect($("defSector"), SECTORS); fillSelect($("edSector"), SECTORS);
+  $("defEspecie").value = "Jacarandá"; $("defSector").value = "Galería central (jacarandás)";
+
+  // ---- map ----
+  var map = L.map("map", { zoomControl: true, tap: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+  var sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 21, maxNativeZoom: 19, attribution: "Imagery © Esri" });
+  var street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" });
+  sat.addTo(map);
+  var baseSat = true;
+  $("baseBtn").addEventListener("click", function () {
+    baseSat = !baseSat;
+    if (baseSat) { map.removeLayer(street); sat.addTo(map); this.textContent = "🛰️"; }
+    else { map.removeLayer(sat); street.addTo(map); this.textContent = "🗺️"; }
+  });
+
+  function pinIcon(rec, sel) { return L.divIcon({ className: "", iconSize: [26, 26], iconAnchor: [13, 25], html: '<div class="pin ' + (sel ? "sel" : "") + '" style="background:' + colorFor(rec.especie) + '"><span>' + esc(rec.etiqueta || "") + '</span></div>' }); }
+  function addMarker(rec) {
+    var m = L.marker([rec.lat, rec.lng], { icon: pinIcon(rec, false), draggable: true });
+    m.on("click", function () { select(rec.id); });
+    m.on("dragend", function () { var ll = m.getLatLng(); rec.lat = ll.lat; rec.lng = ll.lng; persist(); if (selId === rec.id) showCoords(rec); renderList(); });
+    m.addTo(map); markers[rec.id] = m;
+  }
+  function refreshMarker(rec) { var m = markers[rec.id]; if (m) m.setIcon(pinIcon(rec, selId === rec.id)); }
+  function refreshAllMarkers() { data.forEach(function (r) { if (markers[r.id]) markers[r.id].setIcon(pinIcon(r, selId === r.id)); }); }
+
+  // ---- draft + editor ----
+  var draft = null, draftMarker = null;
+  function draftIcon() { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 29], html: '<div class="pin draft" style="background:' + colorFor(draft.especie) + '"><span>' + esc(draft.etiqueta || "") + '</span></div>' }); }
+  function startDraft(lat, lng, src) {
+    closeEditor();
+    draft = { especie: $("defEspecie").value, sector: $("defSector").value, etiqueta: $("autoNum").checked ? String($("nextNum").value || "").trim() : "", nota: "", lat: lat, lng: lng, src: src };
+    draftMarker = L.marker([lat, lng], { icon: draftIcon(), draggable: true, zIndexOffset: 1000 });
+    draftMarker.on("dragend", function () { var ll = draftMarker.getLatLng(); draft.lat = ll.lat; draft.lng = ll.lng; showCoords(draft); });
+    draftMarker.addTo(map); openEditor(draft, true);
+  }
+  function moveDraft(lat, lng) { draft.lat = lat; draft.lng = lng; draftMarker.setLatLng([lat, lng]); showCoords(draft); }
+  function saveDraft() {
+    if (!draft) return;
+    var rec = { id: Date.now() + "-" + Math.floor(Math.random() * 1000), etiqueta: (draft.etiqueta || "").trim(), especie: draft.especie, cientifico: sciFor(draft.especie), sector: draft.sector, nota: draft.nota, lat: draft.lat, lng: draft.lng, acc: null, src: draft.src, ts: new Date().toISOString() };
+    data.push(rec); persist(); addMarker(rec); renderList();
+    if ($("autoNum").checked) { var n = parseInt(rec.etiqueta, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
+    closeEditor(); toast("Árbol " + (rec.etiqueta ? "#" + rec.etiqueta : data.length) + " guardado ✓");
+  }
+  function select(id) { closeEditor(); selId = id; var rec = byId(id); if (!rec) return; refreshMarker(rec); openEditor(rec, false); map.panTo([rec.lat, rec.lng]); }
+  function closeEditor() { if (draftMarker) { map.removeLayer(draftMarker); draftMarker = null; } draft = null; if (selId && byId(selId)) refreshMarker(byId(selId)); selId = null; $("editor").classList.remove("on"); }
+  function showCoords(o) { $("edCoords").textContent = o.lat.toFixed(6) + ", " + o.lng.toFixed(6); }
+  function openEditor(obj, isDraft) {
+    $("editor").classList.add("on");
+    $("edEspecie").value = obj.especie; $("edEtiqueta").value = obj.etiqueta || "";
+    $("edSector").value = obj.sector || SECTORS[0]; $("edNota").value = obj.nota || "";
+    $("edsw").style.background = colorFor(obj.especie);
+    $("edtitle").textContent = isDraft ? "Nuevo árbol · sin guardar" : (obj.etiqueta ? "Árbol #" + obj.etiqueta : "Árbol sin número");
+    showCoords(obj);
+    $("edSave").style.display = isDraft ? "" : "none"; $("edCancel").style.display = isDraft ? "" : "none";
+    $("edClose").style.display = isDraft ? "none" : ""; $("edDel").style.display = isDraft ? "none" : "";
+    $("editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function curObj() { return draft ? draft : byId(selId); }
+  function afterEdit(o) { if (draft) draftMarker.setIcon(draftIcon()); else { persist(); refreshMarker(o); renderList(); } }
+  $("edEspecie").addEventListener("change", function () { var o = curObj(); if (!o) return; o.especie = this.value; o.cientifico = sciFor(this.value); $("defEspecie").value = this.value; $("edsw").style.background = colorFor(this.value); afterEdit(o); });
+  $("edEtiqueta").addEventListener("input", function () { var o = curObj(); if (!o) return; o.etiqueta = this.value.trim(); if (!draft) $("edtitle").textContent = o.etiqueta ? "Árbol #" + o.etiqueta : "Árbol sin número"; afterEdit(o); });
+  $("edSector").addEventListener("change", function () { var o = curObj(); if (!o) return; o.sector = this.value; $("defSector").value = this.value; if (!draft) { persist(); renderList(); } });
+  $("edNota").addEventListener("input", function () { var o = curObj(); if (!o) return; o.nota = this.value; if (!draft) persist(); });
+  $("edSave").addEventListener("click", saveDraft);
+  $("edCancel").addEventListener("click", function () { closeEditor(); toast("Descartado"); });
+  $("edClose").addEventListener("click", closeEditor);
+  $("edDel").addEventListener("click", function () { var o = byId(selId); if (!o) return; if (!confirm("¿Borrar este árbol?")) return; if (markers[o.id]) { map.removeLayer(markers[o.id]); delete markers[o.id]; } data = data.filter(function (x) { return x.id !== o.id; }); closeEditor(); persist(); renderList(); });
+
+  function meIcon() { return L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }); }
+  function showMe(ll) { if (!meMarker) meMarker = L.marker(ll, { icon: meIcon(), interactive: false }).addTo(map); else meMarker.setLatLng(ll); }
+  map.on("click", function (e) { if (draft) moveDraft(e.latlng.lat, e.latlng.lng); else startDraft(e.latlng.lat, e.latlng.lng, "mapa"); });
+  $("addGps").addEventListener("click", function () {
+    if (!navigator.geolocation) { toast("Sin GPS — tocá el mapa"); return; }
+    toast("Ubicándote…");
+    navigator.geolocation.getCurrentPosition(function (p) {
+      var ll = [p.coords.latitude, p.coords.longitude];
+      showMe(ll); map.setView(ll, Math.max(map.getZoom(), 19));
+      if (draft) moveDraft(ll[0], ll[1]); else startDraft(ll[0], ll[1], "gps");
+      toast("Sugerido por GPS (±" + Math.round(p.coords.accuracy) + " m). Arrastralo y Guardá.");
+    }, function () { toast("No pude leer el GPS — tocá el mapa"); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+  $("locate").addEventListener("click", function () {
+    if (!navigator.geolocation) { toast("Sin GPS en este navegador"); return; }
+    toast("Buscando tu ubicación…");
+    navigator.geolocation.getCurrentPosition(function (p) { var ll = [p.coords.latitude, p.coords.longitude]; map.setView(ll, 19); showMe(ll); }, function () { toast("No pude leer el GPS"); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+
+  // ---- plano overlay ----
+  var planOverlay = null, planH = {}, planLocked = false;
+  function loadPlan() { try { return JSON.parse(localStorage.getItem(KEY_PLAN)); } catch (e) { return null; } }
+  function savePlan() {
+    if (!planOverlay) return;
+    localStorage.setItem(KEY_PLAN, JSON.stringify({ tl: llo(planH.tl.getLatLng()), tr: llo(planH.tr.getLatLng()), bl: llo(planH.bl.getLatLng()), op: +$("planOpacity").value }));
+  }
+  function llo(ll) { return { lat: ll.lat, lng: ll.lng }; }
+  function initialCorners() {
+    var saved = loadPlan();
+    if (saved && saved.tl) { if (saved.op) $("planOpacity").value = saved.op; return saved; }
+    var c = map.getCenter(), b = map.getBounds();
+    var hLat = (b.getNorth() - b.getSouth()) * 0.45;
+    var wLng = hLat * PLAN_AR / Math.cos(c.lat * Math.PI / 180);
+    return { tl: { lat: c.lat + hLat / 2, lng: c.lng - wLng / 2 }, tr: { lat: c.lat + hLat / 2, lng: c.lng + wLng / 2 }, bl: { lat: c.lat - hLat / 2, lng: c.lng - wLng / 2 } };
+  }
+  function handleIcon(txt) { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 15], html: '<div class="phandle">' + txt + '</div>' }); }
+  function repositionPlan() { planOverlay.reposition(planH.tl.getLatLng(), planH.tr.getLatLng(), planH.bl.getLatLng()); }
+  function showPlan() {
+    var c = initialCorners();
+    var tl = L.latLng(c.tl.lat, c.tl.lng), tr = L.latLng(c.tr.lat, c.tr.lng), bl = L.latLng(c.bl.lat, c.bl.lng);
+    planOverlay = L.imageOverlay.rotated(PLAN_SRC, tl, tr, bl, { opacity: (+$("planOpacity").value) / 100, interactive: false });
+    planOverlay.addTo(map);
+    var labels = { tl: "↖", tr: "↗", bl: "↙" };
+    ["tl", "tr", "bl"].forEach(function (k) {
+      var ll = k === "tl" ? tl : k === "tr" ? tr : bl;
+      var m = L.marker(ll, { draggable: true, icon: handleIcon(labels[k]), zIndexOffset: 2000 });
+      m.on("drag", repositionPlan); m.on("dragend", savePlan);
+      planH[k] = m;
+    });
+    setLocked(false);
+    map.fitBounds(L.latLngBounds([tl, tr, bl]).pad(0.15));
+  }
+  function hidePlan() {
+    if (planOverlay) { map.removeLayer(planOverlay); planOverlay = null; }
+    ["tl", "tr", "bl"].forEach(function (k) { if (planH[k]) { map.removeLayer(planH[k]); delete planH[k]; } });
+  }
+  function setLocked(lock) {
+    planLocked = lock;
+    ["tl", "tr", "bl"].forEach(function (k) { if (!planH[k]) return; if (lock) map.removeLayer(planH[k]); else planH[k].addTo(map); });
+    $("planAdjust").textContent = lock ? "Ajustar esquinas" : "Bloquear posición";
+  }
+  $("planToggle").addEventListener("change", function () {
+    if (this.checked) { showPlan(); $("planCtl").style.display = "block"; }
+    else { hidePlan(); $("planCtl").style.display = "none"; }
+  });
+  $("planAdjust").addEventListener("click", function () { setLocked(!planLocked); });
+  $("planOpacity").addEventListener("input", function () { if (planOverlay) planOverlay.setOpacity(this.value / 100); });
+  $("planOpacity").addEventListener("change", savePlan);
+
+  // ---- list ----
+  function renderList() {
+    $("count").textContent = data.length; $("count2").textContent = data.length;
+    $("empty").style.display = data.length ? "none" : "block";
+    var ul = $("list"); ul.innerHTML = "";
+    data.slice().sort(function (a, b) { return (parseFloat(a.etiqueta) || 1e9) - (parseFloat(b.etiqueta) || 1e9); }).forEach(function (t) {
+      var li = document.createElement("li"); li.className = "tree";
+      li.innerHTML = '<span class="sw" style="background:' + colorFor(t.especie) + '"></span><div class="body"><div class="sp">' + esc(t.especie) + (t.etiqueta ? ' <span class="tag">#' + esc(t.etiqueta) + '</span>' : '') + '</div><div class="meta">' + esc(t.sector || "") + (t.nota ? ' · “' + esc(t.nota) + '”' : "") + '</div></div><button class="iconbtn" data-go="' + t.id + '">ver</button>';
+      ul.appendChild(li);
+    });
+  }
+  $("list").addEventListener("click", function (e) { var id = e.target.getAttribute("data-go"); if (id) { select(id); map.setView([byId(id).lat, byId(id).lng], Math.max(map.getZoom(), 19)); } });
+
+  // ---- especies ABM ----
+  function renderSpManager() {
+    var box = $("spList"); box.innerHTML = "";
+    SPECIES.forEach(function (sp, i) {
+      var row = document.createElement("div"); row.className = "sp-row"; row.setAttribute("data-i", i);
+      row.innerHTML = '<input class="sp-c" placeholder="Nombre común" value="' + esc(sp.c) + '"><div class="r1"><input class="sp-s" placeholder="Nombre científico (opcional)" value="' + esc(sp.s || "") + '"><input type="color" class="sp-col" value="' + (/^#[0-9a-fA-F]{6}$/.test(sp.col || "") ? sp.col : "#8A8676") + '"><button class="sp-del" title="Borrar">✕</button></div>';
+      box.appendChild(row);
+    });
+  }
+  $("spAdd").addEventListener("click", function () { SPECIES.push({ c: "Nueva especie", s: "", col: "#4C9A6A" }); saveSpecies(); renderSpManager(); refillSpecies(); });
+  $("spList").addEventListener("change", function (e) {
+    var row = e.target.closest(".sp-row"); if (!row) return;
+    var i = +row.getAttribute("data-i"), sp = SPECIES[i]; if (!sp) return;
+    if (e.target.classList.contains("sp-c")) { var old = sp.c, nv = e.target.value.trim() || old; if (nv !== old) { data.forEach(function (r) { if (r.especie === old) r.especie = nv; }); if ($("defEspecie").value === old) $("defEspecie").value = nv; sp.c = nv; persist(); } }
+    else if (e.target.classList.contains("sp-s")) { sp.s = e.target.value.trim(); data.forEach(function (r) { if (r.especie === sp.c) r.cientifico = sp.s; }); persist(); }
+    else if (e.target.classList.contains("sp-col")) { sp.col = e.target.value; }
+    saveSpecies(); refillSpecies(); refreshAllMarkers(); renderList();
+  });
+  $("spList").addEventListener("click", function (e) {
+    if (!e.target.classList.contains("sp-del")) return;
+    var row = e.target.closest(".sp-row"), i = +row.getAttribute("data-i"), sp = SPECIES[i]; if (!sp) return;
+    var used = data.filter(function (r) { return r.especie === sp.c; }).length;
+    if (!confirm('¿Borrar "' + sp.c + '"?' + (used ? "\n" + used + " árbol(es) la usan y quedan con ese nombre." : ""))) return;
+    SPECIES.splice(i, 1); if (!SPECIES.length) SPECIES = defaultSpecies();
+    saveSpecies(); renderSpManager(); refillSpecies();
+  });
+
+  // ---- datos ----
+  function download(name, text, mime) { var a = document.createElement("a"); a.href = "data:" + mime + ";charset=utf-8," + encodeURIComponent(text); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+  function toCsv() { var cols = ["etiqueta", "especie", "cientifico", "sector", "lat", "lng", "nota", "src", "ts"]; var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }; var lines = [cols.join(",")]; data.forEach(function (t) { lines.push(cols.map(function (c) { return q(t[c]); }).join(",")); }); return lines.join("\n"); }
+  $("expJson").addEventListener("click", function () { download("barriotrees-relevamiento.json", JSON.stringify(data, null, 2), "application/json"); });
+  $("expCsv").addEventListener("click", function () { download("barriotrees-relevamiento.csv", toCsv(), "text/csv"); });
+  $("copyJson").addEventListener("click", function () { var t = JSON.stringify(data, null, 2); if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { toast("JSON copiado"); }, function () { toast("No pude copiar"); }); else toast("Usá ⬇︎ JSON"); });
+  function normEt(t) { return (t.etiqueta || "").trim().toLowerCase(); }
+  function isDupOf(r) { for (var i = 0; i < data.length; i++) { var e = data[i]; if (e.id === r.id) return true; if (e.especie === r.especie) { var et = normEt(r); if (et && et === normEt(e)) return true; if (isFinite(e.lat) && isFinite(e.lng) && distM(r.lat, r.lng, e.lat, e.lng) <= 4) return true; } } return false; }
+  $("impBtn").addEventListener("click", function () {
+    try {
+      var arr = JSON.parse($("impBox").value); if (!Array.isArray(arr)) throw 0;
+      var added = 0, skipped = 0;
+      arr.forEach(function (r) { if (!r || !isFinite(r.lat) || !isFinite(r.lng)) { skipped++; return; } if (!r.id) r.id = Date.now() + "-" + Math.floor(Math.random() * 1000); if (isDupOf(r)) { skipped++; return; } data.push(r); addMarker(r); added++; });
+      persist(); renderList(); $("impBox").value = ""; toast("Combinados: +" + added + (skipped ? " · " + skipped + " dup" : ""));
+    } catch (e) { toast("JSON inválido"); }
+  });
+  function clearMarkers() { Object.keys(markers).forEach(function (id) { map.removeLayer(markers[id]); }); markers = {}; }
+  $("clearAll").addEventListener("click", function () { if (!data.length) return; if (!confirm("¿Borrar TODO? Descargá el JSON antes si querés conservarlo.")) return; clearMarkers(); data = []; closeEditor(); persist(); renderList(); });
+
+  // ---- modo prueba ----
+  $("testMode").addEventListener("change", function () {
+    closeEditor(); clearMarkers(); testMode = this.checked; data = loadFor(activeKey()); data.forEach(addMarker); renderList();
+    $("modebar").classList.toggle("on", testMode); $("clearTest").style.display = testMode ? "" : "none";
+    $("modeText").textContent = testMode ? "🧪 MODO PRUEBA — nada de esto queda en el real" : "Modo prueba — practicá sin ensuciar el relevamiento real";
+    toast(testMode ? "Modo prueba: practicá tranquilo" : "Volviste al relevamiento real");
+  });
+  $("clearTest").addEventListener("click", function () { if (!testMode || !data.length) return; if (!confirm("¿Vaciar la PRUEBA? No toca el real.")) return; clearMarkers(); data = []; closeEditor(); persist(); renderList(); });
+
+  function toast(m) { var t = $("toast"); t.textContent = m; t.className = "toast show"; setTimeout(function () { t.className = "toast"; }, 1700); }
+
+  // ---- init ----
+  data.forEach(addMarker); renderList(); renderSpManager();
+  if (data.length) { try { map.fitBounds(L.featureGroup(Object.keys(markers).map(function (id) { return markers[id]; })).getBounds().pad(0.3)); } catch (e) {} }
+  else if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function (p) { map.setView([p.coords.latitude, p.coords.longitude], 19); }, function () {}, { enableHighAccuracy: true, timeout: 12000 });
+})();
+</script>
