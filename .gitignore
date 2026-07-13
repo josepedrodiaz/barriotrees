@@ -31,3 +31,4 @@ vite.config.ts.timestamp-*
 .claude/tiempo/daemon.log
 .playwright-mcp/
 .claude/tiempo/heartbeat-claude.txt
+supabase/.temp

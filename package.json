@@ -13,7 +13,9 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run --passWithNoTests"
+		"test": "npm run test:unit -- --run --passWithNoTests",
+		"db:types": "supabase gen types typescript --linked > src/lib/database.types.ts",
+		"db:push": "supabase db push"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

@@ -14,3 +14,5 @@ bun.lockb
 /docs/
 /.claude/
 CLAUDE.md
+supabase/.temp
+src/lib/database.types.ts
