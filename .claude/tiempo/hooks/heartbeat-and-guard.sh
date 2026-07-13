@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Hook UserPromptSubmit de Claude Code.
-# 1. Toca heartbeat (timestamp epoch).
+# 1. Toca heartbeat (timestamp epoch) + marker global de último proyecto
+#    activo (el daemon lo usa para la dimensión "humano": si el último prompt
+#    fue en otro proyecto, el tiempo humano no cuenta acá).
 # 2. Si no hay timer activo + branch tiene KEY-XX → arranca timer.
 # 3. Si no hay timer activo + branch NO tiene KEY-XX → emite warning visible.
 #
@@ -17,9 +19,11 @@ CONFIG="$TDIR/config.json"
 
 KEY="$(python3 -c "import json;print(json.load(open('$CONFIG'))['key'])" 2>/dev/null || echo TASK)"
 
-# 1. Heartbeat
+# 1. Heartbeat + marker global (un prompt acá = la atención humana está acá)
 mkdir -p "$TDIR"
 date +%s > "$HEARTBEAT"
+mkdir -p "$HOME/.config/claude"
+echo "$PROJECT_ROOT" > "$HOME/.config/claude/tiempo-last-project.txt"
 
 # 2. Auto-resume si hay auto_paused reciente
 python3 "$TIMER" resume >/dev/null 2>&1 || true

@@ -1,19 +1,32 @@
 #!/usr/bin/env python3
 """
-Timer local por ticket <KEY>-*. Source of truth = Jira worklog;
-este script mantiene el intervalo abierto + cache de intervalos no sincronizados.
+Timer local por ticket <KEY>-* con dos dimensiones de tiempo:
+
+  humano: el usuario está en la sesión (input reciente + app en foco +
+          este proyecto es el último que recibió un prompt)
+  claude: Claude está ejecutando trabajo (heartbeat-claude.txt fresco,
+          tocado por los hooks PreToolUse/PostToolUse/Stop)
+
+Las dimensiones corren en paralelo y pueden solaparse. Cada una genera sus
+propios intervalos (campo "dimension") que se suben a Jira como worklogs
+separados con comment "[humano]" / "[claude]".
+
+El estado vive en state.json. Este script es el ÚNICO que lo escribe; el
+daemon solo junta sensores y llama a `tick`.
 
 La key del proyecto y el offset horario se leen de config.json (junto a este
-archivo). Sin config.json, defaults: key="TASK", tz=-3.
+archivo). Sin config.json, defaults: key="TASK", tz=-3. Config opcional:
+focus_apps, humano_pause_min (15), claude_pause_min (10).
 
 Comandos:
   timer.py start [KEY-XX]              → arranca timer (auto desde branch si no hay arg)
-  timer.py stop                        → cierra timer, imprime JSON con el intervalo a sincronizar
-  timer.py status                      → estado actual + acumulado del día
+  timer.py stop                        → cierra dimensiones abiertas, imprime intervalos a sincronizar
+  timer.py status                      → estado actual + acumulado del día por dimensión
   timer.py list [--since YYYY-MM-DD]   → lista intervalos
   timer.py pending-sync                → lista intervalos con synced:false
   timer.py mark-synced <idx> <wlog_id> → marca intervalo como subido a Jira
-  timer.py auto-pause <idle_seconds>   → cierra activo retroactivo: end = now - idle_seconds
+  timer.py tick <sys_idle_s> <front_ok:0|1> <proj_ok:0|1> <claude_hb_age_s|-1>
+                                       → un paso de la máquina de estados (lo llama el daemon)
   timer.py resume                      → reabre último auto_paused si < 1h
   timer.py prune-synced                → borra intervalos ya sincronizados (>30 días)
 """
@@ -26,9 +39,11 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 STATE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = STATE_DIR.parent.parent
 STATE_FILE = STATE_DIR / "state.json"
 HEARTBEAT_FILE = STATE_DIR / "heartbeat.txt"
 CONFIG_FILE = STATE_DIR / "config.json"
+MARKER_FILE = Path.home() / ".config" / "claude" / "tiempo-last-project.txt"
 
 
 def load_config():
@@ -47,13 +62,23 @@ KEY = str(CFG["key"]).upper()
 TZ_LOCAL = timezone(timedelta(hours=CFG.get("tz", -3)))
 TICKET_RE = re.compile(rf"({KEY}-\d+)", re.IGNORECASE)
 TICKET_FULL_RE = re.compile(rf"{KEY}-\d+")
+HUMANO_PAUSE_S = int(CFG.get("humano_pause_min", 15)) * 60
+CLAUDE_PAUSE_S = int(CFG.get("claude_pause_min", 10)) * 60
 
 
 def load_state():
     if not STATE_FILE.exists():
         return {"active": None, "intervals": []}
     with STATE_FILE.open() as f:
-        return json.load(f)
+        state = json.load(f)
+    # Migración v1 → v2 (en memoria; se persiste con el próximo comando que escriba)
+    for iv in state.get("intervals", []):
+        iv.setdefault("dimension", "humano")
+    active = state.get("active")
+    if active is not None and "dims" not in active:
+        # v1: "active" significaba humano trabajando desde started_at
+        active["dims"] = {"humano": {"since": active["started_at"], "last": now_iso()}}
+    return state
 
 
 def save_state(state):
@@ -79,10 +104,9 @@ def fmt_minutes(m):
 
 
 def detect_ticket_from_branch():
-    cwd = STATE_DIR.parent.parent  # raíz del proyecto (.claude/tiempo → ../..)
     try:
         r = subprocess.run(
-            ["git", "-C", str(cwd), "branch", "--show-current"],
+            ["git", "-C", str(PROJECT_ROOT), "branch", "--show-current"],
             capture_output=True, text=True, check=True, timeout=5,
         )
         branch = r.stdout.strip()
@@ -94,51 +118,84 @@ def detect_ticket_from_branch():
     return m.group(1).upper(), branch
 
 
-def close_active(state, end_iso=None, auto_paused=False):
-    """Cierra el timer activo y agrega un intervalo. Devuelve el intervalo.
+def _close_dim(state, active, dim_name, end_iso, auto):
+    """Cierra una dimensión abierta y agrega el intervalo. Devuelve el intervalo.
 
-    NUNCA descarta: si el end retroactivo cae antes del start (señal de idle
-    contradictoria, ej heartbeat viejo), clampea end=start y marca
-    needs_review para que se revise a mano en vez de perder el intervalo.
+    En cierres automáticos, una dimensión sin duración real (end <= since) se
+    descarta en silencio: no hubo nada que registrar. En cierres manuales
+    NUNCA descarta: clampea end=since y marca needs_review.
     """
-    active = state.get("active")
-    if not active:
+    dims = active.get("dims") or {}
+    d = dims.get(dim_name)
+    if not d:
         return None
-    end = end_iso or now_iso()
-    start_dt = parse_iso(active["started_at"])
-    end_dt = parse_iso(end)
+    start = d["since"]
+    start_dt = parse_iso(start)
+    end_dt = parse_iso(end_iso)
+    dims.pop(dim_name, None)
     needs_review = False
     if end_dt <= start_dt:
-        end = active["started_at"]
+        if auto:
+            return None
+        end_iso = start
         needs_review = True
         minutes = 1
     else:
         minutes = max(1, int(round((end_dt - start_dt).total_seconds() / 60)))
     interval = {
         "ticket": active["ticket"],
-        "start": active["started_at"],
-        "end": end,
+        "dimension": dim_name,
+        "start": start,
+        "end": end_iso,
         "minutes": minutes,
         "source": active.get("source", "manual"),
         "branch": active.get("started_branch"),
-        "auto_paused": auto_paused,
+        "auto_paused": auto,
         "needs_review": needs_review,
         "synced": False,
         "worklog_id": None,
     }
     state["intervals"].append(interval)
-    state["active"] = None
     return interval
 
 
-def touch_heartbeat():
-    """Arrancar/reanudar un timer es actividad del proyecto: actualiza el
-    heartbeat para que el daemon no auto-pause por un heartbeat viejo
-    (sesiones abiertas fuera del proyecto no corren el hook que lo toca)."""
+def close_active(state, auto_paused=False):
+    """Cierra todas las dimensiones abiertas del ticket activo y lo desactiva.
+    Devuelve la lista de intervalos generados (puede ser vacía)."""
+    active = state.get("active")
+    if not active:
+        return []
+    now = now_iso()
+    closed = []
+    dims = active.get("dims") or {}
+    for name in list(dims.keys()):
+        # humano cierra en now (cerrar a mano = estás presente);
+        # claude cierra en su último heartbeat visto.
+        end = now if name == "humano" else max(dims[name].get("last") or now, dims[name]["since"])
+        iv = _close_dim(state, active, name, end, auto_paused)
+        if iv:
+            closed.append(iv)
+    state["active"] = None
+    return closed
+
+
+def touch_activity_markers():
+    """Arrancar/reanudar un timer es actividad humana en este proyecto:
+    actualiza el heartbeat local y el marker global de último proyecto activo
+    (el daemon lo usa para no contar tiempo humano en dos proyectos a la vez)."""
     try:
         HEARTBEAT_FILE.write_text(str(int(datetime.now().timestamp())))
     except Exception:
         pass
+    try:
+        MARKER_FILE.parent.mkdir(parents=True, exist_ok=True)
+        MARKER_FILE.write_text(str(PROJECT_ROOT))
+    except Exception:
+        pass
+
+
+def _open_humano(active, since_iso):
+    active.setdefault("dims", {})["humano"] = {"since": since_iso, "last": since_iso}
 
 
 def cmd_start(args):
@@ -161,7 +218,7 @@ def cmd_start(args):
         return 1
 
     # Si ya hay activo
-    closed = None
+    closed = []
     if state.get("active"):
         if state["active"]["ticket"] == ticket:
             print(json.dumps({
@@ -180,9 +237,12 @@ def cmd_start(args):
         "started_at": started,
         "started_branch": branch,
         "source": source,
+        "dims": {},
     }
+    # start viene de un prompt/comando del usuario → humano presente ya
+    _open_humano(state["active"], started)
     save_state(state)
-    touch_heartbeat()
+    touch_activity_markers()
     print(json.dumps({
         "ok": True,
         "started": {"ticket": ticket, "at": started, "source": source, "branch": branch},
@@ -207,26 +267,119 @@ def cmd_stop(args):
     return 0
 
 
+def cmd_tick(args):
+    """Un paso de la máquina de estados. Lo llama el daemon cada 60s con:
+    sys_idle_s, front_ok (0|1), proj_ok (0|1), claude_hb_age_s (-1 = sin heartbeat)."""
+    if len(args) < 4:
+        print(json.dumps({"ok": False, "error": "uso: tick <sys_idle_s> <front_ok> <proj_ok> <claude_hb_age_s>"}))
+        return 1
+    state = load_state()
+    active = state.get("active")
+    if not active:
+        print(json.dumps({"ok": True, "noop": True}))
+        return 0
+
+    sys_idle = float(args[0])
+    front_ok = args[1] == "1"
+    proj_ok = args[2] == "1"
+    hb_age = float(args[3])
+    if hb_age < 0:
+        hb_age = float("inf")
+
+    now_dt = datetime.now(TZ_LOCAL)
+    dims = active.setdefault("dims", {})
+    events, closed, evidence = [], [], []
+
+    # --- humano: input reciente + app de la sesión en foco + este proyecto activo
+    if front_ok and proj_ok and sys_idle < HUMANO_PAUSE_S:
+        last_input = (now_dt - timedelta(seconds=int(sys_idle))).isoformat(timespec="seconds")
+        d = dims.get("humano")
+        if d:
+            d["last"] = max(d["last"], last_input)
+        else:
+            since = max(last_input, active["started_at"])
+            dims["humano"] = {"since": since, "last": max(last_input, since)}
+            events.append(f"humano abierto desde {since}")
+        evidence.append(dims["humano"]["last"])
+    else:
+        d = dims.get("humano")
+        if d and (now_dt - parse_iso(d["last"])).total_seconds() > HUMANO_PAUSE_S:
+            iv = _close_dim(state, active, "humano", d["last"], auto=True)
+            events.append(f"humano cerrado en {d['last']}")
+            evidence.append(d["last"])
+            if iv:
+                closed.append(iv)
+        elif d:
+            evidence.append(d["last"])
+
+    # --- claude: heartbeat de tools fresco
+    if hb_age <= CLAUDE_PAUSE_S:
+        beat = (now_dt - timedelta(seconds=int(hb_age))).isoformat(timespec="seconds")
+        d = dims.get("claude")
+        if d:
+            d["last"] = max(d["last"], beat)
+        else:
+            since = max(beat, active["started_at"])
+            dims["claude"] = {"since": since, "last": max(beat, since)}
+            events.append(f"claude abierto desde {since}")
+        evidence.append(dims["claude"]["last"])
+    else:
+        d = dims.get("claude")
+        if d:
+            iv = _close_dim(state, active, "claude", d["last"], auto=True)
+            events.append(f"claude cerrado en {d['last']}")
+            evidence.append(d["last"])
+            if iv:
+                closed.append(iv)
+
+    # --- última actividad conocida; si murió todo, desactivar el ticket
+    if evidence:
+        active["last_activity"] = max([active.get("last_activity") or active["started_at"]] + evidence)
+    if not dims:
+        ref = active.get("last_activity") or active["started_at"]
+        if (now_dt - parse_iso(ref)).total_seconds() > HUMANO_PAUSE_S:
+            events.append(f"ticket {active['ticket']} desactivado (sin actividad desde {ref})")
+            state["active"] = None
+
+    save_state(state)
+    print(json.dumps({"ok": True, "events": events, "closed": closed, "active": state.get("active")}, ensure_ascii=False))
+    return 0
+
+
 def cmd_status(args):
     state = load_state()
-    today = datetime.now(TZ_LOCAL).date().isoformat()
+    now_dt = datetime.now(TZ_LOCAL)
+    today = now_dt.date().isoformat()
     per_ticket = {}
+
+    def add(ticket, dim, minutes):
+        t = per_ticket.setdefault(ticket, {"humano": 0, "claude": 0, "total": 0})
+        t[dim] = t.get(dim, 0) + minutes
+        t["total"] += minutes
+
     for iv in state["intervals"]:
         if iv["start"].startswith(today) or iv["end"].startswith(today):
-            per_ticket[iv["ticket"]] = per_ticket.get(iv["ticket"], 0) + iv["minutes"]
+            add(iv["ticket"], iv.get("dimension", "humano"), iv["minutes"])
+
     active = state.get("active")
-    active_elapsed = 0
+    running = {}
     if active:
-        elapsed = (datetime.now(TZ_LOCAL) - parse_iso(active["started_at"])).total_seconds() / 60
-        active_elapsed = int(round(elapsed))
-        per_ticket[active["ticket"]] = per_ticket.get(active["ticket"], 0) + active_elapsed
-    total = sum(per_ticket.values())
+        for name, d in (active.get("dims") or {}).items():
+            elapsed = int(round((now_dt - parse_iso(d["since"])).total_seconds() / 60))
+            running[name] = elapsed
+            add(active["ticket"], name, elapsed)
+
+    totals = {"humano": 0, "claude": 0, "total": 0}
+    for t in per_ticket.values():
+        for k in totals:
+            totals[k] += t.get(k, 0)
+
     print(json.dumps({
         "ok": True,
         "active": active,
-        "active_elapsed_minutes": active_elapsed,
+        "running_minutes": running,
         "today_by_ticket": per_ticket,
-        "today_total_minutes": total,
+        "today_total": totals,
         "today": today,
     }, ensure_ascii=False))
     return 0
@@ -274,24 +427,6 @@ def cmd_prune_synced(args):
     return 0
 
 
-def cmd_auto_pause(args):
-    """Cierra el timer activo con end = now - idle_seconds."""
-    state = load_state()
-    if not state.get("active"):
-        print(json.dumps({"ok": False, "noop": True, "reason": "no active timer"}))
-        return 0
-    if not args:
-        print(json.dumps({"ok": False, "error": "falta idle_seconds"}))
-        return 1
-    idle_s = int(args[0])
-    end_dt = datetime.now(TZ_LOCAL) - timedelta(seconds=idle_s)
-    end_iso = end_dt.isoformat(timespec="seconds")
-    closed = close_active(state, end_iso=end_iso, auto_paused=True)
-    save_state(state)
-    print(json.dumps({"ok": True, "closed": closed}, ensure_ascii=False))
-    return 0
-
-
 def cmd_resume(args):
     """Reabre el último auto_paused si fue hace < 1h."""
     state = load_state()
@@ -315,14 +450,18 @@ def cmd_resume(args):
         return 0
     # Reanudar: nuevo active con mismo ticket, started_at = ahora
     detected, branch = detect_ticket_from_branch()
+    started = now_iso()
     state["active"] = {
         "ticket": last["ticket"],
-        "started_at": now_iso(),
+        "started_at": started,
         "started_branch": branch,
         "source": "resume",
+        "dims": {},
     }
+    # resume viene de un prompt del usuario → humano presente
+    _open_humano(state["active"], started)
     save_state(state)
-    touch_heartbeat()
+    touch_activity_markers()
     print(json.dumps({"ok": True, "resumed": state["active"], "after_pause_min": int(age_min)}, ensure_ascii=False))
     return 0
 
@@ -353,7 +492,7 @@ COMMANDS = {
     "list": cmd_list,
     "pending-sync": cmd_pending_sync,
     "mark-synced": cmd_mark_synced,
-    "auto-pause": cmd_auto_pause,
+    "tick": cmd_tick,
     "resume": cmd_resume,
     "prune-synced": cmd_prune_synced,
 }

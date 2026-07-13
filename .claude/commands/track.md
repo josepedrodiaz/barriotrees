@@ -1,11 +1,16 @@
 ---
-description: Reporte HTML de tiempo invertido por ticket BT-* leyendo el changelog de Jira. Genera torta + barras + tabla y abre en browser.
+description: Reporte HTML de tiempo invertido por ticket BT-* leyendo los worklogs de Jira, separado por dimensión humano/claude. Genera torta + barras apiladas + tabla y abre en browser.
 argument-hint: "[rango: sprint|semana|YYYY-MM-DD..YYYY-MM-DD] (default: sprint activo)"
 ---
 
 # /track — Reporte de tiempo por ticket
 
-Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo el changelog de Jira (no requiere worklog manual). El tiempo de un ticket = suma de intervalos en los que estuvo en estado "En curso".
+Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo los **worklogs** de Jira. Cada worklog tiene una dimensión según el prefijo de su comment:
+
+- comment empieza con `[claude]` → dimensión **claude** (Claude ejecutando trabajo)
+- comment empieza con `[humano]`, o sin prefijo (worklogs viejos) → dimensión **humano**
+
+Las dimensiones pueden solaparse en el tiempo: humano y claude se muestran separadas y el total es la suma de ambas (horas de trabajo registradas, no horas de reloj).
 
 ## Argumento
 
@@ -25,36 +30,30 @@ Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo el cha
    - Para lista de keys: `key in (BT-123, BT-124)`
    - Pedir solo campos: `summary, status, assignee, created, updated`
 
-2. **Traer changelogs en batch:**
-   - `mcp__mcp-atlassian__jira_batch_get_changelogs` con los issue keys
-   - Filtrar solo cambios del campo `status`
+2. **Traer worklogs por ticket:**
+   - `mcp__mcp-atlassian__jira_get_worklog` con cada issue key
+   - Filtrar por rango usando el campo `started` de cada worklog (para sprint activo, usar las fechas del sprint; para semana/custom, el rango pedido)
 
-3. **Calcular tiempo en "En curso" por ticket:**
-   - Para cada ticket, recorrer cambios de status ordenados por fecha
-   - Cada vez que entra a "En curso" → guardar timestamp de inicio
-   - Cada vez que sale de "En curso" → cerrar intervalo, sumar diff
-   - Si el último estado es "En curso" → cerrar con `now()` (sigue activo)
-   - Total ticket = suma de intervalos en minutos
+3. **Clasificar y sumar:**
+   - Dimensión del worklog: regex `^\[(humano|claude)\]` sobre el comment; sin match → `humano`
+   - Minutos = `timeSpentSeconds / 60`
+   - Por ticket: `{humano, claude, total}`
+   - Por día y dimensión (para barras apiladas): fecha de `started` → `{ "2026-05-20": {humano: 60, claude: 145}, ... }`
 
-4. **Agrupar por día también** (para gráfico de barras):
-   - Por cada intervalo, distribuir minutos en los días que cruza
-   - Resultado: `{ "2026-05-20": 145, "2026-05-21": 90, ... }`
-
-5. **Generar HTML en `/tmp/track-tiempo-reporte.html`** con la plantilla de abajo, reemplazando los placeholders:
+4. **Generar HTML en `/tmp/track-tiempo-reporte.html`** con la plantilla de abajo, reemplazando los placeholders:
    - `{{TITULO}}` → ej. "Sprint 1 — sprint-1/home-secciones"
-   - `{{RANGO}}` → ej. "2026-05-19 → 2026-05-26"
-   - `{{TOTAL_HORAS}}` → suma total formateada `Xh YYm`
-   - `{{TICKETS_COUNT}}` → cantidad de tickets con tiempo > 0
+   - `{{RANGO}}` → ej. "2026-05-19 → 2026-05-26 · N tickets"
+   - `{{TOTAL_HORAS}}` / `{{HUMANO_HORAS}}` / `{{CLAUDE_HORAS}}` → sumas formateadas `Xh YYm`
    - `{{PIE_LABELS}}` → JSON array `["BT-123: Hero", "BT-124: Home", ...]`
-   - `{{PIE_DATA}}` → JSON array de minutos `[135, 270, ...]`
+   - `{{PIE_DATA}}` → JSON array de minutos totales `[135, 270, ...]`
    - `{{BARS_LABELS}}` → JSON array de fechas `["2026-05-20", ...]`
-   - `{{BARS_DATA}}` → JSON array de minutos por día
-   - `{{TABLA_FILAS}}` → HTML `<tr>...</tr>` por ticket con: key (link a Jira), summary, tiempo, estado actual
+   - `{{BARS_HUMANO}}` / `{{BARS_CLAUDE}}` → JSON arrays de minutos por día de cada dimensión
+   - `{{TABLA_FILAS}}` → HTML `<tr>...</tr>` por ticket con: key (link a Jira), summary, estado actual, humano, claude, total
 
-6. **Abrir el HTML:**
+5. **Abrir el HTML:**
    - `open /tmp/track-tiempo-reporte.html` (macOS)
 
-7. **Resumen en chat:** una línea sola con total + ticket top: "7h 30m esta semana, top BT-124 (4h 30m)."
+6. **Resumen en chat:** una línea sola: "9h 15m esta semana (3h humano + 6h 15m claude), top BT-124 (4h 30m)."
 
 ## Plantilla HTML
 
@@ -74,12 +73,15 @@ Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo el cha
   .card { background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; }
   .card .num { font-size: 28px; font-weight: 600; }
   .card .lbl { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card.humano .num { color: #0a66c2; }
+  .card.claude .num { color: #7c3aed; }
   .charts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; margin-bottom: 24px; }
   .chart-box { background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; }
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e5; }
   th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
   th { background: #f5f5f5; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
-  td.t { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  td.t { text-align: right; font-variant-numeric: tabular-nums; }
+  td.t.total { font-weight: 600; }
   a { color: #0a66c2; text-decoration: none; }
   a:hover { text-decoration: underline; }
   .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #eef; color: #335; }
@@ -91,9 +93,9 @@ Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo el cha
 <div class="meta">{{RANGO}}</div>
 
 <div class="cards">
-  <div class="card"><div class="num">{{TOTAL_HORAS}}</div><div class="lbl">Total invertido</div></div>
-  <div class="card"><div class="num">{{TICKETS_COUNT}}</div><div class="lbl">Tickets activos</div></div>
-  <div class="card"><div class="num">{{PROMEDIO_DIA}}</div><div class="lbl">Promedio por día</div></div>
+  <div class="card"><div class="num">{{TOTAL_HORAS}}</div><div class="lbl">Total registrado</div></div>
+  <div class="card humano"><div class="num">{{HUMANO_HORAS}}</div><div class="lbl">Humano</div></div>
+  <div class="card claude"><div class="num">{{CLAUDE_HORAS}}</div><div class="lbl">Claude</div></div>
 </div>
 
 <div class="charts">
@@ -102,7 +104,7 @@ Generá un reporte HTML del tiempo invertido en cada ticket BT-*, leyendo el cha
 </div>
 
 <table>
-  <thead><tr><th>Ticket</th><th>Título</th><th>Estado</th><th style="text-align:right">Tiempo</th></tr></thead>
+  <thead><tr><th>Ticket</th><th>Título</th><th>Estado</th><th style="text-align:right">Humano</th><th style="text-align:right">Claude</th><th style="text-align:right">Total</th></tr></thead>
   <tbody>{{TABLA_FILAS}}</tbody>
 </table>
 
@@ -119,7 +121,7 @@ new Chart(document.getElementById('pie'), {
     plugins: {
       legend: { position: 'right', labels: { font: { size: 11 } } },
       tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.parsed)}` } },
-      title: { display: true, text: 'Tiempo por ticket' }
+      title: { display: true, text: 'Total por ticket' }
     }
   }
 });
@@ -128,15 +130,17 @@ new Chart(document.getElementById('bars'), {
   type: 'bar',
   data: {
     labels: {{BARS_LABELS}},
-    datasets: [{ label: 'minutos', data: {{BARS_DATA}}, backgroundColor: '#0a66c2' }]
+    datasets: [
+      { label: 'humano', data: {{BARS_HUMANO}}, backgroundColor: '#0a66c2' },
+      { label: 'claude', data: {{BARS_CLAUDE}}, backgroundColor: '#7c3aed' }
+    ]
   },
   options: {
     plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: ctx => fmt(ctx.parsed.y) } },
+      tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } },
       title: { display: true, text: 'Tiempo por día' }
     },
-    scales: { y: { ticks: { callback: v => fmt(v) } } }
+    scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => fmt(v) } } }
   }
 });
 </script>
@@ -146,7 +150,7 @@ new Chart(document.getElementById('bars'), {
 
 ## Notas
 
-- El changelog es la fuente de verdad — no hay double-bookkeeping.
-- Si un ticket nunca pasó por "En curso" → no aparece en el reporte (correcto: no se trabajó formalmente).
-- Si notás un ticket faltante → significa que se olvidó moverlo a En curso (no inventar tiempo).
-- Confirmar que el nombre del estado es exactamente "En curso" inspeccionando el primer changelog. Si difiere ("In Progress"), usar el real.
+- Los worklogs son la fuente de verdad — los sube el propio módulo al cerrar intervalos (`/track-stop`, cambio de ticket, o el flush del SessionStart hook).
+- Worklogs sin prefijo `[humano]`/`[claude]` son anteriores al split de dimensiones → cuentan como humano.
+- Si un ticket no tiene worklogs en el rango → no aparece en el reporte (no inventar tiempo).
+- Puede haber intervalos aún no sincronizados en `.claude/tiempo/state.json` (`timer.py pending-sync`); si hay pendientes, avisarlo en el resumen de chat.

@@ -18,6 +18,9 @@ KEY="$(python3 -c "import json;print(json.load(open('$CONFIG'))['key'])" 2>/dev/
 
 mkdir -p "$TDIR"
 date +%s > "$HEARTBEAT"
+# Marker global: abrir sesión acá = la atención humana está acá
+mkdir -p "$HOME/.config/claude"
+echo "$PROJECT_ROOT" > "$HOME/.config/claude/tiempo-last-project.txt"
 
 # Auto-resume si auto_paused reciente
 python3 "$TIMER" resume >/dev/null 2>&1 || true
@@ -37,7 +40,7 @@ if [[ "$COUNT" != "0" ]]; then
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "tiempo: hay $COUNT intervalos pendientes de sincronizar a Jira. Datos JSON:\n\n$PENDING\n\nPara cada uno, llamá mcp__mcp-atlassian__jira_add_worklog con issue_key=ticket, time_spent=minutos formateado, started=start convertido a 'YYYY-MM-DDTHH:MM:SS.000±HHMM' (sin colon en offset, agregar .000). Después de cada sync exitoso, correr: python3 .claude/tiempo/timer.py mark-synced <idx> <worklog_id>"
+    "additionalContext": "tiempo: hay $COUNT intervalos pendientes de sincronizar a Jira. Datos JSON:\n\n$PENDING\n\nPara cada uno, llamá mcp__mcp-atlassian__jira_add_worklog con issue_key=ticket, time_spent=minutos formateado, started=start convertido a 'YYYY-MM-DDTHH:MM:SS.000±HHMM' (sin colon en offset, agregar .000), y comment='[<dimension>]' usando el campo dimension del intervalo ('[humano]' si falta). Después de cada sync exitoso, correr: python3 .claude/tiempo/timer.py mark-synced <idx> <worklog_id>"
   }
 }
 EOF

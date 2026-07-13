@@ -1,5 +1,6 @@
 state.json
 heartbeat.txt
+heartbeat-claude.txt
 daemon.log
 daemon.out
 daemon.err
