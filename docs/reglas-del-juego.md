@@ -54,7 +54,10 @@ Se ganan por **cómo** cuidás, no por cuánto acumulás. También permanentes, 
 | -------------- | ------------------------------------------------- | ----- |
 | **Rescatista** | 5 riegos a árboles muy sedientos 🔴               | Sí    |
 | **Madrugador** | 10 riegos antes de las 9:00                       | Si da el tiempo |
+| **Sereno**     | 10 riegos después de las 19:00                    | Si da el tiempo |
 | **Centinela**  | 3 reportes de peligro verificados por el admin    | v1.1 (con el flujo de reportes) |
+
+Las dos franjas premiadas son las buenas para el árbol (sin sol fuerte, el agua no se evapora) — pero **la del atardecer es además la franja real de la plaza**: la vuelta del trabajo y de la escuela es cuando más gente circula. Si solo una entra al MVP, va Sereno antes que Madrugador. ("Sereno" por el fresco de la noche y por el que cuida de noche — si a la comisión no le gusta, alternativas: Nochero, Atardecer.)
 
 ## Reportes de peligro (v1.1)
 
