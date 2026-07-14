@@ -1,0 +1,81 @@
+/* Árboles Gigantes — base global. Mobile-first: esto se usa parado al lado
+   de un árbol con el teléfono en una mano y el balde en la otra. */
+
+:root {
+	--verde: #2d7a3a;
+	--verde-oscuro: #1e5428;
+	--tierra: #6b4f2e;
+	--fondo: #fbf9f4;
+	--tinta: #21261f;
+	--tinta-suave: #5c6357;
+	--alerta: #b3261e;
+	--amarillo: #9a6b00;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--fondo);
+	color: var(--tinta);
+	font-family:
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+main {
+	max-width: 480px;
+	margin: 0 auto;
+	padding: 1rem 1.25rem 4rem;
+}
+
+a {
+	color: var(--verde-oscuro);
+}
+
+h1,
+h2 {
+	line-height: 1.15;
+	font-weight: 750;
+}
+
+button.primario {
+	display: block;
+	width: 100%;
+	padding: 1rem;
+	border: none;
+	border-radius: 12px;
+	background: var(--verde);
+	color: white;
+	font-size: 1.25rem;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+button.primario:active {
+	background: var(--verde-oscuro);
+}
+
+button.primario:disabled {
+	opacity: 0.5;
+}
+
+.estado-feliz {
+	color: var(--verde);
+}
+.estado-bien {
+	color: var(--tinta-suave);
+}
+.estado-sediento {
+	color: var(--amarillo);
+}
+.estado-muy-sediento {
+	color: var(--alerta);
+}

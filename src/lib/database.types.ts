@@ -421,6 +421,23 @@ export type Database = {
     }
     Functions: {
       es_admin: { Args: never; Returns: boolean }
+      f_estado_arbol: {
+        Args: { p_arbol_id: string }
+        Returns: {
+          dias_sin_riego: number
+          estado: Database["public"]["Enums"]["estado_arbol"]
+          f_efectiva: number
+        }[]
+      }
+      registrar_riego: {
+        Args: {
+          p_codigo: string
+          p_dispositivo_id?: string
+          p_lat?: number
+          p_lng?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       estado_arbol: "feliz" | "bien" | "sediento" | "muy_sediento"
