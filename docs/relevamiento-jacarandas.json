@@ -1,0 +1,12 @@
+[
+  { "etiqueta": "1", "codigo": "jaca-01", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97879264721342, "lng": -58.02040327572772, "src": "gps", "ts": "2026-07-08T19:52:01.996Z" },
+  { "etiqueta": "2", "codigo": "jaca-02", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97883880235323, "lng": -58.020347223780824, "src": "mapa", "ts": "2026-07-08T19:52:36.425Z" },
+  { "etiqueta": "3", "codigo": "jaca-03", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97888465182149, "lng": -58.02028648613253, "src": "mapa", "ts": "2026-07-08T19:53:11.326Z" },
+  { "etiqueta": "4", "codigo": "jaca-04", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.9789189033647, "lng": -58.02023846302332, "src": "mapa", "ts": "2026-07-08T19:53:44.136Z" },
+  { "etiqueta": "5", "codigo": "jaca-05", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97895433745614, "lng": -58.02017864961402, "src": "mapa", "ts": "2026-07-08T19:54:31.524Z" },
+  { "etiqueta": "6", "codigo": "jaca-06", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.978817454400975, "lng": -58.020013880595656, "src": "mapa", "ts": "2026-07-08T19:56:02.952Z" },
+  { "etiqueta": "7", "codigo": "jaca-07", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97877032404781, "lng": -58.02007119797397, "src": "mapa", "ts": "2026-07-08T19:57:32.802Z" },
+  { "etiqueta": "8", "codigo": "jaca-08", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97872838494665, "lng": -58.02011703285473, "src": "mapa", "ts": "2026-07-08T19:58:44.023Z" },
+  { "etiqueta": "9", "codigo": "jaca-09", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97867548281069, "lng": -58.02017497281731, "src": "mapa", "ts": "2026-07-08T19:59:55.026Z" },
+  { "etiqueta": "10", "codigo": "jaca-10", "especie": "Jacarandá", "sector": "Galería central (jacarandás)", "lat": -34.97864185621449, "lng": -58.020219814115144, "src": "mapa", "ts": "2026-07-08T20:00:01.323Z" }
+]
