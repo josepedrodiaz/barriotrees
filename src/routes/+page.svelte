@@ -1,14 +1,26 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
+	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
+	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 
 	let { data } = $props();
+
+	onMount(() => {
+		if (quiereDistancias()) seguirPosicion();
+	});
 
 	function diasTexto(dias: number | null): string {
 		if (dias === null) return 'nunca regado';
 		if (dias < 1) return 'regado hoy';
 		const d = Math.floor(dias);
 		return d === 1 ? '1 día sin riego' : `${d} días sin riego`;
+	}
+
+	function distanciaA(lat: number | null, lng: number | null): string | null {
+		if (!gps.fix || lat === null || lng === null) return null;
+		return formatearDistancia(distanciaMetros(gps.fix.lat, gps.fix.lng, lat, lng));
 	}
 </script>
 
@@ -22,6 +34,21 @@
 	los que más la necesitan ahora:
 </p>
 
+{#if gps.error === 'permiso'}
+	<p class="ubicacion aviso-gps">
+		Sin permiso de ubicación no puedo mostrarte distancias. Se activa desde los ajustes del
+		navegador.
+	</p>
+{:else if gps.siguiendo && !gps.fix}
+	<p class="ubicacion aviso-gps">📡 Ubicándote…</p>
+{:else if !gps.fix}
+	<p class="ubicacion">
+		<button class="enlace" onclick={seguirPosicion}
+			>📍 Mostrar a cuántos metros estás de cada árbol</button
+		>
+	</p>
+{/if}
+
 <ul class="arboles">
 	{#each data.arboles as arbol (arbol.codigo)}
 		{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
@@ -30,7 +57,10 @@
 				<span class="emoji">{info.emoji}</span>
 				<span class="quien">
 					<strong>{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</strong>
-					<small>{diasTexto(arbol.dias_sin_riego)}</small>
+					<small>
+						{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}&nbsp;· 📍 a
+							{distanciaA(arbol.lat, arbol.lng)}{/if}
+					</small>
 				</span>
 				<span class="estado {info.clase}">{info.etiqueta}</span>
 			</a>
@@ -69,5 +99,22 @@
 	.estado {
 		font-weight: 700;
 		font-size: 0.9rem;
+	}
+	.ubicacion {
+		margin: 0.5rem 0 0;
+	}
+	.aviso-gps {
+		color: var(--tinta-suave);
+		font-size: 0.9rem;
+	}
+	button.enlace {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.95rem;
+		color: var(--verde-oscuro);
+		text-decoration: underline;
+		cursor: pointer;
 	}
 </style>

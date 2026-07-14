@@ -1,11 +1,18 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
+	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
+	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
 	import { tipAlAzar } from '$lib/features/riego/tips';
 
 	let { data } = $props();
+
+	onMount(() => {
+		if (quiereDistancias()) seguirPosicion();
+	});
 
 	type Fase = 'ficha' | 'regando' | 'resultado';
 	let fase: Fase = $state('ficha');
@@ -14,6 +21,11 @@
 
 	const arbol = $derived(data.arbol);
 	const info = $derived(ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]);
+	const distancia = $derived(
+		gps.fix && arbol.lat != null && arbol.lng != null
+			? distanciaMetros(gps.fix.lat, gps.fix.lng, arbol.lat, arbol.lng)
+			: null
+	);
 
 	async function regue() {
 		fase = 'regando';
@@ -58,6 +70,17 @@
 
 	<p class="estado {info.clase}">{info.etiqueta}</p>
 	<p class="dias">{diasTexto(arbol.dias_sin_riego)}</p>
+
+	{#if distancia !== null}
+		<p class="distancia">
+			📍 Estás a {formatearDistancia(distancia)}{#if distancia <= 50}
+				— al lado, ¡dale agua!{/if}
+		</p>
+	{:else if arbol.lat != null && !gps.siguiendo && !gps.error}
+		<p class="distancia">
+			<button class="enlace" onclick={seguirPosicion}>📍 Ver a qué distancia estás</button>
+		</p>
+	{/if}
 
 	<button class="primario" onclick={regue}>💧 Regué este árbol</button>
 	<p class="aviso">
@@ -155,6 +178,20 @@
 		text-align: center;
 		color: var(--tinta-suave);
 		margin: 0.25rem 0 2rem;
+	}
+	.distancia {
+		text-align: center;
+		margin: -1rem 0 1.5rem;
+	}
+	button.enlace {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.95rem;
+		color: var(--verde-oscuro);
+		text-decoration: underline;
+		cursor: pointer;
 	}
 	.aviso {
 		font-size: 0.85rem;
