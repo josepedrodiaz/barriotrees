@@ -82,7 +82,7 @@
 
 		<label>
 			Sector
-			<input bind:value={editando.sector} placeholder="galeria-central" />
+			<input bind:value={editando.sector} placeholder="Galería central" />
 		</label>
 
 		<label>
