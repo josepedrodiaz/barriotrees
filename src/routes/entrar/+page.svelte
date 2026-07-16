@@ -66,10 +66,10 @@
 	<title>Entrar · Árboles Gigantes</title>
 </svelte:head>
 
-<p class="volver"><a href={resolve('/')}>← volver</a></p>
+<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
 
 {#if estado === 'mail_enviado'}
-	<div class="centro">
+	<div class="centro panel">
 		<span class="emoji">📬</span>
 		<h1>Te mandamos un mail</h1>
 		<p>
@@ -78,7 +78,7 @@
 		<p class="chico">¿No llegó? Fijate en el spam, o esperá un minuto y probá de nuevo.</p>
 	</div>
 {:else}
-	<div class="centro">
+	<div class="centro panel">
 		<span class="emoji">🌳</span>
 		{#if porReclamar.riegos > 0}
 			<h1>Guardá tus puntos</h1>
@@ -94,7 +94,7 @@
 		{/if}
 	</div>
 
-	<button class="primario google" onclick={conGoogle} disabled={estado === 'enviando'}>
+	<button class="btn wide" onclick={conGoogle} disabled={estado === 'enviando'}>
 		Entrar con Google
 	</button>
 
@@ -109,7 +109,7 @@
 			autocomplete="email"
 			disabled={estado === 'enviando'}
 		/>
-		<button class="secundario" type="submit" disabled={estado === 'enviando'}>
+		<button class="btn ghost wide" type="submit" disabled={estado === 'enviando'}>
 			{estado === 'enviando' ? 'Enviando…' : 'Mandame un link'}
 		</button>
 	</form>
@@ -122,60 +122,57 @@
 
 <style>
 	.volver {
-		margin: 0 0 1rem;
+		font-family: var(--pixel);
+		font-size: 9px;
+		margin: 12px 0 4px;
+	}
+	.volver a {
+		text-decoration: none;
 	}
 	.centro {
 		text-align: center;
-		margin: 2rem 0;
+		margin: 10px 0 14px;
+		padding: 18px 14px;
 	}
 	.emoji {
-		font-size: 3.5rem;
+		font-size: 3rem;
 		display: block;
 	}
 	.centro h1 {
-		margin: 0.5rem 0;
+		margin: 8px 0;
+		color: #fff;
+		text-shadow: 3px 3px 0 #000;
 	}
-	.google {
-		margin-top: 1rem;
+	.centro p {
+		margin: 8px 0 0;
 	}
 	.separador {
 		text-align: center;
-		color: var(--tinta-suave);
-		font-size: 0.9rem;
-		margin: 1.5rem 0 0.75rem;
+		margin: 16px 0 8px;
 	}
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 8px;
 	}
 	input {
-		padding: 0.9rem;
-		border: 1px solid #d8d3c7;
-		border-radius: 12px;
-		font-size: 1.05rem;
-		font-family: inherit;
-		background: white;
-		color: var(--tinta);
+		padding: 12px;
+		border: 3px solid var(--edge-d);
+		background: var(--panel2);
+		color: var(--ink);
+		font: inherit;
+		box-shadow: inset 3px 3px 0 #1a1528;
 	}
-	button.secundario {
-		padding: 0.9rem;
-		border: 1px solid var(--verde);
-		border-radius: 12px;
-		background: transparent;
-		color: var(--verde-oscuro);
-		font-size: 1.05rem;
-		font-weight: 600;
-		font-family: inherit;
-		cursor: pointer;
+	input::placeholder {
+		color: #6f6690;
 	}
 	.chico {
-		font-size: 0.85rem;
-		color: var(--tinta-suave);
 		text-align: center;
+		font-size: 16px;
+		margin: 10px 4px 0;
 	}
 	.error {
-		color: var(--alerta);
+		color: var(--sed);
 		text-align: center;
 	}
 </style>

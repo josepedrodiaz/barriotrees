@@ -13,6 +13,9 @@
 	// Se recalcula solo cada vez que el GPS reporta una posición nueva: si el
 	// vecino camina, la lista se reacomoda sola (y las filas se deslizan).
 	const arboles = $derived(ordenarArboles(data.arboles, gps.fix));
+	const sedientos = $derived(
+		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento').length
+	);
 
 	onMount(() => {
 		if (quiereDistancias()) seguirPosicion();
@@ -35,94 +38,132 @@
 	<title>Árboles Gigantes</title>
 </svelte:head>
 
-<h1>Árboles Gigantes</h1>
-<p>
-	Los árboles jóvenes de la Plaza Gigante del Oeste necesitan agua para volverse gigantes. Estos son
-	los que más la necesitan ahora{#if gps.fix}, y de esos, los que tenés más cerca{/if}:
-</p>
+<p class="intro">Los árboles jóvenes de la plaza necesitan agua para volverse gigantes.</p>
 
 {#if gps.error === 'permiso'}
-	<p class="ubicacion aviso-gps">
-		Sin permiso de ubicación no puedo mostrarte distancias. Se activa desde los ajustes del
-		navegador.
-	</p>
+	<p class="ubicacion">Sin permiso de ubicación no puedo mostrarte distancias.</p>
 {:else if gps.siguiendo && !gps.fix}
-	<p class="ubicacion aviso-gps">📡 Ubicándote…</p>
+	<p class="ubicacion">📡 Ubicándote…</p>
 {:else if !gps.fix}
 	<p class="ubicacion">
-		<button class="enlace" onclick={seguirPosicion}
-			>📍 Mostrar a cuántos metros estás de cada árbol</button
-		>
+		<button class="enlace" onclick={seguirPosicion}>📍 Ver a cuántos metros estás</button>
 	</p>
 {/if}
+
+<h1 class="section-h">
+	💧 Necesitan agua <span class="n">({sedientos})</span>{#if gps.fix}
+		· cerca tuyo{/if}
+</h1>
 
 <ul class="arboles">
 	{#each arboles as arbol (arbol.codigo)}
 		{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
 		<li animate:flip={{ duration: 400 }}>
-			<a href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
-				<span class="arbolito"
-					><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={44} /></span
+			<a class="panel" href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
+				<span class="mini"
+					><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={52} /></span
 				>
-				<span class="quien">
-					<strong>{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</strong>
-					<small>
-						{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}&nbsp;· 📍 a
-							{distanciaA(arbol.lat, arbol.lng)}{/if}
-					</small>
+				<span class="info">
+					<span class="nm">{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</span>
+					<span class="st">
+						<span class="chip {info.clase}">{info.etiqueta}</span>
+						<span class="datos"
+							>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
+								· 📍
+								{distanciaA(arbol.lat, arbol.lng)}{/if}</span
+						>
+					</span>
 				</span>
-				<span class="estado {info.clase}">{info.etiqueta}</span>
+				<span class="go">▶</span>
 			</a>
 		</li>
 	{:else}
-		<li>Todavía no hay árboles cargados.</li>
+		<li class="panel vacio">Todavía no hay árboles cargados.</li>
 	{/each}
 </ul>
 
 <style>
+	.intro {
+		margin: 14px 4px 6px;
+		text-align: center;
+	}
+	.section-h .n {
+		color: var(--sed);
+	}
 	.arboles {
 		list-style: none;
 		padding: 0;
-		margin: 2rem 0 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 	.arboles li a {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		padding: 0.85rem 0;
+		gap: 10px;
+		padding: 8px 10px;
 		text-decoration: none;
-		color: inherit;
-		border-bottom: 1px solid #e8e4da;
+		color: var(--ink);
 	}
-	.arbolito {
+	.arboles li a:active {
+		transform: translateY(2px);
+	}
+	.mini {
 		flex: none;
 	}
-	.quien {
+	.info {
 		flex: 1;
-		display: flex;
-		flex-direction: column;
+		min-width: 0;
 	}
-	.quien small {
-		color: var(--tinta-suave);
+	.nm {
+		display: block;
+		font-family: var(--pixel);
+		font-size: 9px;
+		line-height: 1.5;
+		color: #fff;
 	}
-	.estado {
-		font-weight: 700;
-		font-size: 0.9rem;
+	.st {
+		display: block;
+		margin-top: 6px;
+	}
+	/* El estado va de chapita bajo el nombre y no en una columna: "¡Muy
+	   sediento!" no entra al costado sin desbordarse. */
+	.chip {
+		font-family: var(--pixel);
+		font-size: 7px;
+		line-height: 1.5;
+		padding: 4px 7px;
+		/* El color lo pone la clase de estado; el borde lo sigue. */
+		border: 2px solid currentColor;
+		display: inline-block;
+	}
+	.datos {
+		color: var(--dim);
+		font-size: 15px;
+		margin-left: 6px;
+	}
+	.go {
+		font-family: var(--pixel);
+		font-size: 12px;
+		color: var(--violet-l);
+		flex: none;
+	}
+	.vacio {
+		padding: 14px;
+		text-align: center;
 	}
 	.ubicacion {
-		margin: 0.5rem 0 0;
-	}
-	.aviso-gps {
-		color: var(--tinta-suave);
-		font-size: 0.9rem;
+		margin: 0 4px;
+		text-align: center;
+		font-size: 17px;
 	}
 	button.enlace {
 		background: none;
 		border: none;
 		padding: 0;
 		font: inherit;
-		font-size: 0.95rem;
-		color: var(--verde-oscuro);
+		color: var(--violet-d);
 		text-decoration: underline;
 		cursor: pointer;
 	}

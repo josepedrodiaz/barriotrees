@@ -61,7 +61,7 @@
 </svelte:head>
 
 {#if fase === 'ficha'}
-	<p class="volver"><a href={resolve('/')}>← todos los árboles</a></p>
+	<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
 
 	<div class="retrato">
 		<div class="arbol">
@@ -74,8 +74,9 @@
 		<h1>{arbol.nombre ?? arbol.especie_nombre}</h1>
 		<p class="especie">
 			{#if arbol.nombre}{arbol.especie_nombre} ·
-			{/if}<em>{arbol.especie_cientifico}</em> · {arbol.codigo}
+			{/if}<em>{arbol.especie_cientifico}</em>
 		</p>
+		<p class="sector">📍 {arbol.sector ?? 'la plaza'} · {arbol.codigo}</p>
 	</div>
 
 	<p class="estado {info.clase}">{info.etiqueta}</p>
@@ -92,7 +93,7 @@
 		</p>
 	{/if}
 
-	<button class="primario" onclick={regue}>💧 Regué este árbol</button>
+	<button class="btn green wide" onclick={regue}>💧 Regué este árbol</button>
 	<p class="aviso">
 		Contá solo riegos de verdad: el juego valida que estés en la plaza, y el árbol te lo agradece
 		él.
@@ -118,13 +119,13 @@
 				<p>Era un rescate: este árbol te necesitaba de verdad.</p>
 			{/if}
 			{#each resultado.insignias_nuevas as insignia (insignia.id)}
-				<div class="insignia">
+				<div class="insignia panel">
 					<h2>🎖 {insignia.nombre}</h2>
 					<p class="copy">{insignia.copy}</p>
 				</div>
 			{/each}
 			{#if resultado.total_puntos === null}
-				<div class="guardar">
+				<div class="guardar panel">
 					<p>Tus puntos quedaron guardados solo en este teléfono.</p>
 					<a class="cta" href={resolve('/entrar')}>Guardalos en tu cuenta →</a>
 				</div>
@@ -159,75 +160,96 @@
 			{:else}
 				<p>No pudimos registrarlo (¿anda la conexión?). Esperá un momento y probá de nuevo.</p>
 			{/if}
-			<button class="primario" onclick={() => (fase = 'ficha')}>Volver al árbol</button>
+			<button class="btn ghost wide" onclick={() => (fase = 'ficha')}>Volver al árbol</button>
 		</div>
 	{/if}
 {/if}
 
 <style>
 	.volver {
-		margin: 0 0 1.5rem;
+		font-family: var(--pixel);
+		font-size: 9px;
+		margin: 12px 0 4px;
+	}
+	.volver a {
+		text-decoration: none;
 	}
 	.retrato {
 		text-align: center;
-		margin-top: 1rem;
+		padding: 4px 0;
 	}
 	.arbol {
 		display: flex;
 		justify-content: center;
+		/* La sombra dura, sin desenfoque, lo apoya sobre el pasto sin romper el
+		   pixel art. */
+		filter: drop-shadow(4px 6px 0 rgba(0, 0, 0, 0.18));
 	}
 	.retrato h1 {
-		margin: 0.5rem 0 0;
+		font-size: 16px;
+		margin: 6px 0;
+		color: #fff;
+		text-shadow: 3px 3px 0 #000;
 	}
 	.especie {
-		color: var(--tinta-suave);
-		margin: 0.25rem 0 0;
+		font-style: italic;
+		margin: 0;
+	}
+	.sector {
+		font-size: 15px;
+		margin: 5px 0 0;
 	}
 	.estado {
 		text-align: center;
-		font-size: 1.5rem;
-		font-weight: 750;
-		margin: 2rem 0 0;
+		font-family: var(--pixel);
+		font-size: 13px;
+		margin: 14px 0 0;
 	}
 	.dias {
 		text-align: center;
-		color: var(--tinta-suave);
-		margin: 0.25rem 0 2rem;
+		color: #1d3a12;
+		margin: 6px 0 14px;
 	}
 	.distancia {
 		text-align: center;
-		margin: -1rem 0 1.5rem;
+		margin: 0 0 14px;
+	}
+	.aviso {
+		font-size: 16px;
+		text-align: center;
+		margin: 14px 4px 0;
 	}
 	button.enlace {
 		background: none;
 		border: none;
 		padding: 0;
 		font: inherit;
-		font-size: 0.95rem;
-		color: var(--verde-oscuro);
+		color: var(--violet-d);
 		text-decoration: underline;
 		cursor: pointer;
 	}
-	.aviso {
-		font-size: 0.85rem;
-		color: var(--tinta-suave);
-		text-align: center;
-	}
+
 	.regando {
 		text-align: center;
-		margin-top: 4rem;
+		margin-top: 3rem;
+	}
+	.regando h1 {
+		font-size: 18px;
+		color: #fff;
+		text-shadow: 3px 3px 0 #000;
 	}
 	.barra {
-		height: 10px;
-		background: #e8e4da;
-		border-radius: 5px;
+		height: 20px;
+		background: var(--panel2);
+		border: 3px solid var(--edge-d);
 		overflow: hidden;
-		margin: 2rem 0;
+		margin: 20px 0;
 	}
 	.progreso {
 		height: 100%;
 		width: 0;
-		background: var(--verde);
+		background: var(--water);
+		box-shadow: inset 0 3px 0 #8fd0fb;
 		animation-name: llenar;
 		animation-timing-function: linear;
 		animation-fill-mode: forwards;
@@ -238,47 +260,55 @@
 		}
 	}
 	.tip {
-		font-size: 1.05rem;
 		max-width: 34ch;
 		margin: 0 auto;
 	}
+
 	.resultado {
 		text-align: center;
-		margin-top: 3rem;
+		margin-top: 1rem;
+	}
+	.resultado h1 {
+		font-size: 15px;
+		color: #fff;
+		text-shadow: 3px 3px 0 #000;
 	}
 	.puntos {
-		font-size: 2.5rem;
-		font-weight: 800;
-		color: var(--verde);
-		margin: 0.5rem 0;
+		font-family: var(--pixel);
+		font-size: 26px;
+		color: var(--gold);
+		text-shadow: 3px 3px 0 #6b4d00;
+		margin: 10px 0;
 	}
 	.insignia {
-		margin: 2.5rem 0;
+		margin: 2rem 0;
+		padding: 14px;
 	}
 	.insignia h2 {
 		margin: 0;
+		color: var(--gold);
 	}
 	.copy {
-		font-size: 1.1rem;
 		font-style: italic;
 		max-width: 36ch;
-		margin: 0.5rem auto 0;
+		margin: 8px auto 0;
+		color: var(--ink);
 	}
 	.guardar {
-		margin: 2rem 0;
-		padding: 1rem;
-		border: 1px dashed #d8d3c7;
-		border-radius: 12px;
+		margin: 1.5rem 0;
+		padding: 14px;
 	}
 	.guardar p {
-		margin: 0 0 0.5rem;
-		font-size: 0.9rem;
-		color: var(--tinta-suave);
+		margin: 0 0 8px;
+		color: var(--dim);
+		font-size: 17px;
 	}
 	.cta {
-		font-weight: 700;
+		font-family: var(--pixel);
+		font-size: 9px;
+		color: var(--violet-l);
 	}
 	.acumulado {
-		color: var(--tinta-suave);
+		color: #1d3a12;
 	}
 </style>

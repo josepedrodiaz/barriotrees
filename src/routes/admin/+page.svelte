@@ -57,12 +57,12 @@
 <div class="titulo">
 	<h1>Árboles</h1>
 	{#if !editando}
-		<button class="chico" onclick={nuevo}>+ Nuevo árbol</button>
+		<button class="btn sm" onclick={nuevo}>+ Nuevo</button>
 	{/if}
 </div>
 
 {#if editando}
-	<form onsubmit={guardar}>
+	<form class="panel" onsubmit={guardar}>
 		<h2>{editando.id ? `Editar ${editando.codigo}` : 'Nuevo árbol'}</h2>
 
 		<label>
@@ -100,7 +100,7 @@
 				<input type="number" step="any" bind:value={editando.lng} placeholder="-58.0204" />
 			</label>
 		</div>
-		<button type="button" class="chico" onclick={tomarUbicacion}>
+		<button type="button" class="btn sm" onclick={tomarUbicacion}>
 			📍 {gps.fix ? 'Usar donde estoy parado' : 'Pedir mi ubicación'}
 		</button>
 		<small class="ayuda">
@@ -116,15 +116,15 @@
 		{#if error}<p class="error">{error}</p>{/if}
 
 		<div class="acciones">
-			<button class="primario" type="submit" disabled={guardando}>
+			<button class="btn" type="submit" disabled={guardando}>
 				{guardando ? 'Guardando…' : 'Guardar'}
 			</button>
-			<button type="button" class="chico" onclick={() => (editando = null)}>Cancelar</button>
+			<button type="button" class="btn ghost sm" onclick={() => (editando = null)}>Cancelar</button>
 		</div>
 	</form>
 {/if}
 
-<table>
+<table class="panel">
 	<thead>
 		<tr><th>Código</th><th>Especie</th><th>Sector</th><th>GPS</th><th></th></tr>
 	</thead>
@@ -166,21 +166,19 @@
 	form {
 		margin: 1.5rem 0 2rem;
 		padding: 1.25rem;
-		border: 1px solid #e8e4da;
-		border-radius: 12px;
-		background: white;
+		padding: 14px;
 	}
 	label {
 		display: block;
 		margin-bottom: 0.9rem;
 		font-size: 0.85rem;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	label.fila {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		color: var(--tinta);
+		color: var(--ink);
 	}
 	input,
 	select {
@@ -188,11 +186,10 @@
 		width: 100%;
 		margin-top: 0.25rem;
 		padding: 0.6rem;
-		border: 1px solid #d8d3c7;
-		border-radius: 8px;
+		border: 3px solid var(--edge-d);
 		font: inherit;
-		background: white;
-		color: var(--tinta);
+		background: var(--panel2);
+		color: var(--ink);
 	}
 	label.fila input {
 		width: auto;
@@ -202,7 +199,7 @@
 		display: block;
 		margin-top: 0.25rem;
 		font-size: 0.78rem;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	.ayuda {
 		margin: 0.5rem 0 1rem;
@@ -221,29 +218,14 @@
 		gap: 1rem;
 		margin-top: 1rem;
 	}
-	.acciones .primario {
-		width: auto;
-		padding: 0.7rem 1.5rem;
-		font-size: 1rem;
-	}
-	button.chico {
-		padding: 0.5rem 0.85rem;
-		border: 1px solid var(--verde);
-		border-radius: 8px;
-		background: transparent;
-		color: var(--verde-oscuro);
-		font: inherit;
-		font-size: 0.85rem;
-		font-weight: 600;
-		cursor: pointer;
-	}
+
 	button.enlace {
 		background: none;
 		border: none;
 		padding: 0;
 		font: inherit;
 		font-size: 0.85rem;
-		color: var(--verde-oscuro);
+		color: var(--violet-l);
 		text-decoration: underline;
 		cursor: pointer;
 	}
@@ -257,13 +239,13 @@
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--tinta-suave);
+		color: var(--dim);
 		font-weight: 600;
 		padding: 0 0 0.5rem;
 	}
 	td {
 		padding: 0.6rem 0.5rem 0.6rem 0;
-		border-top: 1px solid #ece8de;
+		border-top: 2px solid var(--edge-l);
 	}
 	tr.inactivo {
 		opacity: 0.5;
@@ -271,18 +253,18 @@
 	.tag {
 		margin-left: 0.4rem;
 		font-size: 0.7rem;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	.suave {
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	.error {
-		color: var(--alerta);
+		color: var(--sed);
 		font-size: 0.9rem;
 	}
 	.pie {
 		margin-top: 1rem;
 		font-size: 0.85rem;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 </style>
