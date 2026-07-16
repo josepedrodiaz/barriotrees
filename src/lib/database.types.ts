@@ -429,6 +429,7 @@ export type Database = {
           f_efectiva: number
         }[]
       }
+      mi_progreso: { Args: never; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
       reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
       registrar_riego: {
