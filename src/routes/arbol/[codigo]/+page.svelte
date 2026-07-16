@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
 	import { gps, seguirPosicion } from '$lib/geo.svelte';
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
 	import PantallaRegando from '$lib/features/riego/PantallaRegando.svelte';
+	import EscanerQr from '$lib/features/riego/EscanerQr.svelte';
+	import { escaneadoReciente, registrarEscaneo } from '$lib/features/riego/escaneo.svelte';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 
@@ -15,6 +17,8 @@
 	type Fase = 'ficha' | 'regando' | 'resultado';
 	let fase: Fase = $state('ficha');
 	let resultado: RiegoResultado | null = $state(null);
+	let escaneando = $state(false);
+	let escaneoAjeno: string | null = $state(null);
 
 	onMount(() => {
 		// Acá el GPS no es un extra: es lo que decide si el riego cuenta, así que
@@ -35,7 +39,23 @@
 	);
 	const cerca = $derived(distancia !== null && distancia <= data.radioMetros);
 	/** Sin coordenadas cargadas el servidor todavía no exige proximidad (BT-19). */
-	const puedeRegar = $derived(cerca || !tieneCoords);
+	const proximidadOk = $derived(cerca || !tieneCoords);
+	// El corazón de la decisión 17: sin escanear la chapita de ESTE árbol, no se
+	// riega. El GPS no alcanza — los jacarandás están a ~5m y no los distingue.
+	const escaneado = $derived(escaneadoReciente(arbol.codigo!));
+	const puedeRegar = $derived(escaneado && proximidadOk);
+
+	function alEscanear(codigo: string) {
+		escaneando = false;
+		if (codigo === arbol.codigo) {
+			registrarEscaneo(codigo); // habilita el riego de este árbol
+			escaneoAjeno = null;
+		} else {
+			// Escaneó otra chapita: lo llevamos a ESE árbol, ya reconocido.
+			registrarEscaneo(codigo);
+			goto(resolve('/arbol/[codigo]', { codigo }));
+		}
+	}
 
 	async function regue() {
 		fase = 'regando';
@@ -66,6 +86,10 @@
 <svelte:head>
 	<title>{arbol.nombre ?? arbol.especie_nombre} · Árboles Gigantes</title>
 </svelte:head>
+
+{#if escaneando}
+	<EscanerQr onCodigo={alEscanear} onCancelar={() => (escaneando = false)} />
+{/if}
 
 {#if fase === 'ficha'}
 	<a class="back" href={resolve('/')}>◀ VOLVER</a>
@@ -100,7 +124,8 @@
 	{/if}
 
 	<!-- El anti-trampa contado como lo cuenta la demo: no es un candado, es el
-	     árbol reconociéndote. -->
+	     árbol reconociéndote. Y el reconocimiento arranca al escanear la chapita
+	     (decisión 17): sin eso, no hay botón de riego. -->
 	{#if estado === 'feliz'}
 		<div class="magic panel">
 			<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>
@@ -111,6 +136,16 @@
 		<p class="lockmsg">
 			🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
 		</p>
+	{:else if !escaneado}
+		<!-- No escaneó todavía: este es el gate que faltaba. -->
+		<div class="magic panel fail">
+			<div class="mh">🔒 PARA REGAR, ESCANEÁ SU CHAPITA</div>
+			<div class="mr no">
+				<span class="e">📷</span>El árbol te reconoce de cerca, con su QR — no a distancia
+			</div>
+		</div>
+		<button class="btn wide" onclick={() => (escaneando = true)}>📷 ESCANEAR LA CHAPITA</button>
+		<p class="lockmsg">Estás parado frente al árbol: apuntá la cámara a su chapita.</p>
 	{:else if puedeRegar}
 		<div class="magic panel">
 			<span class="spark s1">✦</span>
@@ -118,7 +153,7 @@
 			<span class="spark s3">✦</span>
 			<span class="spark s4">✦</span>
 			<div class="mh">✨ EL ÁRBOL TE RECONOCIÓ ✨</div>
-			<div class="mr"><span class="e">🌳</span>Sabe que sos vos, en este jacarandá</div>
+			<div class="mr"><span class="e">🌳</span>Escaneaste su chapita: sabe que sos vos</div>
 			{#if cerca}
 				<div class="mr"><span class="e">📍</span>Y siente que estás a su lado</div>
 			{/if}
@@ -128,26 +163,23 @@
 	{:else if distancia !== null}
 		<div class="magic panel fail">
 			<div class="mh">🔒 ESTE RIEGO NO CONTARÍA</div>
-			<div class="mr"><span class="e">🌳</span>Es este jacarandá real ✓</div>
+			<div class="mr"><span class="e">🌳</span>Escaneaste su chapita ✓</div>
 			<div class="mr no">
 				<span class="e">📍</span>Pero estás lejos (~{formatearDistancia(distancia)}) ✗
 			</div>
 		</div>
 		<button class="btn red wide" disabled>💧 NO PODÉS DESDE ACÁ</button>
-		<p class="lockmsg">
-			Para que cuente tenés que estar al pie del árbol — así nadie suma puntos de mentira.
-		</p>
+		<p class="lockmsg">Para que cuente tenés que estar al pie del árbol.</p>
 	{:else}
 		<div class="magic panel fail">
-			<div class="mh">🔒 PARA REGAR, EL ÁRBOL TIENE QUE VERTE</div>
+			<div class="mh">🔒 NECESITAMOS TU UBICACIÓN</div>
 			<div class="mr no">
 				<span class="e">📍</span>{gps.error === 'permiso'
-					? 'Necesita tu ubicación y el navegador no se la da'
+					? 'El navegador no nos da tu ubicación'
 					: 'Buscando dónde estás…'}
 			</div>
 		</div>
 		<button class="btn ghost wide" onclick={seguirPosicion}>📍 DAR MI UBICACIÓN</button>
-		<p class="lockmsg">Desde el sillón no se riega. Andá al árbol y probá de nuevo.</p>
 	{/if}
 
 	<div class="card2 panel">

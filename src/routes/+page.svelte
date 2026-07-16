@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { flip } from 'svelte/animate';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
@@ -8,9 +9,21 @@
 	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import PanelVecino from '$lib/features/premios/PanelVecino.svelte';
+	import EscanerQr from '$lib/features/riego/EscanerQr.svelte';
+	import { registrarEscaneo } from '$lib/features/riego/escaneo.svelte';
 	import type { Escalon } from '$lib/domain/insignias';
 
 	let { data } = $props();
+
+	let escaneando = $state(false);
+
+	// Escanear desde la home es el camino principal: apuntás a una chapita y caés
+	// en ese árbol, ya reconocido y listo para regar (decisión 17).
+	function alEscanear(codigo: string) {
+		escaneando = false;
+		registrarEscaneo(codigo);
+		goto(resolve('/arbol/[codigo]', { codigo }));
+	}
 
 	// Se recalcula solo cada vez que el GPS reporta una posición nueva: si el
 	// vecino camina, la lista se reacomoda sola (y las filas se deslizan).
@@ -64,7 +77,12 @@
 	</div>
 </div>
 
+<button class="btn wide escanear" onclick={() => (escaneando = true)}>📷 ESCANEAR QR</button>
 <p class="cta-note">Para sumar hay que estar en el árbol y escanear su chapita.</p>
+
+{#if escaneando}
+	<EscanerQr onCodigo={alEscanear} onCancelar={() => (escaneando = false)} />
+{/if}
 
 {#if gps.error === 'permiso'}
 	<p class="ubicacion">Sin permiso de ubicación no puedo mostrarte distancias.</p>
@@ -146,6 +164,9 @@
 		font-size: 16px;
 		color: var(--dim);
 		margin-top: 6px;
+	}
+	.escanear {
+		margin-top: 4px;
 	}
 	.cta-note {
 		text-align: center;
