@@ -219,6 +219,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "insignias_ganadas_canjeada_por_fkey"
+            columns: ["canjeada_por"]
+            isOneToOne: false
+            referencedRelation: "v_ranking"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "insignias_ganadas_insignia_id_fkey"
             columns: ["insignia_id"]
             isOneToOne: false
@@ -230,6 +237,13 @@ export type Database = {
             columns: ["perfil_id"]
             isOneToOne: false
             referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insignias_ganadas_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "v_ranking"
             referencedColumns: ["id"]
           },
         ]
@@ -318,10 +332,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reportes_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "v_ranking"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reportes_resuelto_por_fkey"
             columns: ["resuelto_por"]
             isOneToOne: false
             referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reportes_resuelto_por_fkey"
+            columns: ["resuelto_por"]
+            isOneToOne: false
+            referencedRelation: "v_ranking"
             referencedColumns: ["id"]
           },
         ]
@@ -382,6 +410,13 @@ export type Database = {
             referencedRelation: "perfiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "riegos_perfil_id_fkey"
+            columns: ["perfil_id"]
+            isOneToOne: false
+            referencedRelation: "v_ranking"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -418,8 +453,19 @@ export type Database = {
           },
         ]
       }
+      v_ranking: {
+        Row: {
+          id: string | null
+          nombre: string | null
+          puesto: number | null
+          puntos: number | null
+          riegos: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      actualizar_mi_nombre: { Args: { p_nombre: string }; Returns: Json }
       canjear_pin: { Args: { p_token: string }; Returns: Json }
       es_admin: { Args: never; Returns: boolean }
       f_estado_arbol: {

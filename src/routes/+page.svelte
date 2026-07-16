@@ -78,7 +78,10 @@
 </div>
 
 <button class="btn wide escanear" onclick={() => (escaneando = true)}>📷 ESCANEAR QR</button>
-<p class="cta-note">Para sumar hay que estar en el árbol y escanear su chapita.</p>
+<p class="cta-note">
+	Para sumar hay que estar en el árbol y escanear su chapita. ·
+	<a href={resolve('/ranking')}>🏆 Ranking del barrio</a>
+</p>
 
 {#if escaneando}
 	<EscanerQr onCodigo={alEscanear} onCancelar={() => (escaneando = false)} />
