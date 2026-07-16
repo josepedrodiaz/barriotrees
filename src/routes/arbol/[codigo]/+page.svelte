@@ -8,6 +8,7 @@
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
 	import { tipAlAzar } from '$lib/features/riego/tips';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
+	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 
 	let { data } = $props();
 
@@ -63,7 +64,13 @@
 	<p class="volver"><a href={resolve('/')}>← todos los árboles</a></p>
 
 	<div class="retrato">
-		<span class="arbol-emoji">{info.emoji}</span>
+		<div class="arbol">
+			<ArbolVoxel
+				estado={(arbol.estado ?? 'muy_sediento') as Estado}
+				px={180}
+				alt="Árbol {info.etiqueta.toLowerCase()}"
+			/>
+		</div>
 		<h1>{arbol.nombre ?? arbol.especie_nombre}</h1>
 		<p class="especie">
 			{#if arbol.nombre}{arbol.especie_nombre} ·
@@ -101,7 +108,10 @@
 {:else if resultado}
 	{#if resultado.ok}
 		<div class="resultado">
-			<span class="arbol-emoji">🌳</span>
+			<!-- Ya regado: se lo ve como quedó, no como estaba. Es el premio visual. -->
+			<div class="arbol">
+				<ArbolVoxel estado={(arbol.estado ?? 'feliz') as Estado} px={180} alt="El árbol regado" />
+			</div>
 			<h1>¡Riego registrado!</h1>
 			<p class="puntos">+{resultado.puntos} puntos</p>
 			{#if resultado.estado_anterior === 'muy_sediento'}
@@ -162,9 +172,9 @@
 		text-align: center;
 		margin-top: 1rem;
 	}
-	.arbol-emoji {
-		font-size: 4.5rem;
-		display: block;
+	.arbol {
+		display: flex;
+		justify-content: center;
 	}
 	.retrato h1 {
 		margin: 0.5rem 0 0;
