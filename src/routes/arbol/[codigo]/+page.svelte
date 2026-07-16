@@ -6,7 +6,7 @@
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
 	import { gps, seguirPosicion } from '$lib/geo.svelte';
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
-	import { tipAlAzar } from '$lib/features/riego/tips';
+	import PantallaRegando from '$lib/features/riego/PantallaRegando.svelte';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 
@@ -14,7 +14,6 @@
 
 	type Fase = 'ficha' | 'regando' | 'resultado';
 	let fase: Fase = $state('ficha');
-	let tip = $state('');
 	let resultado: RiegoResultado | null = $state(null);
 
 	onMount(() => {
@@ -40,7 +39,6 @@
 
 	async function regue() {
 		fase = 'regando';
-		tip = tipAlAzar();
 		// La espera mínima corre en paralelo con la geolocalización + la RPC:
 		// el riego se registra recién cuando ambas terminan (decisión 19).
 		const espera = new Promise((r) => setTimeout(r, data.duracionSegundos * 1000));
@@ -159,13 +157,7 @@
 		</div>
 	</div>
 {:else if fase === 'regando'}
-	<div class="regando">
-		<h1>REGANDO…</h1>
-		<div class="barra">
-			<div class="progreso" style="animation-duration: {data.duracionSegundos}s"></div>
-		</div>
-		<p class="tip">🌱 {tip}</p>
-	</div>
+	<PantallaRegando segundos={data.duracionSegundos} />
 {:else if resultado}
 	{#if resultado.ok}
 		<div class="resultado">
@@ -475,41 +467,6 @@
 	}
 	.pronto {
 		color: var(--dim);
-	}
-
-	.regando {
-		text-align: center;
-		margin-top: 3rem;
-	}
-	.regando h1 {
-		font-size: 18px;
-		color: #fff;
-		text-shadow: 3px 3px 0 #000;
-	}
-	.barra {
-		height: 20px;
-		background: var(--panel2);
-		border: 3px solid var(--edge-d);
-		overflow: hidden;
-		margin: 20px 0;
-	}
-	.progreso {
-		height: 100%;
-		width: 0;
-		background: var(--water);
-		box-shadow: inset 0 3px 0 #8fd0fb;
-		animation-name: llenar;
-		animation-timing-function: linear;
-		animation-fill-mode: forwards;
-	}
-	@keyframes llenar {
-		to {
-			width: 100%;
-		}
-	}
-	.tip {
-		max-width: 34ch;
-		margin: 0 auto;
 	}
 
 	.resultado {

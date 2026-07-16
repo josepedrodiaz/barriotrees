@@ -7,6 +7,8 @@
 	import { ordenarArboles } from '$lib/domain/orden';
 	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
+	import PanelVecino from '$lib/features/premios/PanelVecino.svelte';
+	import type { Escalon } from '$lib/domain/insignias';
 
 	let { data } = $props();
 
@@ -15,6 +17,17 @@
 	const arboles = $derived(ordenarArboles(data.arboles, gps.fix));
 	const sedientos = $derived(
 		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento').length
+	);
+	const regadosHoy = $derived(
+		arboles.filter((a) => a.dias_sin_riego !== null && a.dias_sin_riego < 1).length
+	);
+	// Como la demo: los que piden agua arriba y el resto abajo. Adentro de cada
+	// grupo sigue mandando la cercanía, así que la lista se reacomoda al caminar.
+	const conSed = $derived(
+		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento')
+	);
+	const yaEstan = $derived(
+		arboles.filter((a) => a.estado !== 'sediento' && a.estado !== 'muy_sediento')
 	);
 
 	onMount(() => {
@@ -38,7 +51,20 @@
 	<title>Árboles Gigantes</title>
 </svelte:head>
 
-<p class="intro">Los árboles jóvenes de la plaza necesitan agua para volverse gigantes.</p>
+<PanelVecino escalera={data.escalera as Escalon[]} />
+
+<div class="stat">
+	<div class="box panel">
+		<div class="num sed">{sedientos}</div>
+		<div class="lab">CON SED</div>
+	</div>
+	<div class="box panel">
+		<div class="num fel">{regadosHoy}</div>
+		<div class="lab">REGADOS HOY</div>
+	</div>
+</div>
+
+<p class="cta-note">Para sumar hay que estar en el árbol y escanear su chapita.</p>
 
 {#if gps.error === 'permiso'}
 	<p class="ubicacion">Sin permiso de ubicación no puedo mostrarte distancias.</p>
@@ -55,37 +81,77 @@
 		· cerca tuyo{/if}
 </h1>
 
-<ul class="arboles">
-	{#each arboles as arbol (arbol.codigo)}
-		{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
-		<li animate:flip={{ duration: 400 }}>
-			<a class="panel" href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
-				<span class="mini"
-					><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={52} /></span
+{#if conSed.length}
+	<ul class="arboles">
+		{#each conSed as arbol (arbol.codigo)}
+			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
+		{/each}
+	</ul>
+{:else}
+	<p class="vacio panel">Ninguno urgente 🎉</p>
+{/if}
+
+{#if yaEstan.length}
+	<h2 class="section-h">Ya están bien</h2>
+	<ul class="arboles">
+		{#each yaEstan as arbol (arbol.codigo)}
+			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
+		{/each}
+	</ul>
+{/if}
+
+{#snippet fila(arbol: (typeof arboles)[number])}
+	{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
+	<a class="panel" href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
+		<span class="mini"
+			><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={52} /></span
+		>
+		<span class="info">
+			<span class="nm">{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</span>
+			<span class="st">
+				<span class="chip {info.clase}">{info.etiqueta}</span>
+				<span class="datos"
+					>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
+						· 📍
+						{distanciaA(arbol.lat, arbol.lng)}{/if}</span
 				>
-				<span class="info">
-					<span class="nm">{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</span>
-					<span class="st">
-						<span class="chip {info.clase}">{info.etiqueta}</span>
-						<span class="datos"
-							>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
-								· 📍
-								{distanciaA(arbol.lat, arbol.lng)}{/if}</span
-						>
-					</span>
-				</span>
-				<span class="go">▶</span>
-			</a>
-		</li>
-	{:else}
-		<li class="panel vacio">Todavía no hay árboles cargados.</li>
-	{/each}
-</ul>
+			</span>
+		</span>
+		<span class="go">▶</span>
+	</a>
+{/snippet}
 
 <style>
-	.intro {
-		margin: 14px 4px 6px;
+	.stat {
+		display: flex;
+		gap: 10px;
+		margin: 14px 0 12px;
+	}
+	.stat .box {
+		flex: 1;
+		padding: 12px;
 		text-align: center;
+	}
+	.stat .num {
+		font-family: var(--pixel);
+		font-size: 22px;
+	}
+	.stat .num.sed {
+		color: var(--sed);
+	}
+	.stat .num.fel {
+		color: var(--feliz);
+	}
+	.stat .lab {
+		font-size: 16px;
+		color: var(--dim);
+		margin-top: 6px;
+	}
+	.cta-note {
+		text-align: center;
+		font-size: 16px;
+		color: #2c4a1e;
+		margin: 9px 4px 0;
 	}
 	.section-h .n {
 		color: var(--sed);
@@ -122,6 +188,8 @@
 		font-size: 9px;
 		line-height: 1.5;
 		color: #fff;
+		/* La pixel se lee mejor en mayúsculas; así lo hace la demo. */
+		text-transform: uppercase;
 	}
 	.st {
 		display: block;
@@ -137,6 +205,7 @@
 		/* El color lo pone la clase de estado; el borde lo sigue. */
 		border: 2px solid currentColor;
 		display: inline-block;
+		text-transform: uppercase;
 	}
 	.datos {
 		color: var(--dim);
@@ -150,8 +219,9 @@
 		flex: none;
 	}
 	.vacio {
-		padding: 14px;
+		padding: 16px;
 		text-align: center;
+		color: var(--dim);
 	}
 	.ubicacion {
 		margin: 0 4px;
