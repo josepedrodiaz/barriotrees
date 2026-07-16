@@ -6,6 +6,7 @@
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
 	import { ordenarArboles } from '$lib/domain/orden';
 	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
+	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 
 	let { data } = $props();
 
@@ -60,7 +61,9 @@
 		{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
 		<li animate:flip={{ duration: 400 }}>
 			<a href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
-				<span class="emoji">{info.emoji}</span>
+				<span class="arbolito"
+					><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={44} /></span
+				>
 				<span class="quien">
 					<strong>{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</strong>
 					<small>
@@ -91,8 +94,8 @@
 		color: inherit;
 		border-bottom: 1px solid #e8e4da;
 	}
-	.emoji {
-		font-size: 1.6rem;
+	.arbolito {
+		flex: none;
 	}
 	.quien {
 		flex: 1;
