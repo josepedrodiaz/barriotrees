@@ -7,6 +7,7 @@
 	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
 	import { tipAlAzar } from '$lib/features/riego/tips';
+	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 
 	let { data } = $props();
 
@@ -36,7 +37,9 @@
 		const [res] = await Promise.all([registrarRiego(arbol.codigo!), espera]);
 		resultado = res;
 		fase = 'resultado';
-		if (res.ok) await invalidateAll();
+		// El riego cambió el estado del árbol y, si hay sesión, los puntos del
+		// vecino: hay que refrescar los dos o el header queda con el total viejo.
+		if (res.ok) await Promise.all([invalidateAll(), cargarPerfil()]);
 	}
 
 	function horaLocal(iso: string | undefined): string {
