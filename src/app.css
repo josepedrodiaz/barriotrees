@@ -1,90 +1,216 @@
-/* Árboles Gigantes — base global. Mobile-first: esto se usa parado al lado
-   de un árbol con el teléfono en una mano y el balde en la otra. */
+/* Árboles Gigantes — sistema visual (decisión 21).
+   Portado de tools/demo.html, que es lo que aprobó la comisión: pixel art,
+   fondo de cielo y pasto, y paneles violetas con biselado. */
+
+/* Las fuentes viven acá y no en Google Fonts: pedírselas a Google cuesta dos
+   DNS + dos TLS a servidores ajenos antes de que se vea una letra, y en la
+   plaza con señal mala eso se siente. Subset latino: 12 KB las dos. */
+@font-face {
+	font-family: 'Press Start 2P';
+	src: url('/fuentes/press-start-2p-latin.woff2') format('woff2');
+	font-display: swap;
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122;
+}
+@font-face {
+	font-family: 'VT323';
+	src: url('/fuentes/vt323-latin.woff2') format('woff2');
+	font-display: swap;
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122;
+}
 
 :root {
-	--verde: #2d7a3a;
-	--verde-oscuro: #1e5428;
-	--tierra: #6b4f2e;
-	--fondo: #fbf9f4;
-	--tinta: #21261f;
-	--tinta-suave: #5c6357;
-	--alerta: #b3261e;
-	--amarillo: #9a6b00;
+	--sky1: #7fc5e8;
+	--sky2: #a9e0f2;
+	--pasto1: #c7ecc0;
+	--pasto2: #a9de9e;
+	--grass: #6bbe4a;
+
+	--panel: #2b2542;
+	--panel2: #221c36;
+	--edge-d: #14101f;
+	--edge-l: #4a3f6e;
+
+	--ink: #f3eeff;
+	--dim: #b9aee0;
+	/* Para el texto que va sobre el pasto, no dentro de un panel. */
+	--tinta-pasto: #234a12;
+
+	--violet: #7c5cd0;
+	--violet-d: #5a3fa6;
+	--violet-l: #a98ce8;
+
+	--gold: #f5c542;
+	--sed: #e5484d;
+	--bien: #eba53b;
+	--feliz: #46c36a;
+	--water: #3fa9f5;
+
+	--pixel: 'Press Start 2P', monospace;
+	--read: 'VT323', 'Courier New', monospace;
 }
 
 * {
 	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
 }
 
 body {
 	margin: 0;
-	background: var(--fondo);
-	color: var(--tinta);
-	font-family:
-		system-ui,
-		-apple-system,
-		'Segoe UI',
-		Roboto,
-		sans-serif;
-	line-height: 1.5;
-	-webkit-font-smoothing: antialiased;
+	font-family: var(--read);
+	/* VT323 es angosta: con menos de 20px no se lee. */
+	font-size: 20px;
+	line-height: 1.2;
+	color: var(--ink);
+	background: linear-gradient(
+		180deg,
+		var(--sky1) 0%,
+		var(--sky2) 46%,
+		var(--pasto1) 46.2%,
+		var(--pasto2) 100%
+	);
+	background-attachment: fixed;
+	min-height: 100vh;
 }
 
 main {
-	max-width: 480px;
+	max-width: 460px;
 	margin: 0 auto;
-	padding: 1rem 1.25rem 4rem;
+	padding: 0 12px 4rem;
+	color: var(--tinta-pasto);
+}
+
+svg {
+	image-rendering: pixelated;
 }
 
 a {
-	color: var(--verde-oscuro);
+	color: var(--violet-d);
 }
 
+/* Los títulos van en pixel; el texto corrido, nunca: Press Start 2P es
+   preciosa e ilegible en párrafos. */
 h1,
+h2,
+h3 {
+	font-family: var(--pixel);
+	line-height: 1.5;
+	font-weight: 400;
+}
+h1 {
+	font-size: 15px;
+}
 h2 {
-	line-height: 1.15;
-	font-weight: 750;
+	font-size: 11px;
+}
+h3 {
+	font-size: 10px;
 }
 
-button.primario {
-	display: block;
-	width: 100%;
-	padding: 1rem;
-	border: none;
-	border-radius: 12px;
-	background: var(--verde);
-	color: white;
-	font-size: 1.25rem;
-	font-weight: 700;
+/* El biselado de píxel: dos sombras internas (luz arriba-izquierda, sombra
+   abajo-derecha) y una externa que lo levanta del fondo. */
+.panel {
+	background: var(--panel);
+	border: 3px solid var(--edge-d);
+	box-shadow:
+		inset 3px 3px 0 var(--edge-l),
+		inset -3px -3px 0 #1a1528,
+		0 4px 0 rgba(0, 0, 0, 0.25);
+	color: var(--ink);
+}
+
+button.btn {
+	font-family: var(--pixel);
+	font-size: 11px;
+	color: #fff;
+	background: var(--violet);
+	border: 3px solid var(--edge-d);
+	padding: 13px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
 	cursor: pointer;
+	box-shadow:
+		inset 3px 3px 0 var(--violet-l),
+		inset -3px -3px 0 var(--violet-d),
+		0 5px 0 #2c1f52;
+}
+/* Se hunde al apretarlo: la sombra de abajo se achica y el botón baja. */
+button.btn:active {
+	transform: translateY(3px);
+	box-shadow:
+		inset 3px 3px 0 var(--violet-l),
+		inset -3px -3px 0 var(--violet-d),
+		0 2px 0 #2c1f52;
+}
+button.btn:disabled {
+	opacity: 0.55;
+}
+.btn.wide {
+	width: 100%;
+}
+.btn.green {
+	background: var(--feliz);
+	box-shadow:
+		inset 3px 3px 0 #7ee29a,
+		inset -3px -3px 0 #2b9350,
+		0 5px 0 #1c6437;
+}
+.btn.green:active {
+	box-shadow:
+		inset 3px 3px 0 #7ee29a,
+		inset -3px -3px 0 #2b9350,
+		0 2px 0 #1c6437;
+}
+.btn.ghost {
+	background: #4b4270;
+	box-shadow:
+		inset 3px 3px 0 #6a5f96,
+		inset -3px -3px 0 #322a4f,
+		0 5px 0 #201a33;
+}
+.btn.ghost:active {
+	box-shadow:
+		inset 3px 3px 0 #6a5f96,
+		inset -3px -3px 0 #322a4f,
+		0 2px 0 #201a33;
+}
+.btn.sm {
+	font-size: 9px;
+	padding: 10px;
+	box-shadow:
+		inset 2px 2px 0 var(--violet-l),
+		inset -2px -2px 0 var(--violet-d),
+		0 4px 0 #2c1f52;
 }
 
-button.primario:active {
-	background: var(--verde-oscuro);
+/* Encabezado de sección: pixel chiquito sobre el pasto. */
+.section-h {
+	font-family: var(--pixel);
+	font-size: 10px;
+	color: var(--tinta-pasto);
+	margin: 20px 4px 10px;
+	text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-button.primario:disabled {
-	opacity: 0.5;
+.estado-feliz {
+	color: var(--feliz);
+}
+.estado-bien {
+	color: var(--bien);
+}
+.estado-sediento {
+	color: var(--bien);
+}
+.estado-muy-sediento {
+	color: var(--sed);
 }
 
-/* Al imprimir, fuera los fondos. Ojo: el header y el <main> se ocultan desde
-   el <style> del layout y no desde acá — Svelte escopa los estilos de cada
-   componente y esas reglas le ganan en especificidad a un selector global. */
+/* Al imprimir (las chapitas QR del admin) fuera los fondos. El header y el
+   <main> se ocultan desde el layout: Svelte escopa sus estilos y le ganan a
+   un selector global. */
 @media print {
 	body {
 		background: white;
 	}
-}
-
-.estado-feliz {
-	color: var(--verde);
-}
-.estado-bien {
-	color: var(--tinta-suave);
-}
-.estado-sediento {
-	color: var(--amarillo);
-}
-.estado-muy-sediento {
-	color: var(--alerta);
 }

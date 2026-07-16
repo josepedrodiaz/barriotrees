@@ -11,22 +11,38 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<!-- Las fuentes son lo primero que se nota faltando: que empiecen a bajar
+	     junto con el HTML y no cuando el CSS las descubre. -->
+	<link
+		rel="preload"
+		href="/fuentes/press-start-2p-latin.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
+	/>
+	<link
+		rel="preload"
+		href="/fuentes/vt323-latin.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
+	/>
 </svelte:head>
 
-{#if !sesion.cargando}
-	<header>
+<header>
+	<a class="logo" href={resolve('/')}>🌳 Árboles <b>Gigantes</b></a>
+	{#if !sesion.cargando}
 		{#if sesion.perfil}
 			<a class="vecino" href={resolve('/insignias')}>
-				<strong>{sesion.perfil.nombre}</strong>
-				<span class="puntos">{sesion.perfil.puntos} pts</span>
+				<span class="nombre">{sesion.perfil.nombre}</span>
+				<span class="puntos">{sesion.perfil.puntos}</span>
 			</a>
 			<button class="salir" onclick={salir}>salir</button>
 		{:else}
-			<span class="vecino anonimo">Estás sin cuenta</span>
 			<a class="entrar" href={resolve('/entrar')}>entrar</a>
 		{/if}
-	</header>
-{/if}
+	{/if}
+</header>
 
 <main>
 	{@render children()}
@@ -34,49 +50,65 @@
 
 <style>
 	header {
-		max-width: 480px;
-		margin: 0 auto;
-		padding: 0.6rem 1.25rem;
+		position: sticky;
+		top: 0;
+		z-index: 30;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem;
-		font-size: 0.9rem;
-		border-bottom: 1px solid #e8e4da;
+		gap: 8px;
+		padding: 10px 12px;
+		background: var(--panel2);
+		border-bottom: 4px solid var(--edge-d);
+	}
+	.logo {
+		font-family: var(--pixel);
+		font-size: 12px;
+		color: var(--feliz);
+		text-shadow: 2px 2px 0 #0d3d1f;
+		text-decoration: none;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+	}
+	.logo :global(b) {
+		color: var(--violet-l);
+		text-shadow: 2px 2px 0 #2c1f52;
 	}
 	.vecino {
 		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
+		align-items: center;
+		gap: 6px;
+		margin-left: auto;
 		min-width: 0;
-		color: inherit;
 		text-decoration: none;
+		color: var(--dim);
 	}
-	.vecino strong {
+	.nombre {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		max-width: 9ch;
 	}
 	.puntos {
-		color: var(--verde-oscuro);
-		font-weight: 700;
-		white-space: nowrap;
+		font-family: var(--pixel);
+		font-size: 11px;
+		color: var(--gold);
+		text-shadow: 2px 2px 0 #6b4d00;
 	}
-	.anonimo {
-		color: var(--tinta-suave);
-	}
-	.entrar {
-		font-weight: 600;
-		white-space: nowrap;
-	}
+	.entrar,
 	.salir {
+		font-family: var(--read);
+		font-size: 18px;
+		color: var(--dim);
 		background: none;
 		border: none;
 		padding: 0;
-		font: inherit;
-		color: var(--tinta-suave);
-		text-decoration: underline;
 		cursor: pointer;
+		text-decoration: underline;
+	}
+	.entrar {
+		margin-left: auto;
 	}
 
 	/* Imprimir es solo para las chapitas QR: la app desaparece y queda la hoja.

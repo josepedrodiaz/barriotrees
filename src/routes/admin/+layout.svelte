@@ -19,7 +19,7 @@
 	{/if}
 	<p><a href={resolve('/')}>← volver a los árboles</a></p>
 {:else}
-	<nav>
+	<nav class="panel">
 		<a href={resolve('/admin')} class:activo={page.url.pathname === '/admin'}>Árboles</a>
 		<a href={resolve('/admin/qrs')} class:activo={page.url.pathname === '/admin/qrs'}>Chapitas QR</a
 		>
@@ -30,7 +30,7 @@
 
 <style>
 	.esperando {
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	nav {
 		display: flex;
@@ -38,15 +38,14 @@
 		font-size: 0.9rem;
 		padding-bottom: 0.75rem;
 		margin-bottom: 1.5rem;
-		border-bottom: 1px solid #e8e4da;
+		border-bottom: 2px solid var(--edge-l);
 	}
 	nav a {
-		color: var(--tinta-suave);
+		color: var(--dim);
 		text-decoration: none;
 	}
 	nav a.activo {
-		color: var(--tinta);
-		font-weight: 700;
+		color: var(--ink);
 		text-decoration: underline;
 		text-underline-offset: 4px;
 	}

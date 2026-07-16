@@ -76,14 +76,14 @@
 	<title>Insignias · Árboles Gigantes</title>
 </svelte:head>
 
-<p class="volver"><a href={resolve('/')}>← los árboles</a></p>
+<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
 
 {#if sesion.session}
 	<h1>Tus insignias</h1>
 	<p class="puntaje"><strong>{nro(puntos)}</strong> puntos</p>
 
 	{#if progreso.siguiente}
-		<div class="camino">
+		<div class="camino panel">
 			<div class="barra"><div class="avance" style="width: {progreso.porcentaje}%"></div></div>
 			<p>
 				Te faltan <strong>{nro(progreso.faltan)}</strong> para
@@ -102,14 +102,14 @@
 	<p><a class="cta" href={resolve('/entrar')}>Entrá para empezar a ganarlas →</a></p>
 {/if}
 
-<h2>La escalera</h2>
+<h2 class="section-h">La escalera</h2>
 <p class="bajada">Siete peldaños por puntos acumulados. El primero se gana con el primer riego.</p>
 
 <ol class="escalera">
 	{#each escalera as escalon (escalon.id)}
 		{@const ganada = gano(ganadas, escalon.id)}
 		{@const proxima = progreso.siguiente?.id === escalon.id}
-		<li class:ganada class:proxima>
+		<li class="panel" class:ganada class:proxima>
 			<span class="marca">{ganada ? '🎖' : escalon.orden}</span>
 			<div class="cuerpo">
 				<h3>{escalon.nombre}</h3>
@@ -126,7 +126,7 @@
 	{/each}
 </ol>
 
-<h2>Por cómo cuidás</h2>
+<h2 class="section-h">Por cómo cuidás</h2>
 <p class="bajada">Estas no dependen de cuánto sumás, sino de qué hacés.</p>
 
 <ul class="meritos">
@@ -134,7 +134,7 @@
 		{@const ganada = gano(ganadas, merito.id)}
 		{@const objetivo = objetivoDe(merito.criterio)}
 		{@const actual = Math.min(actualDe(merito.criterio), objetivo)}
-		<li class:ganada>
+		<li class="panel" class:ganada>
 			<span class="marca">{ganada ? '🎖' : '·'}</span>
 			<div class="cuerpo">
 				<h3>{merito.nombre}</h3>
@@ -152,7 +152,7 @@
 </ul>
 
 {#if ganadas.some((g) => g.canje_estado === 'pendiente')}
-	<p class="pines">
+	<p class="pines panel">
 		🎖 Tenés {ganadas.filter((g) => g.canje_estado === 'pendiente').length} pin{ganadas.filter(
 			(g) => g.canje_estado === 'pendiente'
 		).length === 1
@@ -163,114 +163,128 @@
 
 <style>
 	.volver {
-		margin: 0 0 1rem;
+		font-family: var(--pixel);
+		font-size: 9px;
+		margin: 12px 0 4px;
+	}
+	.volver a {
+		text-decoration: none;
 	}
 	h1 {
-		margin: 0;
+		margin: 10px 0 0;
+		text-align: center;
+		color: #fff;
+		text-shadow: 3px 3px 0 #000;
 	}
 	.puntaje {
-		margin: 0.25rem 0 1.5rem;
-		font-size: 1.1rem;
-		color: var(--tinta-suave);
+		margin: 8px 0 14px;
+		text-align: center;
 	}
 	.puntaje strong {
-		font-size: 2.5rem;
-		color: var(--verde);
+		display: block;
+		font-family: var(--pixel);
+		font-size: 26px;
+		font-weight: 400;
+		color: var(--gold);
+		text-shadow: 3px 3px 0 #6b4d00;
 	}
 	.intro {
-		color: var(--tinta-suave);
+		text-align: center;
+		margin: 8px 4px;
 	}
 	.cta {
-		font-weight: 700;
+		font-family: var(--pixel);
+		font-size: 9px;
 	}
 	.camino {
-		margin: 0 0 2.5rem;
+		padding: 12px 14px;
+		margin: 0 0 6px;
 	}
 	.camino p {
-		margin: 0.5rem 0 0;
-		font-size: 0.95rem;
-		color: var(--tinta-suave);
+		margin: 8px 0 0;
+		font-size: 17px;
+		color: var(--dim);
+		text-align: center;
 	}
 	.cumbre {
 		font-style: italic;
+		text-align: center;
 	}
+	/* La barra de experiencia: hueco oscuro con relleno dorado, sin curvas. */
 	.barra {
-		height: 8px;
-		background: #e8e4da;
-		border-radius: 4px;
+		height: 16px;
+		background: var(--panel2);
+		border: 2px solid var(--edge-d);
 		overflow: hidden;
 	}
 	.avance {
 		height: 100%;
-		background: var(--verde);
-		transition: width 0.4s ease;
-	}
-	h2 {
-		margin: 2.5rem 0 0.25rem;
-		font-size: 1.15rem;
+		background: var(--gold);
+		box-shadow: inset 0 2px 0 #ffe08a;
+		transition: width 0.4s steps(12);
 	}
 	.bajada {
-		margin: 0 0 1.25rem;
-		font-size: 0.9rem;
-		color: var(--tinta-suave);
+		margin: 0 4px 10px;
+		font-size: 16px;
 	}
 	.escalera,
 	.meritos {
 		list-style: none;
 		padding: 0;
 		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 	}
 	.escalera li,
 	.meritos li {
 		display: flex;
-		gap: 0.85rem;
-		padding: 0.9rem 0;
-		border-bottom: 1px solid #ece8de;
-		opacity: 0.45;
+		gap: 10px;
+		align-items: center;
+		padding: 10px;
+		/* Las que todavía no ganó se ven apagadas, pero legibles: son la
+		   zanahoria, no un secreto. */
+		opacity: 0.55;
 	}
 	.escalera li.ganada,
 	.meritos li.ganada {
 		opacity: 1;
 	}
 	.escalera li.proxima {
-		opacity: 0.8;
+		opacity: 0.85;
 	}
 	.marca {
-		width: 1.6rem;
+		width: 2rem;
 		flex: none;
 		text-align: center;
-		font-size: 1.2rem;
-		font-variant-numeric: tabular-nums;
-		color: var(--tinta-suave);
-	}
-	.ganada .marca {
-		color: inherit;
+		font-family: var(--pixel);
+		font-size: 12px;
+		color: var(--dim);
 	}
 	.cuerpo {
 		min-width: 0;
 	}
 	h3 {
 		margin: 0;
-		font-size: 1.05rem;
-		font-weight: 700;
+		color: #fff;
 	}
 	.ganada h3 {
-		color: var(--verde-oscuro);
+		color: var(--gold);
 	}
 	.copy {
-		margin: 0.35rem 0 0;
+		margin: 6px 0 0;
 		font-style: italic;
-		font-size: 0.95rem;
+		color: var(--ink);
 	}
 	.umbral {
-		margin: 0.15rem 0 0;
-		font-size: 0.8rem;
-		color: var(--tinta-suave);
-		font-variant-numeric: tabular-nums;
+		margin: 4px 0 0;
+		font-size: 16px;
+		color: var(--dim);
 	}
 	.pines {
-		margin-top: 2rem;
-		font-size: 0.9rem;
-		color: var(--tinta-suave);
+		margin-top: 16px;
+		padding: 12px 14px;
+		font-size: 17px;
+		text-align: center;
 	}
 </style>

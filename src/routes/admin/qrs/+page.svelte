@@ -39,7 +39,7 @@
 	<title>Chapitas QR · Panel</title>
 </svelte:head>
 
-<div class="barra">
+<div class="barra panel">
 	<h1>Chapitas QR</h1>
 	<p>
 		Elegí los árboles, imprimí y recortá por la línea punteada. Cada QR abre la ficha de ese árbol.
@@ -68,7 +68,7 @@
 		{/each}
 	</ul>
 
-	<button class="primario" onclick={() => window.print()} disabled={elegidos.length === 0}>
+	<button class="btn wide" onclick={() => window.print()} disabled={elegidos.length === 0}>
 		Imprimir {elegidos.length} chapita{elegidos.length === 1 ? '' : 's'}
 	</button>
 	<p class="consejo">
@@ -100,11 +100,11 @@
 	.barra p {
 		margin: 0 0 0.5rem;
 		font-size: 0.9rem;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	.apunta code {
 		font-size: 0.85rem;
-		background: #ece8de;
+		background: var(--panel2);
 		padding: 0.1rem 0.35rem;
 		border-radius: 4px;
 	}
@@ -116,7 +116,7 @@
 		font-size: 0.85rem;
 	}
 	.cuenta {
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 	button.enlace {
 		background: none;
@@ -124,7 +124,7 @@
 		padding: 0;
 		font: inherit;
 		font-size: 0.85rem;
-		color: var(--verde-oscuro);
+		color: var(--violet-l);
 		text-decoration: underline;
 		cursor: pointer;
 	}
@@ -142,7 +142,7 @@
 		padding: 0.2rem 0;
 	}
 	.suave {
-		color: var(--tinta-suave);
+		color: var(--dim);
 		font-size: 0.85rem;
 	}
 	.consejo {
@@ -175,7 +175,7 @@
 	.marca {
 		font-weight: 800;
 		font-size: 12px;
-		color: var(--verde-oscuro);
+		color: var(--violet-l);
 	}
 	.nombre {
 		font-weight: 800;
@@ -189,7 +189,7 @@
 	}
 	.pie {
 		font-size: 10px;
-		color: var(--tinta-suave);
+		color: var(--dim);
 	}
 
 	@media print {
