@@ -19,6 +19,12 @@ export const load = async () => {
 	return {
 		escalera: (insignias ?? []).filter((i) => i.tipo === 'escalera'),
 		meritos: (insignias ?? []).filter((i) => i.tipo === 'merito'),
-		objetivos
+		objetivos,
+		// A dónde apunta el QR de canje. Sale de la base: si cambia el dominio,
+		// los QR nuevos salen bien sin tocar código (igual que las chapitas).
+		urlBase: String(
+			(config ?? []).find((c) => c.clave === 'url_base')?.valor ??
+				'https://arboles-gigantes.vercel.app'
+		)
 	};
 };

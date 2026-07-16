@@ -3,6 +3,7 @@
 	import { supabase } from '$lib/supabase';
 	import { sesion, salir } from '$lib/features/auth/sesion.svelte';
 	import { progresoEscalera, gano, type Escalon } from '$lib/domain/insignias';
+	import QrDeCanje from '$lib/features/premios/QrDeCanje.svelte';
 
 	let { data } = $props();
 
@@ -12,7 +13,15 @@
 		canje_estado: string;
 	}
 
+	interface Canje {
+		insignia_id: string;
+		nombre: string;
+		estado: string;
+		token: string;
+	}
+
 	let ganadas: Ganada[] = $state([]);
+	let canjes: Canje[] = $state([]);
 	let conteos: Record<string, number> = $state({});
 	let cargadoPara: string | null = $state(null);
 
@@ -26,17 +35,25 @@
 	});
 
 	async function cargarMio(id: string) {
-		const [{ data: g }, { data: progreso }] = await Promise.all([
+		// Los tokens de canje no se leen de la tabla (son privados): los da una
+		// RPC que solo devuelve los del vecino logueado.
+		const [{ data: g }, { data: progreso }, { data: mis }] = await Promise.all([
 			supabase
 				.from('insignias_ganadas')
 				.select('insignia_id, ganada_en, canje_estado')
 				.eq('perfil_id', id),
-			supabase.rpc('mi_progreso')
+			supabase.rpc('mi_progreso'),
+			supabase.rpc('mis_canjes')
 		]);
 		ganadas = g ?? [];
 		const p = progreso as { ok?: boolean; conteos?: Record<string, number> } | null;
 		if (p?.ok) conteos = p.conteos ?? {};
+		const c = mis as { ok?: boolean; canjes?: Canje[] } | null;
+		if (c?.ok) canjes = c.canjes ?? [];
 	}
+
+	const pendientes = $derived(canjes.filter((c) => c.estado === 'pendiente'));
+	const entregados = $derived(canjes.filter((c) => c.estado === 'entregado'));
 
 	const puntos = $derived(sesion.perfil?.puntos ?? 0);
 	const escalera = $derived(data.escalera as unknown as Escalon[]);
@@ -155,13 +172,24 @@
 	<p class="cuenta"><button class="salir" onclick={salir}>Cerrar sesión</button></p>
 {/if}
 
-{#if ganadas.some((g) => g.canje_estado === 'pendiente')}
-	<p class="pines panel">
-		🎖 Tenés {ganadas.filter((g) => g.canje_estado === 'pendiente').length} pin{ganadas.filter(
-			(g) => g.canje_estado === 'pendiente'
-		).length === 1
-			? ''
-			: 'es'} esperándote. Te los entrega la comisión en mano.
+{#if pendientes.length}
+	<h2 class="section-h">
+		{pendientes.length === 1
+			? 'Tenés un pin esperándote'
+			: `Tenés ${pendientes.length} pines esperándote`}
+	</h2>
+	<p class="bajada">
+		Te los entrega la comisión en mano. Mostrá el QR y es tuyo — cada uno se canjea una sola vez.
+	</p>
+	{#each pendientes as c (c.insignia_id)}
+		<QrDeCanje nombre={c.nombre} token={c.token} urlBase={data.urlBase} />
+	{/each}
+{/if}
+
+{#if entregados.length}
+	<p class="pines">
+		🎖 Ya tenés en tu poder {entregados.length}
+		{entregados.length === 1 ? 'pin' : 'pines'}: {entregados.map((c) => c.nombre).join(', ')}.
 	</p>
 {/if}
 

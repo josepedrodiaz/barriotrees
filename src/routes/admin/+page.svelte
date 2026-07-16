@@ -149,6 +149,15 @@
 	{data.arboles.length} árboles · {data.arboles.filter((a) => a.activo).length} activos
 </p>
 
+<div class="ayuda-canje panel">
+	<h2>🎖 Para entregar un pin</h2>
+	<p>
+		Escaneá con la cámara del teléfono el QR que te muestra el vecino en su pantalla. Se abre la
+		validación: si el pin corresponde, tocás <b>Entregué el pin</b> y queda marcado. Si ese QR ya se usó,
+		te avisa — no se puede cobrar dos veces.
+	</p>
+</div>
+
 <style>
 	.titulo {
 		display: flex;
@@ -261,6 +270,22 @@
 	.error {
 		color: var(--sed);
 		font-size: 0.9rem;
+	}
+	.ayuda-canje {
+		margin-top: 24px;
+		padding: 14px;
+	}
+	.ayuda-canje h2 {
+		margin: 0 0 8px;
+		color: var(--gold);
+	}
+	.ayuda-canje p {
+		margin: 0;
+		font-size: 17px;
+		color: var(--dim);
+	}
+	.ayuda-canje b {
+		color: var(--ink);
 	}
 	.pie {
 		margin-top: 1rem;

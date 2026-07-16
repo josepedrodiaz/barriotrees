@@ -420,6 +420,7 @@ export type Database = {
       }
     }
     Functions: {
+      canjear_pin: { Args: { p_token: string }; Returns: Json }
       es_admin: { Args: never; Returns: boolean }
       f_estado_arbol: {
         Args: { p_arbol_id: string }
@@ -430,6 +431,7 @@ export type Database = {
         }[]
       }
       mi_progreso: { Args: never; Returns: Json }
+      mis_canjes: { Args: never; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
       reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
       registrar_riego: {
@@ -441,6 +443,7 @@ export type Database = {
         }
         Returns: Json
       }
+      ver_canje: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
       estado_arbol: "feliz" | "bien" | "sediento" | "muy_sediento"
