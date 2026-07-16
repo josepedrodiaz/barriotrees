@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
+	import { ordenarArboles } from '$lib/domain/orden';
 	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
 
 	let { data } = $props();
+
+	// Se recalcula solo cada vez que el GPS reporta una posición nueva: si el
+	// vecino camina, la lista se reacomoda sola (y las filas se deslizan).
+	const arboles = $derived(ordenarArboles(data.arboles, gps.fix));
 
 	onMount(() => {
 		if (quiereDistancias()) seguirPosicion();
@@ -31,7 +37,7 @@
 <h1>Árboles Gigantes</h1>
 <p>
 	Los árboles jóvenes de la Plaza Gigante del Oeste necesitan agua para volverse gigantes. Estos son
-	los que más la necesitan ahora:
+	los que más la necesitan ahora{#if gps.fix}, y de esos, los que tenés más cerca{/if}:
 </p>
 
 {#if gps.error === 'permiso'}
@@ -50,9 +56,9 @@
 {/if}
 
 <ul class="arboles">
-	{#each data.arboles as arbol (arbol.codigo)}
+	{#each arboles as arbol (arbol.codigo)}
 		{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
-		<li>
+		<li animate:flip={{ duration: 400 }}>
 			<a href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
 				<span class="emoji">{info.emoji}</span>
 				<span class="quien">

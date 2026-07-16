@@ -82,6 +82,18 @@ Al ganar cualquier insignia (escalera o mérito), la app muestra un **QR de canj
 
 Todo del lado del servidor: el cliente no puede otorgar puntos ni insignias.
 
+### Lo que el anti-trampa NO puede evitar (y por qué está bien)
+
+**Un GPS falso se puede usar.** Cualquier teléfono con el modo desarrollador activado, o una extensión de navegador, puede mentir la ubicación: el navegador entrega esa posición falsa como si fuera real y el servidor no tiene forma de distinguirla. Es una limitación de la web, no de esta app — le pasa a Pokémon Go, a Strava y a todos.
+
+Qué frena igual a un tramposo casual:
+- **Hay que tener el QR del árbol.** No está en la app: está en la chapita, en la plaza. Para falsear un riego hay que haber ido al menos una vez y copiarse el código.
+- **Los cooldowns limitan el techo.** Aunque alguien falsee todo, no puede sumar más que el que riega de verdad: son 12 h por árbol y 20 h por vecino+árbol.
+- **Cada riego lleva sus 20 segundos.** No hay forma de hacer 50 riegos en un minuto.
+- **La plaza es chica y el barrio se conoce.** Si alguien "riega" 10 árboles por día y nadie lo vio nunca con el balde, se nota. El historial de cada árbol es público en su ficha.
+
+La decisión de fondo: **esto es un juego vecinal por pines, no un banco.** Blindarlo contra un tramposo decidido (foto obligatoria con revisión humana, verificación de red, etc.) costaría mucho trabajo y arruinaría la experiencia de los 99 vecinos honestos para frenar a uno. Si algún día aparece el problema real, se ataca ahí — y la carta más fuerte que tenemos es social, no técnica: los pines los entrega la comisión en la mano.
+
 ## Preguntas abiertas para la comisión del juego 👨‍👩‍👧
 
 1. Nombres de los 7 peldaños — ¿estos, u otros? (el 7 = "Gigante del Oeste" es la apuesta fuerte)
