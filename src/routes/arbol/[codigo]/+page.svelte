@@ -18,7 +18,6 @@
 	let fase: Fase = $state('ficha');
 	let resultado: RiegoResultado | null = $state(null);
 	let escaneando = $state(false);
-	let escaneoAjeno: string | null = $state(null);
 
 	onMount(() => {
 		// Acá el GPS no es un extra: es lo que decide si el riego cuenta, así que
@@ -47,14 +46,9 @@
 
 	function alEscanear(codigo: string) {
 		escaneando = false;
-		if (codigo === arbol.codigo) {
-			registrarEscaneo(codigo); // habilita el riego de este árbol
-			escaneoAjeno = null;
-		} else {
-			// Escaneó otra chapita: lo llevamos a ESE árbol, ya reconocido.
-			registrarEscaneo(codigo);
-			goto(resolve('/arbol/[codigo]', { codigo }));
-		}
+		registrarEscaneo(codigo);
+		// Si escaneó OTRA chapita, lo llevamos a ese árbol (ya reconocido).
+		if (codigo !== arbol.codigo) goto(resolve('/arbol/[codigo]', { codigo }));
 	}
 
 	async function regue() {
