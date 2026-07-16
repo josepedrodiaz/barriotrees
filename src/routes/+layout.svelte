@@ -16,10 +16,10 @@
 {#if !sesion.cargando}
 	<header>
 		{#if sesion.perfil}
-			<span class="vecino">
+			<a class="vecino" href={resolve('/insignias')}>
 				<strong>{sesion.perfil.nombre}</strong>
 				<span class="puntos">{sesion.perfil.puntos} pts</span>
-			</span>
+			</a>
 			<button class="salir" onclick={salir}>salir</button>
 		{:else}
 			<span class="vecino anonimo">Estás sin cuenta</span>
@@ -49,6 +49,8 @@
 		align-items: baseline;
 		gap: 0.5rem;
 		min-width: 0;
+		color: inherit;
+		text-decoration: none;
 	}
 	.vecino strong {
 		overflow: hidden;
