@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { ESTADO_INFO, type Estado } from '$lib/domain/estado';
 	import { distanciaMetros, formatearDistancia } from '$lib/domain/distancia';
-	import { gps, seguirPosicion, quiereDistancias } from '$lib/geo.svelte';
+	import { gps, seguirPosicion } from '$lib/geo.svelte';
 	import { registrarRiego, type RiegoResultado } from '$lib/features/riego/registrarRiego';
 	import { tipAlAzar } from '$lib/features/riego/tips';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
@@ -12,22 +12,31 @@
 
 	let { data } = $props();
 
-	onMount(() => {
-		if (quiereDistancias()) seguirPosicion();
-	});
-
 	type Fase = 'ficha' | 'regando' | 'resultado';
 	let fase: Fase = $state('ficha');
 	let tip = $state('');
 	let resultado: RiegoResultado | null = $state(null);
 
+	onMount(() => {
+		// Acá el GPS no es un extra: es lo que decide si el riego cuenta, así que
+		// se pide apenas se abre la ficha.
+		seguirPosicion();
+	});
+
 	const arbol = $derived(data.arbol);
-	const info = $derived(ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]);
+	const estado = $derived((arbol.estado ?? 'muy_sediento') as Estado);
+	const info = $derived(ESTADO_INFO[estado]);
+	const puntos = $derived(data.puntosPorEstado[estado] ?? 0);
+	const tieneCoords = $derived(arbol.lat != null && arbol.lng != null);
+
 	const distancia = $derived(
-		gps.fix && arbol.lat != null && arbol.lng != null
-			? distanciaMetros(gps.fix.lat, gps.fix.lng, arbol.lat, arbol.lng)
+		gps.fix && tieneCoords
+			? distanciaMetros(gps.fix.lat, gps.fix.lng, arbol.lat!, arbol.lng!)
 			: null
 	);
+	const cerca = $derived(distancia !== null && distancia <= data.radioMetros);
+	/** Sin coordenadas cargadas el servidor todavía no exige proximidad (BT-19). */
+	const puedeRegar = $derived(cerca || !tieneCoords);
 
 	async function regue() {
 		fase = 'regando';
@@ -48,11 +57,11 @@
 		return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 	}
 
-	function diasTexto(dias: number | null): string {
-		if (dias === null) return 'Nunca lo regaron';
-		if (dias < 1) return 'Regado hoy';
+	function cuando(dias: number | null): string {
+		if (dias === null) return 'nunca';
+		if (dias < 1) return 'hoy';
 		const d = Math.floor(dias);
-		return d === 1 ? 'Hace 1 día que no lo riegan' : `Hace ${d} días que no lo riegan`;
+		return d === 1 ? 'ayer' : `hace ${d} días`;
 	}
 </script>
 
@@ -61,46 +70,97 @@
 </svelte:head>
 
 {#if fase === 'ficha'}
-	<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
+	<a class="back" href={resolve('/')}>◀ VOLVER</a>
 
-	<div class="retrato">
-		<div class="arbol">
-			<ArbolVoxel
-				estado={(arbol.estado ?? 'muy_sediento') as Estado}
-				px={180}
-				alt="Árbol {info.etiqueta.toLowerCase()}"
-			/>
+	<div class="hero">
+		<div class="big">
+			<ArbolVoxel {estado} px={150} alt="Árbol {info.etiqueta.toLowerCase()}" />
 		</div>
 		<h1>{arbol.nombre ?? arbol.especie_nombre}</h1>
-		<p class="especie">
-			{#if arbol.nombre}{arbol.especie_nombre} ·
-			{/if}<em>{arbol.especie_cientifico}</em>
-		</p>
-		<p class="sector">📍 {arbol.sector ?? 'la plaza'} · {arbol.codigo}</p>
+		<div class="sci">{arbol.especie_cientifico}</div>
+		<div class="sector">📍 {arbol.sector ?? 'la plaza'} · {arbol.codigo}</div>
 	</div>
 
-	<p class="estado {info.clase}">{info.etiqueta}</p>
-	<p class="dias">{diasTexto(arbol.dias_sin_riego)}</p>
-
-	{#if distancia !== null}
-		<p class="distancia">
-			📍 Estás a {formatearDistancia(distancia)}{#if distancia <= 50}
-				— al lado, ¡dale agua!{/if}
-		</p>
-	{:else if arbol.lat != null && !gps.siguiendo && !gps.error}
-		<p class="distancia">
-			<button class="enlace" onclick={seguirPosicion}>📍 Ver a qué distancia estás</button>
-		</p>
+	{#if estado !== 'feliz'}
+		<div class="statline">
+			<p class="statmsg">
+				{#if estado === 'bien'}
+					Está <b class="ok">bien</b>: fue regado {cuando(arbol.dias_sin_riego)}.
+				{:else if estado === 'sediento'}
+					Está <b class="mal">sediento</b>: hace {Math.floor(arbol.dias_sin_riego ?? 0)} días que nadie
+					lo riega.
+				{:else}
+					¡Está <b class="mal">muy sediento</b>!
+					{#if arbol.dias_sin_riego === null}
+						Todavía nadie lo regó.
+					{:else}
+						Hace {Math.floor(arbol.dias_sin_riego)} días que nadie lo riega.
+					{/if}
+				{/if}
+			</p>
+		</div>
 	{/if}
 
-	<button class="btn green wide" onclick={regue}>💧 Regué este árbol</button>
-	<p class="aviso">
-		Contá solo riegos de verdad: el juego valida que estés en la plaza, y el árbol te lo agradece
-		él.
-	</p>
+	<!-- El anti-trampa contado como lo cuenta la demo: no es un candado, es el
+	     árbol reconociéndote. -->
+	{#if estado === 'feliz'}
+		<div class="magic panel">
+			<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>
+			<div class="mr">
+				<span class="e">💧</span>Fue regado {cuando(arbol.dias_sin_riego)} — ya tomó suficiente agua
+			</div>
+		</div>
+		<p class="lockmsg">
+			🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
+		</p>
+	{:else if puedeRegar}
+		<div class="magic panel">
+			<span class="spark s1">✦</span>
+			<span class="spark s2">✦</span>
+			<span class="spark s3">✦</span>
+			<span class="spark s4">✦</span>
+			<div class="mh">✨ EL ÁRBOL TE RECONOCIÓ ✨</div>
+			<div class="mr"><span class="e">🌳</span>Sabe que sos vos, en este jacarandá</div>
+			{#if cerca}
+				<div class="mr"><span class="e">📍</span>Y siente que estás a su lado</div>
+			{/if}
+		</div>
+		<button class="btn green wide act" onclick={regue}>💧 YA REGUÉ ESTE ÁRBOL (+{puntos})</button>
+		<p class="lockmsg">Tocá recién cuando terminaste de regarlo</p>
+	{:else if distancia !== null}
+		<div class="magic panel fail">
+			<div class="mh">🔒 ESTE RIEGO NO CONTARÍA</div>
+			<div class="mr"><span class="e">🌳</span>Es este jacarandá real ✓</div>
+			<div class="mr no">
+				<span class="e">📍</span>Pero estás lejos (~{formatearDistancia(distancia)}) ✗
+			</div>
+		</div>
+		<button class="btn red wide" disabled>💧 NO PODÉS DESDE ACÁ</button>
+		<p class="lockmsg">
+			Para que cuente tenés que estar al pie del árbol — así nadie suma puntos de mentira.
+		</p>
+	{:else}
+		<div class="magic panel fail">
+			<div class="mh">🔒 PARA REGAR, EL ÁRBOL TIENE QUE VERTE</div>
+			<div class="mr no">
+				<span class="e">📍</span>{gps.error === 'permiso'
+					? 'Necesita tu ubicación y el navegador no se la da'
+					: 'Buscando dónde estás…'}
+			</div>
+		</div>
+		<button class="btn ghost wide" onclick={seguirPosicion}>📍 DAR MI UBICACIÓN</button>
+		<p class="lockmsg">Desde el sillón no se riega. Andá al árbol y probá de nuevo.</p>
+	{/if}
+
+	<div class="card2 panel">
+		<div class="row">
+			<span class="k">Leyenda del árbol</span>
+			<span class="v pronto">— pronto 🚩</span>
+		</div>
+	</div>
 {:else if fase === 'regando'}
 	<div class="regando">
-		<h1>Regando…</h1>
+		<h1>REGANDO…</h1>
 		<div class="barra">
 			<div class="progreso" style="animation-duration: {data.duracionSegundos}s"></div>
 		</div>
@@ -109,124 +169,312 @@
 {:else if resultado}
 	{#if resultado.ok}
 		<div class="resultado">
-			<!-- Ya regado: se lo ve como quedó, no como estaba. Es el premio visual. -->
-			<div class="arbol">
-				<ArbolVoxel estado={(arbol.estado ?? 'feliz') as Estado} px={180} alt="El árbol regado" />
+			<div class="big">
+				<ArbolVoxel estado={(arbol.estado ?? 'feliz') as Estado} px={150} alt="El árbol regado" />
 			</div>
-			<h1>¡Riego registrado!</h1>
-			<p class="puntos">+{resultado.puntos} puntos</p>
+			<h1>¡GRACIAS!</h1>
+			<p class="puntos">+{resultado.puntos}</p>
 			{#if resultado.estado_anterior === 'muy_sediento'}
-				<p>Era un rescate: este árbol te necesitaba de verdad.</p>
+				<p class="rescate">Era un rescate: este árbol te necesitaba de verdad.</p>
 			{/if}
+
 			{#each resultado.insignias_nuevas as insignia (insignia.id)}
-				<div class="insignia panel">
-					<h2>🎖 {insignia.nombre}</h2>
+				<div class="magic panel">
+					<span class="spark s1">✦</span>
+					<span class="spark s2">✦</span>
+					<span class="spark s3">✦</span>
+					<div class="mh">🎖 {insignia.nombre.toUpperCase()}</div>
 					<p class="copy">{insignia.copy}</p>
 				</div>
 			{/each}
+
 			{#if resultado.total_puntos === null}
-				<div class="guardar panel">
-					<p>Tus puntos quedaron guardados solo en este teléfono.</p>
-					<a class="cta" href={resolve('/entrar')}>Guardalos en tu cuenta →</a>
+				<div class="card2 panel">
+					<p class="guardar">Tus puntos quedaron guardados solo en este teléfono.</p>
+					<a class="cta" href={resolve('/entrar')}>GUARDALOS EN TU CUENTA ▶</a>
 				</div>
 			{:else}
 				<p class="acumulado">Llevás {resultado.total_puntos} puntos</p>
 			{/if}
-			<p><a href={resolve('/')}>Ver qué otro árbol necesita agua →</a></p>
+			<a class="btn ghost wide" href={resolve('/')}>◀ VER OTRO ÁRBOL</a>
 		</div>
 	{:else}
 		<div class="resultado">
-			<h1>Mmm, este riego no se pudo registrar</h1>
-			{#if resultado.motivo === 'cooldown_arbol'}
-				<p>
-					Este árbol ya recibió agua hace poquito 💚 Con los árboles jóvenes, mejor no ahogarlos. Se
-					puede volver a regar a las {horaLocal(resultado.proximo_riego)}.
-				</p>
-				<p><a href={resolve('/')}>Hay otros que sí te necesitan →</a></p>
-			{:else if resultado.motivo === 'cooldown_vecino'}
-				<p>A este ya lo regaste vos hace poco. ¡Gracias! Dale una oportunidad a otro sediento.</p>
-				<p><a href={resolve('/')}>Ver los más sedientos →</a></p>
-			{:else if resultado.motivo === 'lejos'}
-				<p>
-					Parece que no estás al lado del árbol{#if resultado.distancia_m}
-						(a unos {resultado.distancia_m} m){/if}. El riego se registra parado en la plaza, balde
-					en mano.
-				</p>
-			{:else if resultado.motivo === 'sin_ubicacion'}
-				<p>
-					Necesitamos tu ubicación para confirmar que estás en la plaza. Activá el GPS y volvé a
-					intentar.
-				</p>
-			{:else}
-				<p>No pudimos registrarlo (¿anda la conexión?). Esperá un momento y probá de nuevo.</p>
-			{/if}
-			<button class="btn ghost wide" onclick={() => (fase = 'ficha')}>Volver al árbol</button>
+			<h1>NO SE PUDO</h1>
+			<div class="magic panel fail">
+				{#if resultado.motivo === 'cooldown_arbol'}
+					<div class="mh">💚 YA TOMÓ AGUA</div>
+					<div class="mr">
+						<span class="e">💧</span>Alguien lo regó hace poquito. Con los árboles jóvenes, mejor no
+						ahogarlos.
+					</div>
+					<div class="mr no">
+						<span class="e">🕐</span>Se puede volver a regar a las {horaLocal(
+							resultado.proximo_riego
+						)}
+					</div>
+				{:else if resultado.motivo === 'cooldown_vecino'}
+					<div class="mh">💚 A ESTE YA LO REGASTE VOS</div>
+					<div class="mr">
+						<span class="e">🙌</span>¡Gracias! Dale una oportunidad a otro sediento.
+					</div>
+				{:else if resultado.motivo === 'lejos'}
+					<div class="mh">🔒 ESTÁS LEJOS DEL ÁRBOL</div>
+					<div class="mr no">
+						<span class="e">📍</span>El riego se registra parado en la plaza, balde en mano.
+					</div>
+				{:else if resultado.motivo === 'sin_ubicacion'}
+					<div class="mh">🔒 SIN UBICACIÓN NO CUENTA</div>
+					<div class="mr no"><span class="e">📍</span>Activá el GPS y probá de nuevo.</div>
+				{:else}
+					<div class="mh">📡 NO PUDIMOS REGISTRARLO</div>
+					<div class="mr no">
+						<span class="e">🔌</span>¿Anda la conexión? Esperá un momento y probá de nuevo.
+					</div>
+				{/if}
+			</div>
+			<button class="btn ghost wide" onclick={() => (fase = 'ficha')}>◀ VOLVER AL ÁRBOL</button>
+			<p class="lockmsg"><a href={resolve('/')}>Ver los que sí necesitan agua</a></p>
 		</div>
 	{/if}
 {/if}
 
 <style>
-	.volver {
+	.back {
+		display: inline-block;
 		font-family: var(--pixel);
 		font-size: 9px;
-		margin: 12px 0 4px;
-	}
-	.volver a {
+		color: var(--tinta-pasto);
 		text-decoration: none;
+		padding: 6px 0;
+		margin-bottom: 4px;
 	}
-	.retrato {
+	.hero {
 		text-align: center;
 		padding: 4px 0;
 	}
-	.arbol {
-		display: flex;
-		justify-content: center;
-		/* La sombra dura, sin desenfoque, lo apoya sobre el pasto sin romper el
-		   pixel art. */
+	.big {
+		width: 150px;
+		margin: 0 auto;
+		/* Sombra dura, sin desenfoque: lo apoya sobre el pasto sin romper el pixel art. */
 		filter: drop-shadow(4px 6px 0 rgba(0, 0, 0, 0.18));
 	}
-	.retrato h1 {
+	.hero h1 {
 		font-size: 16px;
+		/* La pixel se lee mejor en mayúsculas, y así lo hace la demo. */
+		text-transform: uppercase;
 		margin: 6px 0;
 		color: #fff;
 		text-shadow: 3px 3px 0 #000;
 	}
-	.especie {
+	.sci {
+		font-size: 16px;
 		font-style: italic;
-		margin: 0;
 	}
 	.sector {
 		font-size: 15px;
-		margin: 5px 0 0;
+		margin-top: 5px;
 	}
-	.estado {
+	.statline {
 		text-align: center;
-		font-family: var(--pixel);
-		font-size: 13px;
-		margin: 14px 0 0;
+		margin: 12px 0;
 	}
-	.dias {
-		text-align: center;
+	.statmsg {
+		font-size: 19px;
 		color: #1d3a12;
-		margin: 6px 0 14px;
+		margin: 0;
 	}
-	.distancia {
+	.statmsg b.ok {
+		color: #8a5a10;
+	}
+	.statmsg b.mal {
+		color: #a82c30;
+	}
+
+	/* El panel del reconocimiento: verde y latiendo cuando el riego va a contar,
+	   rojo y quieto cuando no. */
+	.magic {
+		position: relative;
+		overflow: hidden;
+		padding: 13px 14px;
+		margin: 10px 0;
+		border-color: var(--feliz);
+		box-shadow:
+			inset 3px 3px 0 rgba(70, 195, 106, 0.25),
+			inset -3px -3px 0 #14101f;
+	}
+	.magic:not(.fail) {
+		animation: magicglow 1.6s steps(2) infinite;
+	}
+	.magic.fail {
+		border-color: var(--sed);
+		box-shadow:
+			inset 3px 3px 0 rgba(229, 72, 77, 0.22),
+			inset -3px -3px 0 #14101f;
+		animation: none;
+	}
+	.magic .mh {
+		position: relative;
+		z-index: 2;
+		font-family: var(--pixel);
+		font-size: 9px;
+		line-height: 1.5;
+		color: var(--feliz);
+		text-shadow: 2px 2px 0 #14401f;
 		text-align: center;
-		margin: 0 0 14px;
+		margin-bottom: 10px;
 	}
-	.aviso {
+	.magic:not(.fail) .mh {
+		animation: twinkle 0.8s steps(2) infinite;
+	}
+	.magic.fail .mh {
+		color: var(--sed);
+		text-shadow: 2px 2px 0 #400f10;
+	}
+	.magic .mr {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		gap: 11px;
+		align-items: center;
 		font-size: 16px;
-		text-align: center;
-		margin: 14px 4px 0;
+		color: var(--ink);
+		padding: 4px 0;
 	}
-	button.enlace {
-		background: none;
-		border: none;
-		padding: 0;
-		font: inherit;
-		color: var(--violet-d);
-		text-decoration: underline;
-		cursor: pointer;
+	.magic .mr .e {
+		font-size: 21px;
+		width: 28px;
+		text-align: center;
+		flex: none;
+	}
+	.magic .mr.no {
+		color: var(--dim);
+	}
+	.magic .spark {
+		position: absolute;
+		z-index: 1;
+		color: var(--gold);
+		font-size: 13px;
+		opacity: 0;
+		pointer-events: none;
+		text-shadow: 0 0 5px var(--gold);
+	}
+	.magic .spark.s1 {
+		top: 7px;
+		left: 11px;
+		animation: sparkle 1.5s steps(3) infinite;
+	}
+	.magic .spark.s2 {
+		top: 40px;
+		right: 14px;
+		animation: sparkle 1.5s steps(3) 0.5s infinite;
+	}
+	.magic .spark.s3 {
+		bottom: 10px;
+		left: 42%;
+		animation: sparkle 1.5s steps(3) 1s infinite;
+	}
+	.magic .spark.s4 {
+		top: 12px;
+		right: 44%;
+		animation: sparkle 1.3s steps(3) 0.8s infinite;
+	}
+	@keyframes magicglow {
+		0%,
+		100% {
+			box-shadow:
+				inset 3px 3px 0 rgba(70, 195, 106, 0.25),
+				inset -3px -3px 0 #14101f,
+				0 0 0 rgba(70, 195, 106, 0);
+		}
+		50% {
+			box-shadow:
+				inset 3px 3px 0 rgba(70, 195, 106, 0.45),
+				inset -3px -3px 0 #14101f,
+				0 0 14px rgba(70, 195, 106, 0.5);
+		}
+	}
+	@keyframes twinkle {
+		0%,
+		100% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.55);
+		}
+	}
+	@keyframes sparkle {
+		0%,
+		100% {
+			opacity: 0;
+			transform: scale(0.3);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	/* El botón de regar late: es la acción de toda la pantalla. */
+	:global(.btn.act) {
+		font-size: 12px;
+		padding: 20px 10px;
+		box-shadow:
+			inset 3px 3px 0 #7ee29a,
+			inset -3px -3px 0 #2b9350,
+			0 7px 0 #1c6437;
+		animation: actpulse 1.3s steps(2) infinite;
+	}
+	:global(.btn.act:active) {
+		transform: translateY(4px);
+		box-shadow:
+			inset 3px 3px 0 #7ee29a,
+			inset -3px -3px 0 #2b9350,
+			0 3px 0 #1c6437;
+		animation: none;
+	}
+	@keyframes actpulse {
+		0%,
+		100% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.14);
+		}
+	}
+	:global(.btn.red) {
+		background: var(--sed);
+		box-shadow:
+			inset 3px 3px 0 #ff8a8d,
+			inset -3px -3px 0 #a82c30,
+			0 5px 0 #7a2023;
+	}
+
+	.lockmsg {
+		text-align: center;
+		font-size: 16px;
+		color: #2c4a1e;
+		margin: 9px 4px 0;
+	}
+	.card2 {
+		padding: 12px 14px;
+		margin: 14px 0;
+	}
+	.card2 .row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 7px 2px;
+		font-size: 17px;
+	}
+	.card2 .k {
+		color: var(--dim);
+	}
+	.card2 .v {
+		color: #fff;
+	}
+	.pronto {
+		color: var(--dim);
 	}
 
 	.regando {
@@ -266,39 +514,32 @@
 
 	.resultado {
 		text-align: center;
-		margin-top: 1rem;
 	}
 	.resultado h1 {
-		font-size: 15px;
+		font-size: 16px;
 		color: #fff;
 		text-shadow: 3px 3px 0 #000;
+		margin: 6px 0;
 	}
 	.puntos {
 		font-family: var(--pixel);
-		font-size: 26px;
+		font-size: 30px;
 		color: var(--gold);
 		text-shadow: 3px 3px 0 #6b4d00;
 		margin: 10px 0;
 	}
-	.insignia {
-		margin: 2rem 0;
-		padding: 14px;
-	}
-	.insignia h2 {
-		margin: 0;
-		color: var(--gold);
+	.rescate {
+		font-size: 18px;
+		color: #1d3a12;
 	}
 	.copy {
+		position: relative;
+		z-index: 2;
 		font-style: italic;
-		max-width: 36ch;
-		margin: 8px auto 0;
 		color: var(--ink);
+		margin: 0;
 	}
 	.guardar {
-		margin: 1.5rem 0;
-		padding: 14px;
-	}
-	.guardar p {
 		margin: 0 0 8px;
 		color: var(--dim);
 		font-size: 17px;
@@ -307,8 +548,14 @@
 		font-family: var(--pixel);
 		font-size: 9px;
 		color: var(--violet-l);
+		text-decoration: none;
 	}
 	.acumulado {
 		color: #1d3a12;
+	}
+	/* El link de "ver otro árbol" se ve y se toca como botón. */
+	a.btn {
+		text-decoration: none;
+		margin-top: 14px;
 	}
 </style>
