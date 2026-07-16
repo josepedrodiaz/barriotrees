@@ -1,13 +1,29 @@
 <script lang="ts">
 	import '../app.css';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
 	import { sesion, seguirSesion } from '$lib/features/auth/sesion.svelte';
+	import Bienvenida from '$lib/features/onboarding/Bienvenida.svelte';
+	import { bienvenida, yaLaVio } from '$lib/features/onboarding/vista.svelte';
 
 	let { children } = $props();
 
 	seguirSesion();
+
+	// Va en el layout y no en una pantalla: el vecino puede caer en cualquier
+	// lado (una chapita lo deja en la ficha del árbol, un link en la home).
+	// Se espera a saber si hay sesión para no llegar tarde ni de más.
+	const mostrarBienvenida = $derived(
+		!sesion.cargando && !sesion.session && !bienvenida.cerrada && !yaLaVio()
+	);
+	// Si llegó escaneando una chapita, el paso 2 le habla de SU árbol.
+	const arbolDelQr = $derived(page.data.arbol?.nombre ?? page.data.arbol?.especie_nombre);
 </script>
+
+{#if mostrarBienvenida}
+	<Bienvenida arbol={arbolDelQr} />
+{/if}
 
 <svelte:head>
 	<link rel="icon" href={favicon} />

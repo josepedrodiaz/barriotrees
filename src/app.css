@@ -162,6 +162,20 @@ button.btn:disabled {
 		inset -3px -3px 0 #2b9350,
 		0 2px 0 #1c6437;
 }
+.btn.gold {
+	background: var(--gold);
+	color: #3a2c00;
+	box-shadow:
+		inset 3px 3px 0 #ffe08a,
+		inset -3px -3px 0 #c99a1e,
+		0 5px 0 #8a6a10;
+}
+.btn.gold:active {
+	box-shadow:
+		inset 3px 3px 0 #ffe08a,
+		inset -3px -3px 0 #c99a1e,
+		0 2px 0 #8a6a10;
+}
 .btn.ghost {
 	background: #4b4270;
 	box-shadow:
