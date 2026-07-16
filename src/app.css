@@ -67,6 +67,21 @@ button.primario:disabled {
 	opacity: 0.5;
 }
 
+/* Al imprimir (las chapitas QR del admin) la app deja de ser una pantalla de
+   teléfono: fuera el ancho de 480px, el header y los fondos. */
+@media print {
+	body {
+		background: white;
+	}
+	header {
+		display: none;
+	}
+	main {
+		max-width: none;
+		padding: 0;
+	}
+}
+
 .estado-feliz {
 	color: var(--verde);
 }
