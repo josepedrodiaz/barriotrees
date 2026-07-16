@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { supabase } from '$lib/supabase';
-	import { sesion } from '$lib/features/auth/sesion.svelte';
+	import { sesion, salir } from '$lib/features/auth/sesion.svelte';
 	import { progresoEscalera, gano, type Escalon } from '$lib/domain/insignias';
 
 	let { data } = $props();
@@ -151,6 +151,10 @@
 	{/each}
 </ul>
 
+{#if sesion.session}
+	<p class="cuenta"><button class="salir" onclick={salir}>Cerrar sesión</button></p>
+{/if}
+
 {#if ganadas.some((g) => g.canje_estado === 'pendiente')}
 	<p class="pines panel">
 		🎖 Tenés {ganadas.filter((g) => g.canje_estado === 'pendiente').length} pin{ganadas.filter(
@@ -280,6 +284,18 @@
 		margin: 4px 0 0;
 		font-size: 16px;
 		color: var(--dim);
+	}
+	.cuenta {
+		text-align: center;
+		margin-top: 24px;
+	}
+	.salir {
+		font: inherit;
+		background: none;
+		border: none;
+		color: var(--dim);
+		text-decoration: underline;
+		cursor: pointer;
 	}
 	.pines {
 		margin-top: 16px;
