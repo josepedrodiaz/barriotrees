@@ -50,4 +50,10 @@
 		text-decoration: underline;
 		text-underline-offset: 4px;
 	}
+
+	@media print {
+		nav {
+			display: none;
+		}
+	}
 </style>
