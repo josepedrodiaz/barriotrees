@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		bloquesArbol,
 		bloquesSegunEstado,
 		proyectar,
 		sombra,
@@ -11,15 +12,19 @@
 	import type { Estado } from '$lib/domain/estado';
 
 	interface Props {
-		estado: Estado;
+		estado?: Estado;
+		/** Salud cruda 0..1. Pisa a `estado`: sirve para animar el árbol creciendo. */
+		salud?: number;
 		px?: number;
 		/** Texto para lectores de pantalla; sin esto el árbol es un dibujo mudo. */
 		alt?: string;
 	}
 
-	let { estado, px = 120, alt }: Props = $props();
+	let { estado, salud, px = 120, alt }: Props = $props();
 
-	const bloques = $derived(bloquesSegunEstado(estado));
+	const bloques = $derived(
+		salud !== undefined ? bloquesArbol(salud) : bloquesSegunEstado(estado ?? 'muy_sediento')
+	);
 
 	// Las tres caras de cada cubo. La de arriba va plena y las laterales
 	// oscurecidas: eso es todo lo que hace falta para que se vea el volumen.
