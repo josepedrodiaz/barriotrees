@@ -111,10 +111,12 @@
 				</div>
 			{/each}
 			{#if resultado.total_puntos === null}
-				<p class="guardar">
-					Tus puntos quedaron guardados en este teléfono. Pronto vas a poder crear tu cuenta para no
-					perderlos nunca.
-				</p>
+				<div class="guardar">
+					<p>Tus puntos quedaron guardados solo en este teléfono.</p>
+					<a class="cta" href={resolve('/entrar')}>Guardalos en tu cuenta →</a>
+				</div>
+			{:else}
+				<p class="acumulado">Llevás {resultado.total_puntos} puntos</p>
 			{/if}
 			<p><a href={resolve('/')}>Ver qué otro árbol necesita agua →</a></p>
 		</div>
@@ -250,7 +252,20 @@
 		margin: 0.5rem auto 0;
 	}
 	.guardar {
+		margin: 2rem 0;
+		padding: 1rem;
+		border: 1px dashed #d8d3c7;
+		border-radius: 12px;
+	}
+	.guardar p {
+		margin: 0 0 0.5rem;
 		font-size: 0.9rem;
+		color: var(--tinta-suave);
+	}
+	.cta {
+		font-weight: 700;
+	}
+	.acumulado {
 		color: var(--tinta-suave);
 	}
 </style>
