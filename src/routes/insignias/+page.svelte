@@ -1,11 +1,43 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { supabase } from '$lib/supabase';
-	import { sesion, salir } from '$lib/features/auth/sesion.svelte';
+	import { sesion, salir, cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import { progresoEscalera, gano, type Escalon } from '$lib/domain/insignias';
 	import QrDeCanje from '$lib/features/premios/QrDeCanje.svelte';
 
 	let { data } = $props();
+
+	// Editar el nombre (BT-26): así en el ranking no aparece el prefijo del mail.
+	let editandoNombre = $state(false);
+	let nombreNuevo = $state('');
+	let guardandoNombre = $state(false);
+	let errorNombre: string | null = $state(null);
+
+	function abrirNombre() {
+		nombreNuevo = sesion.perfil?.nombre ?? '';
+		errorNombre = null;
+		editandoNombre = true;
+	}
+
+	async function guardarNombre(evento: SubmitEvent) {
+		evento.preventDefault();
+		guardandoNombre = true;
+		errorNombre = null;
+		const { data: res } = await supabase.rpc('actualizar_mi_nombre', { p_nombre: nombreNuevo });
+		guardandoNombre = false;
+		const r = res as { ok?: boolean; motivo?: string } | null;
+		if (r?.ok) {
+			await cargarPerfil();
+			editandoNombre = false;
+		} else {
+			errorNombre =
+				r?.motivo === 'muy_corto'
+					? 'Muy corto: al menos 2 letras.'
+					: r?.motivo === 'muy_largo'
+						? 'Muy largo: hasta 24 letras.'
+						: 'No se pudo guardar. Probá de nuevo.';
+		}
+	}
 
 	interface Ganada {
 		insignia_id: string;
@@ -96,7 +128,30 @@
 <p class="volver"><a href={resolve('/')}>◀ volver</a></p>
 
 {#if sesion.session}
-	<h1>Tus insignias</h1>
+	<div class="perfil">
+		{#if editandoNombre}
+			<form class="nombre-form" onsubmit={guardarNombre}>
+				<input
+					bind:value={nombreNuevo}
+					maxlength="24"
+					placeholder="Tu nombre en el juego"
+					autocomplete="off"
+				/>
+				<div class="nombre-acciones">
+					<button class="btn sm" type="submit" disabled={guardandoNombre}>
+						{guardandoNombre ? '…' : 'Guardar'}
+					</button>
+					<button type="button" class="enlace" onclick={() => (editandoNombre = false)}
+						>cancelar</button
+					>
+				</div>
+				{#if errorNombre}<p class="error">{errorNombre}</p>{/if}
+			</form>
+		{:else}
+			<h1>{sesion.perfil?.nombre}</h1>
+			<button class="enlace" onclick={abrirNombre}>cambiar nombre</button>
+		{/if}
+	</div>
 	<p class="puntaje"><strong>{nro(puntos)}</strong> puntos</p>
 
 	{#if progreso.siguiente}
@@ -207,6 +262,40 @@
 		text-align: center;
 		color: #fff;
 		text-shadow: 3px 3px 0 #000;
+	}
+	.perfil {
+		text-align: center;
+	}
+	.perfil .enlace {
+		font-size: 15px;
+		color: var(--violet-l);
+	}
+	.nombre-form {
+		max-width: 280px;
+		margin: 10px auto 0;
+	}
+	.nombre-form input {
+		width: 100%;
+		padding: 10px;
+		border: 3px solid var(--edge-d);
+		background: var(--panel2);
+		color: var(--ink);
+		font: inherit;
+		text-align: center;
+		box-shadow: inset 3px 3px 0 #1a1528;
+	}
+	.nombre-acciones {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 8px;
+	}
+	.error {
+		color: var(--sed);
+		font-size: 16px;
+		text-align: center;
+		margin: 8px 0 0;
 	}
 	.puntaje {
 		margin: 8px 0 14px;
