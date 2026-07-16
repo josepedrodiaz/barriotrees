@@ -50,6 +50,8 @@ Estado: solo README con el punteo de requerimientos. No hay código todavía.
 
 20. **La progresión es una escalera de 7 insignias por puntos acumulados** (decidido jul 2026): la 1ª se gana con el primer riego (imposible no ganarla), la dificultad crece exponencialmente y la 7ª ("Gigante del Oeste" propuesto) es muy muy difícil — la alcanzan pocos. Cada peldaño es un pin físico. La escalera puede crecer con el tiempo si 7 quedan cortas. Unifica "niveles de cuidador" e insignias de progresión en un solo sistema; las insignias de mérito (Rescatista, Madrugador, Centinela) van aparte. **El reglamento completo del juego (puntos, umbrales, cooldowns, canje) está en [docs/reglas-del-juego.md](docs/reglas-del-juego.md)** — lo revisa la comisión del juego (la familia de Pedro) antes de congelar el esquema.
 
+21. **El estilo visual final es el de la demo** (decidido jul 2026): pixel art oscuro, paleta violeta, tipografías Press Start 2P (títulos) y VT323 (lectura), y el **árbol voxel isométrico** que ya vive en `tools/demo.html` (función `isoTree`). Es lo que aprobó la comisión de cultura, así que no se rediseña: se porta. Clave: el árbol **no necesita assets** — se genera por código a partir de la salud (0..1), interpolando el color de las hojas y sumando bloques de follaje y flores violetas a medida que mejora. La app actual (sobria y clara) es un placeholder funcional: la deuda visual se salda después de cerrar el MVP funcional (tickets BT-29 árbol y BT-30 sistema visual).
+
 ## Requerimientos (resumen; el detalle está en README.md)
 
 - Circuito: llenar balde en bebedero → regar → escanear QR del árbol → riego registrado → puntos + premios
