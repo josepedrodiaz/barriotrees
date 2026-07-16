@@ -67,18 +67,12 @@ button.primario:disabled {
 	opacity: 0.5;
 }
 
-/* Al imprimir (las chapitas QR del admin) la app deja de ser una pantalla de
-   teléfono: fuera el ancho de 480px, el header y los fondos. */
+/* Al imprimir, fuera los fondos. Ojo: el header y el <main> se ocultan desde
+   el <style> del layout y no desde acá — Svelte escopa los estilos de cada
+   componente y esas reglas le ganan en especificidad a un selector global. */
 @media print {
 	body {
 		background: white;
-	}
-	header {
-		display: none;
-	}
-	main {
-		max-width: none;
-		padding: 0;
 	}
 }
 

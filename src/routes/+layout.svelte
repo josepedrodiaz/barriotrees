@@ -78,4 +78,17 @@
 		text-decoration: underline;
 		cursor: pointer;
 	}
+
+	/* Imprimir es solo para las chapitas QR: la app desaparece y queda la hoja.
+	   Va acá y no en app.css porque estas reglas tienen que compartir el
+	   scoping de las de arriba para poder pisarlas. */
+	@media print {
+		header {
+			display: none;
+		}
+		main {
+			max-width: none;
+			padding: 0;
+		}
+	}
 </style>
