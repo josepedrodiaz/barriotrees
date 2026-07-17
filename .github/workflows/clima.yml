@@ -1,0 +1,63 @@
+# Tarea diaria: trae el clima de la plaza de Open-Meteo y lo guarda en la base.
+# Es el cron del balance hídrico (BT-33). Corre del lado de GitHub, no del
+# navegador del vecino, así no depende de la señal en la plaza ni gasta el
+# límite de la API.
+#
+# Necesita dos secretos del repo (Settings → Secrets → Actions):
+#   SUPABASE_URL        → https://xebdkoqorgnjatyisvky.supabase.co
+#   SUPABASE_ANON_KEY   → la publishable key (sb_publishable_...)
+#   CLIMA_TOKEN         → el token que da el panel admin (/admin, sección Clima)
+
+name: clima
+
+on:
+  schedule:
+    # 09:12 UTC ≈ 06:12 en La Plata: ya cerró el día anterior en Open-Meteo.
+    - cron: '12 9 * * *'
+  workflow_dispatch: {} # permite correrla a mano desde la pestaña Actions
+
+jobs:
+  traer-clima:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Traer de Open-Meteo y guardar en Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CLIMA_TOKEN: ${{ secrets.CLIMA_TOKEN }}
+        run: |
+          set -euo pipefail
+          LAT=-34.9787
+          LNG=-58.0202
+          # past_days=2 cubre el día de ayer aunque la Action falle un día.
+          URL="https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LNG&daily=precipitation_sum,temperature_2m_max,et0_fao_evapotranspiration&past_days=2&forecast_days=1&timezone=America/Argentina/Buenos_Aires"
+          curl -sS "$URL" -o clima.json
+
+          # Un registrar_clima por cada día que trajo la API (upsert idempotente).
+          node --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+          const d = JSON.parse(readFileSync('clima.json', 'utf8')).daily;
+          const { SUPABASE_URL, SUPABASE_ANON_KEY, CLIMA_TOKEN } = process.env;
+          let ok = 0;
+          for (let i = 0; i < d.time.length; i++) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/registrar_clima`, {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                p_token: CLIMA_TOKEN,
+                p_fecha: d.time[i],
+                p_lluvia: d.precipitation_sum[i],
+                p_et0: d.et0_fao_evapotranspiration[i],
+                p_temp: d.temperature_2m_max[i]
+              })
+            });
+            const j = await res.json();
+            if (!j.ok) throw new Error(`Falló ${d.time[i]}: ${JSON.stringify(j)}`);
+            ok++;
+          }
+          console.log(`Clima guardado: ${ok} día(s).`);
+          JS
