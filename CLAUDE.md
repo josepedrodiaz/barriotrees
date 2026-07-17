@@ -12,7 +12,7 @@ Estado: solo README con el punteo de requerimientos. No hay código todavía.
 - Prioridad: que sea MUY gamificada, con muchos premios, distintivos y niveles
 - **La plaza es la Plaza Gigante del Oeste** (La Plata, 49 bis/50 entre 174 bis/175 bis). Plano y especies en [docs/especies-umbrales.md](docs/especies-umbrales.md). La **galería central son jacarandás** (se replantaron porque los del plano original se murieron) — dan a la ventana de la oficina de Pedro y son **zona prioritaria** del proyecto.
 - **Se hace en conjunto con dos comisiones de vecinos del barrio: la comisión de cultura y la comisión de arbolado.** Pedro presenta el proyecto a la comisión de cultura, y esa comisión lleva la batuta / centraliza todo el proyecto. (Implica: las decisiones grandes se validan con cultura; arbolado aporta lo técnico de los árboles.)
-- **Lanzamiento: 21 de septiembre de 2026 (Día de la Primavera).** Fecha límite dura. Encaja perfecto: arranca la temporada de riego y el Día de la Primavera es el evento de lanzamiento natural (el "bautismo de la plaza"). Desde hoy (jul 2026) son ~2,5 meses → obliga a un MVP chico y bien cortado.
+- **Lanzamiento: 21 de septiembre de 2026 (Día de la Primavera).** Fecha límite dura. Encaja perfecto: arranca la temporada de riego y el Día de la Primavera es el evento de lanzamiento natural (el "bautismo de la plaza"). **Estado real (actualizado 17-jul-2026): el MVP ya está terminado y en producción** — se desarrolló en ~12 días (4 al 16 de julio). **Restan +60 días hasta el lanzamiento, con mucho margen.** El encuadre de "apretados de tiempo" del arranque quedó viejo: ya NO hay urgencia de calendario. El foco ahora es pulir, validar con las comisiones y decidir el dominio antes de imprimir chapitas; no cortar features por tiempo. (Nota histórica: al iniciar, el 4-jul, se estimaron ~2,5 meses y eso llevó a cortar un MVP chico; la estimación resultó holgada.)
 - **Los logros permanentes se entregan como pines físicos reales.** La esposa de Pedro tiene una pinera (máquina de hacer pines), así que los premios que no se pierden (insignias permanentes, y por extensión niveles/tutela) se materializan en un pin real entregable. Las banderas rotativas NO son pines (se pierden). Esto hace el premio tangible y refuerza la distinción permanente vs. rotativo.
 
 ## Decisiones ya tomadas (no reabrir sin preguntar)
@@ -88,7 +88,7 @@ Criterio de corte: **¿qué tiene que poder hacer la app el 21/09 en la plaza?**
 2. **v1.1 (semanas después, en temporada):** banderas Leyenda, notificaciones, modo verano (puntos dobles en calor), tabla de posiciones más completa.
 3. **v2 (temporada que viene):** familias, tutela, metas colectivas, resumen de temporada, comercios.
 
-**Notas:** el corte ya es ambicioso para ~2,5 meses con stack nuevo. Si se aprieta, lo primero que se sacrifica es el tabla de posiciones, después Madrugador; el piso intocable es circuito + un pin + admin. Los umbrales de estado por especie se cierran con la comisión de arbolado.
+**Notas:** el corte se temía ambicioso para ~2,5 meses con stack nuevo, pero se completó entero en ~12 días — no hizo falta sacrificar nada (tabla de posiciones y Madrugador entraron). Con +60 días de margen al 21/09, la lista de "primero se sacrifica X" quedó sin efecto. Los umbrales de estado por especie se cierran con la comisión de arbolado.
 
 ## Pendientes / próximos pasos
 
