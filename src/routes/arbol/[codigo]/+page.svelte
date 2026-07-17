@@ -122,10 +122,18 @@
 	     (decisión 17): sin eso, no hay botón de riego. -->
 	{#if estado === 'feliz'}
 		<div class="magic panel">
-			<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>
-			<div class="mr">
-				<span class="e">💧</span>Fue regado {cuando(arbol.dias_sin_riego)} — ya tomó suficiente agua
-			</div>
+			{#if (arbol.lluvia_3d ?? 0) >= 3}
+				<div class="mh">🌧️ LA LLUVIA LO REGÓ</div>
+				<div class="mr">
+					<span class="e">💧</span>Llovió {Math.round(arbol.lluvia_3d ?? 0)} mm estos días — el suelo
+					tiene agua de sobra
+				</div>
+			{:else}
+				<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>
+				<div class="mr">
+					<span class="e">💧</span>Fue regado {cuando(arbol.dias_sin_riego)} — ya tomó suficiente agua
+				</div>
+			{/if}
 		</div>
 		<p class="lockmsg">
 			🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>

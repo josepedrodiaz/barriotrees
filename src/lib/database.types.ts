@@ -95,6 +95,30 @@ export type Database = {
           },
         ]
       }
+      clima_diario: {
+        Row: {
+          creado_en: string
+          et0_mm: number
+          fecha: string
+          lluvia_mm: number
+          temp_max: number | null
+        }
+        Insert: {
+          creado_en?: string
+          et0_mm?: number
+          fecha: string
+          lluvia_mm?: number
+          temp_max?: number | null
+        }
+        Update: {
+          creado_en?: string
+          et0_mm?: number
+          fecha?: string
+          lluvia_mm?: number
+          temp_max?: number | null
+        }
+        Relationships: []
+      }
       config: {
         Row: {
           clave: string
@@ -419,6 +443,21 @@ export type Database = {
           },
         ]
       }
+      secretos: {
+        Row: {
+          clave: string
+          valor: string
+        }
+        Insert: {
+          clave: string
+          valor: string
+        }
+        Update: {
+          clave?: string
+          valor?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_arboles_estado: {
@@ -427,6 +466,7 @@ export type Database = {
           altura_cm: number | null
           codigo: string | null
           creado_en: string | null
+          deficit_mm: number | null
           dias_sin_riego: number | null
           especie_cientifico: string | null
           especie_id: string | null
@@ -437,11 +477,11 @@ export type Database = {
           frecuencia_dias_override: number | null
           id: string | null
           lat: number | null
+          lluvia_3d: number | null
           lng: number | null
           nombre: string | null
           notas: string | null
           sector: string | null
-          ultimo_riego: string | null
         }
         Relationships: [
           {
@@ -468,6 +508,7 @@ export type Database = {
       actualizar_mi_nombre: { Args: { p_nombre: string }; Returns: Json }
       canjear_pin: { Args: { p_token: string }; Returns: Json }
       es_admin: { Args: never; Returns: boolean }
+      f_deficit_mm: { Args: { p_arbol: string }; Returns: number }
       f_estado_arbol: {
         Args: { p_arbol_id: string }
         Returns: {
@@ -478,8 +519,19 @@ export type Database = {
       }
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
+      obtener_clima_token: { Args: never; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
       reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
+      registrar_clima: {
+        Args: {
+          p_et0: number
+          p_fecha: string
+          p_lluvia: number
+          p_temp?: number
+          p_token: string
+        }
+        Returns: Json
+      }
       registrar_riego: {
         Args: {
           p_codigo: string

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { gps, seguirPosicion } from '$lib/geo.svelte';
+	import { supabase } from '$lib/supabase';
 	import { guardarArbol, type ArbolAdmin } from '$lib/features/admin/arboles';
 
 	let { data } = $props();
@@ -8,6 +9,15 @@
 	let editando: Partial<ArbolAdmin> | null = $state(null);
 	let guardando = $state(false);
 	let error: string | null = $state(null);
+
+	// El token del clima para el secreto CLIMA_TOKEN de GitHub Actions (BT-33).
+	// Se pide a demanda: no anda dando vueltas en la página.
+	let climaToken: string | null = $state(null);
+	async function verClimaToken() {
+		const { data: res } = await supabase.rpc('obtener_clima_token');
+		const r = res as { ok?: boolean; token?: string } | null;
+		climaToken = r?.ok ? (r.token ?? '(vacío)') : 'No se pudo (¿sos admin?)';
+	}
 
 	const especieDe = (id: string) => data.especies.find((e) => e.id === id)?.nombre_comun ?? '—';
 
@@ -158,6 +168,20 @@
 	</p>
 </div>
 
+<div class="ayuda-canje panel">
+	<h2>🌦️ Clima (tarea diaria)</h2>
+	<p>
+		El estado de los árboles ya usa el clima real de la plaza (lluvia y evaporación). La tarea que
+		lo actualiza corre sola en GitHub una vez por día. Para que funcione hay que cargar el token una
+		sola vez como secreto <b>CLIMA_TOKEN</b> en GitHub (Settings → Secrets → Actions).
+	</p>
+	{#if climaToken}
+		<p class="token">{climaToken}</p>
+	{:else}
+		<button class="btn sm" onclick={verClimaToken}>Ver el token del clima</button>
+	{/if}
+</div>
+
 <style>
 	.titulo {
 		display: flex;
@@ -286,6 +310,17 @@
 	}
 	.ayuda-canje b {
 		color: var(--ink);
+	}
+	.token {
+		font-family: var(--read);
+		font-size: 18px;
+		color: var(--gold);
+		background: var(--panel2);
+		border: 2px solid var(--edge-d);
+		padding: 8px 10px;
+		margin: 8px 0 0;
+		word-break: break-all;
+		user-select: all;
 	}
 	.pie {
 		margin-top: 1rem;
