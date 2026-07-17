@@ -1,7 +1,9 @@
 <script lang="ts">
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { pwaInfo } from 'virtual:pwa-info';
 	import favicon from '$lib/assets/favicon.svg';
 	import { sesion, seguirSesion } from '$lib/features/auth/sesion.svelte';
 	import Bienvenida from '$lib/features/onboarding/Bienvenida.svelte';
@@ -10,6 +12,16 @@
 	let { children } = $props();
 
 	seguirSesion();
+
+	// PWA (BT-32): registra el service worker que deja la app instalada y con el
+	// shell precacheado — abre al toque aunque la señal de la plaza esté floja.
+	onMount(() => {
+		if ('serviceWorker' in navigator) {
+			import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+		}
+	});
+
+	const manifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
 	// Va en el layout y no en una pantalla: el vecino puede caer en cualquier
 	// lado (una chapita lo deja en la ficha del árbol, un link en la home).
@@ -27,6 +39,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<!-- PWA: el manifest (instalable), el ícono de iOS y el color de la barra
+	     del sistema en el violeta del panel. -->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- linkTag lo genera el plugin, no el usuario -->
+	{@html manifestLink}
+	<link rel="apple-touch-icon" href="/iconos/apple-touch-icon.png" />
+	<meta name="theme-color" content="#221c36" />
 	<!-- Las fuentes son lo primero que se nota faltando: que empiecen a bajar
 	     junto con el HTML y no cuando el CSS las descubre. -->
 	<link

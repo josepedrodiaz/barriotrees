@@ -1,5 +1,10 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
+
+// Tipos de los módulos virtuales de la PWA (virtual:pwa-register / pwa-info).
+/// <reference types="vite-plugin-pwa/client" />
+/// <reference types="vite-plugin-pwa/info" />
+
 declare global {
 	namespace App {
 		// interface Error {}

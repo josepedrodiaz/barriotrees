@@ -26,10 +26,30 @@ export default defineConfig({
 					'Regá los árboles jóvenes de la Plaza Gigante del Oeste, sumá puntos y ayudalos a hacerse gigantes.',
 				lang: 'es',
 				start_url: '/',
+				scope: '/',
 				display: 'standalone',
-				background_color: '#ffffff',
-				theme_color: '#2e7d32'
-				// icons: se agregan en BT-20 (onboarding + PWA instalable)
+				orientation: 'portrait',
+				// Los colores del sistema visual (decisión 21): el splash y la barra
+				// del sistema salen en el violeta del panel, no en blanco.
+				background_color: '#221c36',
+				theme_color: '#221c36',
+				icons: [
+					{ src: '/iconos/icon-192.png', sizes: '192x192', type: 'image/png' },
+					{ src: '/iconos/icon-512.png', sizes: '512x512', type: 'image/png' },
+					// El maskable deja aire alrededor: Android lo recorta en círculo.
+					{
+						src: '/iconos/maskable-512.png',
+						sizes: '512x512',
+						type: 'image/png',
+						purpose: 'maskable'
+					}
+				]
+			},
+			workbox: {
+				// Precachea el shell entero (JS, CSS, fuentes, íconos): la app abre al
+				// toque aunque la señal de la plaza esté floja. Los datos siguen
+				// viniendo de la red (sin conexión real es v2, decisión 13).
+				globPatterns: ['client/**/*.{js,css,ico,png,svg,woff2,webmanifest}']
 			}
 		})
 	],
