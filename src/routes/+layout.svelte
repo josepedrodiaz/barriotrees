@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { sesion, seguirSesion } from '$lib/features/auth/sesion.svelte';
+	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import Bienvenida from '$lib/features/onboarding/Bienvenida.svelte';
 	import { bienvenida, yaLaVio } from '$lib/features/onboarding/vista.svelte';
 
@@ -66,7 +67,7 @@
      nivel del vecino viven en el panel de la home, no acá — repetirlos era lo
      que apretaba la barra. -->
 <header>
-	<a class="logo" href={resolve('/')}>🌳 Árboles <b>Gigantes</b></a>
+	<a class="logo" href={resolve('/')}><ArbolVoxel salud={1} px={34} />Árboles <b>Gigantes</b></a>
 	{#if !sesion.cargando}
 		{#if sesion.perfil}
 			<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
