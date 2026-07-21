@@ -1,0 +1,6 @@
+<!-- Favicon: el emoji 🌳, el mismo árbol de la bienvenida (BT-34). Se dibuja
+     con la fuente de emojis del sistema: frondoso y legible hasta a 16px,
+     cosa que el árbol voxel (mucho detalle, mucho aire) no lograba. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <text x="50" y="57" text-anchor="middle" dominant-baseline="central" font-size="92">🌳</text>
+</svg>

@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
+	import favicon from '$lib/assets/favicon.svg';
 	import { sesion, seguirSesion } from '$lib/features/auth/sesion.svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import Bienvenida from '$lib/features/onboarding/Bienvenida.svelte';
@@ -38,7 +39,7 @@
 {/if}
 
 <svelte:head>
-	<link rel="icon" href="/iconos/icon-192.png" type="image/png" />
+	<link rel="icon" href={favicon} type="image/svg+xml" />
 	<!-- PWA: el manifest (instalable), el ícono de iOS y el color de la barra
 	     del sistema en el violeta del panel. -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- linkTag lo genera el plugin, no el usuario -->
