@@ -136,7 +136,12 @@
 			{/if}
 		</div>
 		<p class="lockmsg">
-			🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
+			{#if (arbol.lluvia_3d ?? 0) >= 3}
+				<!-- La lluvia es global: si a este lo regó, no hay sedientos a donde mandar. -->
+				🚫 Regarlo de más no suma. Hoy la lluvia trabajó por todos — volvé en unos días ⛅
+			{:else}
+				🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
+			{/if}
 		</p>
 	{:else if !escaneado}
 		<!-- No escaneó todavía: este es el gate que faltaba. -->

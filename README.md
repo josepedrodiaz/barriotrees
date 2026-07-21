@@ -1,77 +1,36 @@
 # Árboles Gigantes 🌳
 
-App gamificada para que los vecinos cuidemos los árboles jóvenes de la plaza: llenás el balde en el bebedero, regás, escaneás el QR del árbol y sumás.
+**[arboles-gigantes.vercel.app](https://arboles-gigantes.vercel.app)**
 
-## La idea
+El juego del barrio para cuidar los árboles jóvenes de la plaza. Regás un arbolito con el balde, escaneás su chapita QR y sumás puntos. El árbol te lo agradece a su manera: su ícono se pone más verde, le crece follaje y, si está bien cuidado, florece.
 
-Los árboles recién plantados necesitan riego constante, especialmente en verano. Árboles Gigantes convierte ese cuidado en un juego comunitario: cada riego registrado suma puntos al vecino y mejora el estado del árbol en la app.
+Los árboles recién plantados necesitan riego constante durante sus primeros veranos — la mayoría de los que se pierden, se pierden por sed. Árboles Gigantes convierte ese cuidado en un juego comunitario: en vez de un cronograma de riego que nadie sigue, una plaza llena de vecinos que compiten por cuidarla.
 
-## Circuito principal
+## Cómo se juega
 
-1. Cada árbol joven tiene una chapita con QR único
-2. El vecino llena el balde en el bebedero de la plaza y riega
-3. Escanea el QR y el riego queda registrado
-4. Suma puntos, el ícono del árbol mejora, desbloquea premios
+1. **Buscá un árbol con sed.** La app te muestra cuáles necesitan agua ahora, ordenados por urgencia.
+2. **Llená el balde** en el bebedero de la plaza y regá.
+3. **Escaneá su chapita QR.** El árbol te reconoce: tenés que estar ahí, al lado, para que el riego cuente.
+4. **Sumá puntos y ganá premios.** Un árbol sediento paga más que uno feliz — el juego te lleva justo a donde hace falta el agua.
 
-## El árbol - perfil digital
+La sed de cada árbol no es un contador ciego de días: se calcula con el clima real de la plaza (lluvia y evaporación, actualizados todos los días). Si llovió fuerte, la app te avisa que hoy la lluvia trabajó por todos.
 
-- Ficha por árbol: especie, fecha de plantación (sin foto: todo con iconos, para no pesar en mala conectividad)
-- Estado visual según días sin riego: sediento / bien / feliz
-- El ícono del árbol evoluciona según el nivel de riego alcanzado. Es solo visual, para gamificar: no comunica cambios físicos reales del árbol
-- Historial de riegos: quiénes y cuándo
-- Ponerle nombre al árbol es un premio: se desbloquea a los N riegos y se elige por votación entre quienes lo regaron
+## Los premios se tocan
 
-## Pantalla inicial
+Las insignias no viven solo en la pantalla: **cada logro permanente es un pin físico real**, hecho a mano en el barrio, que se entrega en mano mostrando un QR de canje. Hay una escalera de siete insignias por puntos — la primera se gana con el primer riego, la séptima la van a alcanzar muy pocos — y aparte las de mérito: Rescatista (salvar árboles muy sedientos), Madrugador, Sereno.
 
-- Arranca con las alarmas de los árboles más sedientos ahora, ordenados por urgencia (días sin riego vs. frecuencia objetivo de la especie)
-- Es el gancho: abrís la app y ya sabés a qué árbol ir
+También hay tabla de posiciones del barrio, y se viene más: títulos rotativos que se defienden semana a semana, la tutela de un árbol propio, notificaciones cuando un árbol te necesita.
 
-## Gamificación
+## Sin fricción, a propósito
 
-Tres tipos de premio, cada uno con su función:
+- **No hay app que instalar:** el QR abre la página del árbol en el navegador. Funciona en cualquier teléfono, y si querés la instalás como PWA.
+- **Regás primero, cuenta después:** tu primer riego suma sin registrarte. La cuenta (Google o enlace mágico) llega recién cuando querés guardar tus puntos.
+- **Pensada para la señal floja de la plaza:** liviana, sin fotos pesadas, con el árbol dibujado por código.
 
-- **Insignias (permanentes):** se ganan y quedan para siempre. Premian que arranques. Primer riego, Madrugador, Rescatista (regar árboles muy sedientos N veces), Verano heroico
-- **Banderas / títulos rotativos (estilo Strava "Leyenda"):** los tenés mientras seas el mejor en una ventana móvil de X días. Se defienden y se pueden perder. Leyenda de un árbol (quien más lo regó en los últimos 30 días), Leyenda del barrio. Es la competencia viva
-- **Niveles de cuidador:** progresión por hitos, con beneficios. Suben, no bajan
-- **Tutela (premio Tutor):** vínculo 1-a-1 con un árbol. Ganás la tutela de un árbol específico, tu nombre queda en su ficha. El honor más alto — no es un puntaje, es una relación
+## La plaza
 
-Puntos por riego con extra: árbol sediento, ola de calor, horario recomendado. Rachas semanales de riego.
+El proyecto arranca en la **Plaza Gigante del Oeste** (La Plata), junto a las comisiones de cultura y arbolado del barrio. Lanzamiento: **21 de septiembre de 2026**, Día de la Primavera, con el primer riego colectivo y la entrega de los primeros pines.
 
-El exceso de riego no quita puntos. Un árbol ya feliz da 0 o pocos puntos (el extra vive en los sedientos) y al escanearlo un mensaje te redirige a los sedientos cercanos. La regulación es por diseño, sin castigo.
+## Para curiosos técnicos
 
-Cada desbloqueo muestra un copy muy motivador, no solo el ícono. La idea es que ganar un premio se sienta.
-
-## Comunidad
-
-- Tabla de posiciones semanal y mensual del barrio
-- Muro de actividad
-- Metas colectivas con premio comunitario
-
-## Modo verano
-
-- Frecuencia objetivo de riego por especie y edad, más exigente en verano
-- Alertas por notificación cuando un árbol lleva días sin agua
-- Puntos dobles en días de calor extremo
-
-## Anti-trampa
-
-- Tiempo de espera: un mismo árbol no suma dos riegos en menos de X horas
-- Geolocalización al escanear
-- Foto del riego opcional para insignias especiales
-
-## Admin
-
-- Alta y baja de árboles, generación de QRs imprimibles
-- Panel: árboles en riesgo, riegos por semana, vecinos activos
-
-## Decisiones de producto
-
-- App web PWA orientada a celular, sin app nativa: el QR abre el navegador, cero fricción. Funciona en iPhone y Android con una sola publicación
-- Registro simple: nombre + correo o teléfono
-- Debe funcionar con mala conectividad: guardar el riego sin conexión y sincronizar
-
-## Pendientes
-
-- Definir el MVP
-- Nombre del rol del vecino: cuidador, tutor u otro
-- Tecnologías
+PWA en SvelteKit + Supabase (Postgres, RPC y RLS para la integridad del juego), clima diario de Open-Meteo vía GitHub Actions, deploy en Vercel. Las reglas del juego son funciones puras y el anti-trampa vive en la base, no en el cliente. Detalle de arquitectura en [docs/arquitectura.md](docs/arquitectura.md).

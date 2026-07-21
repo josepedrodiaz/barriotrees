@@ -6,6 +6,7 @@
 	import { pwaInfo } from 'virtual:pwa-info';
 	import favicon from '$lib/assets/favicon.svg';
 	import { sesion, seguirSesion } from '$lib/features/auth/sesion.svelte';
+	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import Bienvenida from '$lib/features/onboarding/Bienvenida.svelte';
 	import { bienvenida, yaLaVio } from '$lib/features/onboarding/vista.svelte';
 
@@ -38,7 +39,7 @@
 {/if}
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} type="image/svg+xml" />
 	<!-- PWA: el manifest (instalable), el ícono de iOS y el color de la barra
 	     del sistema en el violeta del panel. -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- linkTag lo genera el plugin, no el usuario -->
@@ -67,7 +68,7 @@
      nivel del vecino viven en el panel de la home, no acá — repetirlos era lo
      que apretaba la barra. -->
 <header>
-	<a class="logo" href={resolve('/')}>🌳 Árboles <b>Gigantes</b></a>
+	<a class="logo" href={resolve('/')}><ArbolVoxel salud={1} px={34} />Árboles <b>Gigantes</b></a>
 	{#if !sesion.cargando}
 		{#if sesion.perfil}
 			<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
