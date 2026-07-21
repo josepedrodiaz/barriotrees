@@ -11,6 +11,7 @@ export interface Perfil {
 	nombre: string;
 	puntos: number;
 	es_admin: boolean;
+	cambios_nombre: number;
 }
 
 export const sesion = $state({
@@ -45,7 +46,7 @@ export async function cargarPerfil(): Promise<void> {
 	if (!id) return;
 	const { data } = await supabase
 		.from('perfiles')
-		.select('id, nombre, puntos, es_admin')
+		.select('id, nombre, puntos, es_admin, cambios_nombre')
 		.eq('id', id)
 		.maybeSingle();
 	sesion.perfil = data ?? null;

@@ -8,10 +8,15 @@
 	let { data } = $props();
 
 	// Editar el nombre (BT-26): así en el ranking no aparece el prefijo del mail.
+	// Con límite (BT-35): 2 cambios en total, y el segundo avisa que es el último.
 	let editandoNombre = $state(false);
 	let nombreNuevo = $state('');
 	let guardandoNombre = $state(false);
 	let errorNombre: string | null = $state(null);
+
+	const cambiosHechos = $derived(sesion.perfil?.cambios_nombre ?? 0);
+	const ultimaChance = $derived(cambiosHechos === 1);
+	const sinCambios = $derived(cambiosHechos >= 2);
 
 	function abrirNombre() {
 		nombreNuevo = sesion.perfil?.nombre ?? '';
@@ -35,7 +40,11 @@
 					? 'Muy corto: al menos 2 letras.'
 					: r?.motivo === 'muy_largo'
 						? 'Muy largo: hasta 24 letras.'
-						: 'No se pudo guardar. Probá de nuevo.';
+						: r?.motivo === 'duplicado'
+							? 'Ese nombre ya lo usa otro vecino. Elegí uno propio.'
+							: r?.motivo === 'sin_cambios'
+								? 'Ya usaste tus dos cambios de nombre.'
+								: 'No se pudo guardar. Probá de nuevo.';
 		}
 	}
 
@@ -131,6 +140,9 @@
 	<div class="perfil">
 		{#if editandoNombre}
 			<form class="nombre-form" onsubmit={guardarNombre}>
+				{#if ultimaChance}
+					<p class="aviso">⚠️ Esta es tu última chance de cambiar tu nombre. Pensalo bien.</p>
+				{/if}
 				<input
 					bind:value={nombreNuevo}
 					maxlength="24"
@@ -149,7 +161,9 @@
 			</form>
 		{:else}
 			<h1>{sesion.perfil?.nombre}</h1>
-			<button class="enlace" onclick={abrirNombre}>cambiar nombre</button>
+			{#if !sinCambios}
+				<button class="enlace" onclick={abrirNombre}>cambiar nombre</button>
+			{/if}
 		{/if}
 	</div>
 	<p class="puntaje"><strong>{nro(puntos)}</strong> puntos</p>
@@ -296,6 +310,12 @@
 		font-size: 16px;
 		text-align: center;
 		margin: 8px 0 0;
+	}
+	.aviso {
+		color: var(--gold);
+		font-size: 16px;
+		text-align: center;
+		margin: 0 0 8px;
 	}
 	.puntaje {
 		margin: 8px 0 14px;

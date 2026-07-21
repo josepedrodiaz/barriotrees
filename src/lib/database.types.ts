@@ -274,6 +274,7 @@ export type Database = {
       }
       perfiles: {
         Row: {
+          cambios_nombre: number
           creado_en: string
           es_admin: boolean
           id: string
@@ -281,6 +282,7 @@ export type Database = {
           puntos: number
         }
         Insert: {
+          cambios_nombre?: number
           creado_en?: string
           es_admin?: boolean
           id: string
@@ -288,6 +290,7 @@ export type Database = {
           puntos?: number
         }
         Update: {
+          cambios_nombre?: number
           creado_en?: string
           es_admin?: boolean
           id?: string
