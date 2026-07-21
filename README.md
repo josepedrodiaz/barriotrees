@@ -2,9 +2,9 @@
 
 **[arboles-gigantes.vercel.app](https://arboles-gigantes.vercel.app)**
 
-El juego del barrio para cuidar los árboles jóvenes de la plaza. Regás un arbolito con el balde, escaneás su chapita QR y sumás puntos. El árbol te lo agradece a su manera: su ícono se pone más verde, le crece follaje y, si está bien cuidado, florece.
+Un juego del barrio para cuidar los árboles jóvenes de la plaza. Regás un arbolito con el balde, escaneás su chapita QR y sumás puntos. El árbol te lo agradece a su manera: su ícono se pone más verde, le crece follaje y, si está bien cuidado, florece.
 
-Los árboles recién plantados necesitan riego constante durante sus primeros veranos — la mayoría de los que se pierden, se pierden por sed. Árboles Gigantes convierte ese cuidado en un juego comunitario: en vez de un cronograma de riego que nadie sigue, una plaza llena de vecinos que compiten por cuidarla.
+Sabemos que los árboles recién plantados necesitan riego constante durante sus primeros veranos. Árboles Gigantes convierte ese cuidado en un juego comunitario.
 
 ## Cómo se juega
 
