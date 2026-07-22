@@ -386,8 +386,9 @@
   function llo(ll) { return { lat: ll.lat, lng: ll.lng }; }
   function initialCorners() {
     var saved = loadPlan();
-    if (saved && saved.tl) { if (saved.op) $("planOpacity").value = saved.op; return saved; }
     var c = map.getCenter(), b = map.getBounds();
+    if (saved && saved.tl && distM(saved.tl.lat, saved.tl.lng, c.lat, c.lng) < 3000) { if (saved.op) $("planOpacity").value = saved.op; return saved; }
+    if (saved && saved.tl) { try { localStorage.removeItem(KEY_PLAN); } catch (e) {} }
     var hLat = (b.getNorth() - b.getSouth()) * 0.45;
     var wLng = hLat * PLAN_AR / Math.cos(c.lat * Math.PI / 180);
     return { tl: { lat: c.lat + hLat / 2, lng: c.lng - wLng / 2 }, tr: { lat: c.lat + hLat / 2, lng: c.lng + wLng / 2 }, bl: { lat: c.lat - hLat / 2, lng: c.lng - wLng / 2 } };
