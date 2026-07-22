@@ -8,6 +8,7 @@ La herramienta para georreferenciar los árboles de la plaza es [tools/relevamie
 - Un pin por árbol: se pone tocando el mapa, o con **"Árbol en mi GPS"** parado al lado del árbol (el pin se ajusta arrastrando). Corte por precisión de GPS y aviso de duplicados.
 - ABM de especies, sectores predefinidos, modo hilera, y un modo prueba separado para ensayar sin ensuciar los datos reales.
 - **Exportar/copiar JSON**, y combinación de los JSON de varias personas con dedupe (para hacer el censo en grupo).
+- **Carga de escritorio + verificación en campo (BT-36):** con el plano superpuesto, cada pin que se pone nace con `src: "plano"` y `verificado: false` (pin con borde punteado, tag "sin verificar" en la lista). Otro día, en la plaza, se toca el pin y el botón **"✓ Lo vi en la plaza — confirmar"** lo marca verificado (editar/borrar ya existían). La lista tiene filtro "solo sin verificar" con contador. Los pines por GPS nacen verificados (estás parado al lado); los registros viejos sin el campo se tratan como verificados. Dato de la comisión de arbolado (jul 2026): salvo las hileras de jacarandá, el plano coincide con la realidad — la carga desde plano es casi-definitiva y la caminata es control.
 
 ## ⚠️ Dónde viven los datos
 
