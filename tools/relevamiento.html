@@ -65,6 +65,10 @@
   .pin span { transform: rotate(45deg); color: #fff; font-size: 11px; font-weight: 800; font-family: ui-monospace, monospace; text-shadow: 0 1px 1px rgba(0,0,0,.4); }
   .pin.sel { box-shadow: 0 0 0 4px rgba(107,79,191,.55), 0 2px 5px rgba(0,0,0,.4); }
   .pin.draft { box-shadow: 0 0 0 5px rgba(107,79,191,.4), 0 2px 6px rgba(0,0,0,.45); animation: drop .45s ease; }
+  .pin.unv { border-style: dashed; opacity: .85; }
+  .btn-verif { background: #E7F5EC; color: var(--good); }
+  .btn-verif.done { background: #F1EEE7; color: var(--muted); font-weight: 600; }
+  .unvtag { color: var(--warn); font-weight: 700; }
   @keyframes drop { 0% { transform: rotate(-45deg) scale(.3); } 60% { transform: rotate(-45deg) scale(1.15); } 100% { transform: rotate(-45deg) scale(1); } }
   .me-dot { width: 16px; height: 16px; border-radius: 50%; background: #2b7de9; border: 3px solid #fff; box-shadow: 0 0 0 3px rgba(43,125,233,.3); }
   .phandle { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 800; }
@@ -119,7 +123,7 @@
 
   <div class="card" id="planCard">
     <p class="title">🗺️ Plano de la plaza</p>
-    <p class="sub">Superponé el plano sobre el satélite para saber qué especie es cada árbol.</p>
+    <p class="sub">Superponé el plano sobre el satélite para saber qué especie es cada árbol. Con el plano visible podés <b>cargar desde el escritorio</b>: cada árbol que pongas nace "según plano", <b>sin verificar</b>, y otro día lo confirmás en la plaza.</p>
     <label class="inline" style="cursor:pointer">
       <input type="checkbox" id="planToggle">
       <span class="label" style="margin:0">Mostrar el plano encima del mapa</span>
@@ -157,6 +161,7 @@
     <div class="field"><span class="label">Sector</span><select id="edSector"></select></div>
     <div class="field"><span class="label">Nota</span><textarea id="edNota" placeholder="Observaciones, dudas de especie…"></textarea></div>
     <div class="field mono" id="edCoords" style="font-size:12px; color:var(--muted)"></div>
+    <div class="btn-row" style="margin-bottom:8px"><button class="btn btn-verif grow" id="edVerif" style="display:none"></button></div>
     <div class="btn-row">
       <button class="btn btn-primary grow" id="edSave">✓ Guardar árbol</button>
       <button class="btn btn-ghost grow" id="edCancel">Cancelar</button>
@@ -168,6 +173,10 @@
   <div class="card">
     <details id="listDetails">
       <summary>Árboles cargados (<span id="count2">0</span>)</summary>
+      <label class="inline" style="margin-top:10px; cursor:pointer">
+        <input type="checkbox" id="fltUnv">
+        <span class="label" style="margin:0">Mostrar solo los sin verificar (<span id="countUnv">0</span>)</span>
+      </label>
       <ul class="trees" id="list" style="margin-top:12px"></ul>
       <div class="empty" id="empty">Todavía no pusiste ningún árbol.<br>Tocá <b>➕ Poner árbol acá</b> para arrancar.</div>
     </details>
@@ -280,7 +289,8 @@
     else { map.removeLayer(sat); street.addTo(map); this.textContent = "🗺️"; }
   });
 
-  function pinIcon(rec, sel) { return L.divIcon({ className: "", iconSize: [26, 26], iconAnchor: [13, 25], html: '<div class="pin ' + (sel ? "sel" : "") + '" style="background:' + colorFor(rec.especie) + '"><span>' + esc(rec.etiqueta || "") + '</span></div>' }); }
+  function isUnv(rec) { return rec.verificado === false; }
+  function pinIcon(rec, sel) { return L.divIcon({ className: "", iconSize: [26, 26], iconAnchor: [13, 25], html: '<div class="pin ' + (sel ? "sel" : "") + (isUnv(rec) ? " unv" : "") + '" style="background:' + colorFor(rec.especie) + '"><span>' + esc(rec.etiqueta || "") + '</span></div>' }); }
   function addMarker(rec) {
     var m = L.marker([rec.lat, rec.lng], { icon: pinIcon(rec, false), draggable: true });
     m.on("click", function () { select(rec.id); });
@@ -295,6 +305,7 @@
   function draftIcon() { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 29], html: '<div class="pin draft" style="background:' + colorFor(draft.especie) + '"><span>' + esc(draft.etiqueta || "") + '</span></div>' }); }
   function startDraft(lat, lng, src) {
     closeEditor();
+    if (src === "mapa" && planOverlay) src = "plano";
     draft = { especie: $("defEspecie").value, sector: $("defSector").value, etiqueta: $("autoNum").checked ? String($("nextNum").value || "").trim() : "", nota: "", lat: lat, lng: lng, src: src };
     draftMarker = L.marker([lat, lng], { icon: draftIcon(), draggable: true, zIndexOffset: 1000 });
     draftMarker.on("dragend", function () { var ll = draftMarker.getLatLng(); draft.lat = ll.lat; draft.lng = ll.lng; showCoords(draft); });
@@ -303,7 +314,7 @@
   function moveDraft(lat, lng) { draft.lat = lat; draft.lng = lng; draftMarker.setLatLng([lat, lng]); showCoords(draft); }
   function saveDraft() {
     if (!draft) return;
-    var rec = { id: Date.now() + "-" + Math.floor(Math.random() * 1000), etiqueta: (draft.etiqueta || "").trim(), especie: draft.especie, cientifico: sciFor(draft.especie), sector: draft.sector, nota: draft.nota, lat: draft.lat, lng: draft.lng, acc: null, src: draft.src, ts: new Date().toISOString() };
+    var rec = { id: Date.now() + "-" + Math.floor(Math.random() * 1000), etiqueta: (draft.etiqueta || "").trim(), especie: draft.especie, cientifico: sciFor(draft.especie), sector: draft.sector, nota: draft.nota, lat: draft.lat, lng: draft.lng, acc: null, src: draft.src, verificado: draft.src === "gps", ts: new Date().toISOString() };
     data.push(rec); persist(); addMarker(rec); renderList();
     if ($("autoNum").checked) { var n = parseInt(rec.etiqueta, 10); if (isFinite(n)) $("nextNum").value = n + 1; }
     closeEditor(); toast("Árbol " + (rec.etiqueta ? "#" + rec.etiqueta : data.length) + " guardado ✓");
@@ -316,10 +327,11 @@
     $("edEspecie").value = obj.especie; $("edEtiqueta").value = obj.etiqueta || "";
     $("edSector").value = obj.sector || SECTORS[0]; $("edNota").value = obj.nota || "";
     $("edsw").style.background = colorFor(obj.especie);
-    $("edtitle").textContent = isDraft ? "Nuevo árbol · sin guardar" : (obj.etiqueta ? "Árbol #" + obj.etiqueta : "Árbol sin número");
+    $("edtitle").textContent = isDraft ? "Nuevo árbol · sin guardar" : (obj.etiqueta ? "Árbol #" + obj.etiqueta : "Árbol sin número") + (isUnv(obj) ? " · según plano" : "");
     showCoords(obj);
     $("edSave").style.display = isDraft ? "" : "none"; $("edCancel").style.display = isDraft ? "" : "none";
     $("edClose").style.display = isDraft ? "none" : ""; $("edDel").style.display = isDraft ? "none" : "";
+    $("edVerif").style.display = isDraft ? "none" : ""; if (!isDraft) setVerifBtn(obj);
     $("editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
   function curObj() { return draft ? draft : byId(selId); }
@@ -328,6 +340,18 @@
   $("edEtiqueta").addEventListener("input", function () { var o = curObj(); if (!o) return; o.etiqueta = this.value.trim(); if (!draft) $("edtitle").textContent = o.etiqueta ? "Árbol #" + o.etiqueta : "Árbol sin número"; afterEdit(o); });
   $("edSector").addEventListener("change", function () { var o = curObj(); if (!o) return; o.sector = this.value; $("defSector").value = this.value; if (!draft) { persist(); renderList(); } });
   $("edNota").addEventListener("input", function () { var o = curObj(); if (!o) return; o.nota = this.value; if (!draft) persist(); });
+  function setVerifBtn(o) {
+    var vb = $("edVerif");
+    if (isUnv(o)) { vb.className = "btn btn-verif grow"; vb.textContent = "✓ Lo vi en la plaza — confirmar"; }
+    else { vb.className = "btn btn-verif done grow"; vb.textContent = "Verificado ✓ · tocar para desmarcar"; }
+  }
+  $("edVerif").addEventListener("click", function () {
+    var o = byId(selId); if (!o) return;
+    o.verificado = isUnv(o);
+    persist(); refreshMarker(o); renderList(); setVerifBtn(o);
+    $("edtitle").textContent = (o.etiqueta ? "Árbol #" + o.etiqueta : "Árbol sin número") + (isUnv(o) ? " · según plano" : "");
+    toast(o.verificado === false ? "Quedó como sin verificar" : "Verificado en la plaza ✓");
+  });
   $("edSave").addEventListener("click", saveDraft);
   $("edCancel").addEventListener("click", function () { closeEditor(); toast("Descartado"); });
   $("edClose").addEventListener("click", closeEditor);
@@ -404,15 +428,19 @@
 
   // ---- list ----
   function renderList() {
+    var unv = data.filter(isUnv);
     $("count").textContent = data.length; $("count2").textContent = data.length;
-    $("empty").style.display = data.length ? "none" : "block";
+    $("countUnv").textContent = unv.length;
+    var shown = $("fltUnv").checked ? unv : data;
+    $("empty").style.display = shown.length ? "none" : "block";
     var ul = $("list"); ul.innerHTML = "";
-    data.slice().sort(function (a, b) { return (parseFloat(a.etiqueta) || 1e9) - (parseFloat(b.etiqueta) || 1e9); }).forEach(function (t) {
+    shown.slice().sort(function (a, b) { return (parseFloat(a.etiqueta) || 1e9) - (parseFloat(b.etiqueta) || 1e9); }).forEach(function (t) {
       var li = document.createElement("li"); li.className = "tree";
-      li.innerHTML = '<span class="sw" style="background:' + colorFor(t.especie) + '"></span><div class="body"><div class="sp">' + esc(t.especie) + (t.etiqueta ? ' <span class="tag">#' + esc(t.etiqueta) + '</span>' : '') + '</div><div class="meta">' + esc(t.sector || "") + (t.nota ? ' · “' + esc(t.nota) + '”' : "") + '</div></div><button class="iconbtn" data-go="' + t.id + '">ver</button>';
+      li.innerHTML = '<span class="sw" style="background:' + colorFor(t.especie) + '"></span><div class="body"><div class="sp">' + esc(t.especie) + (t.etiqueta ? ' <span class="tag">#' + esc(t.etiqueta) + '</span>' : '') + '</div><div class="meta">' + esc(t.sector || "") + (isUnv(t) ? ' · <span class="unvtag">sin verificar</span>' : "") + (t.nota ? ' · “' + esc(t.nota) + '”' : "") + '</div></div><button class="iconbtn" data-go="' + t.id + '">ver</button>';
       ul.appendChild(li);
     });
   }
+  $("fltUnv").addEventListener("change", renderList);
   $("list").addEventListener("click", function (e) { var id = e.target.getAttribute("data-go"); if (id) { select(id); map.setView([byId(id).lat, byId(id).lng], Math.max(map.getZoom(), 19)); } });
 
   // ---- especies ABM ----
@@ -444,7 +472,7 @@
 
   // ---- datos ----
   function download(name, text, mime) { var a = document.createElement("a"); a.href = "data:" + mime + ";charset=utf-8," + encodeURIComponent(text); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
-  function toCsv() { var cols = ["etiqueta", "especie", "cientifico", "sector", "lat", "lng", "nota", "src", "ts"]; var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }; var lines = [cols.join(",")]; data.forEach(function (t) { lines.push(cols.map(function (c) { return q(t[c]); }).join(",")); }); return lines.join("\n"); }
+  function toCsv() { var cols = ["etiqueta", "especie", "cientifico", "sector", "lat", "lng", "nota", "src", "verificado", "ts"]; var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }; var lines = [cols.join(",")]; data.forEach(function (t) { lines.push(cols.map(function (c) { return q(t[c]); }).join(",")); }); return lines.join("\n"); }
   $("expJson").addEventListener("click", function () { download("barriotrees-relevamiento.json", JSON.stringify(data, null, 2), "application/json"); });
   $("expCsv").addEventListener("click", function () { download("barriotrees-relevamiento.csv", toCsv(), "text/csv"); });
   $("copyJson").addEventListener("click", function () { var t = JSON.stringify(data, null, 2); if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { toast("JSON copiado"); }, function () { toast("No pude copiar"); }); else toast("Usá ⬇︎ JSON"); });
