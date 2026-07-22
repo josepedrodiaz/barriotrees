@@ -221,7 +221,7 @@
   var KEY_REAL = "bt_relevamiento_v2", KEY_TEST = "bt_relevamiento_test", KEY_SP = "bt_especies_v1", KEY_PLAN = "bt_plan_align_v1";
   var testMode = false;
   function activeKey() { return testMode ? KEY_TEST : KEY_REAL; }
-  var DEFAULT_CENTER = [-34.9298, -57.9920], DEFAULT_ZOOM = 18;
+  var DEFAULT_CENTER = [-34.97880, -58.02021], DEFAULT_ZOOM = 17;
   var PLAN_SRC = "plano.png", PLAN_AR = 3509 / 2482;
 
   function defaultSpecies() { return [
@@ -503,6 +503,5 @@
   // ---- init ----
   data.forEach(addMarker); renderList(); renderSpManager();
   if (data.length) { try { map.fitBounds(L.featureGroup(Object.keys(markers).map(function (id) { return markers[id]; })).getBounds().pad(0.3)); } catch (e) {} }
-  else if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function (p) { map.setView([p.coords.latitude, p.coords.longitude], 19); }, function () {}, { enableHighAccuracy: true, timeout: 12000 });
 })();
 </script>
