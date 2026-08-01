@@ -1,0 +1,48 @@
+# CD: al mergear a main, aplica las migraciones pendientes a la base de
+# producción — pero solo si los tests pasan primero. El front lo deploya Vercel
+# por su cuenta (integración de Git); esto cubre lo único que quedaba a mano: la
+# base. `supabase db push` es idempotente, así que un push sin migraciones
+# nuevas no hace nada.
+#
+# Secretos que necesita (Settings → Secrets and variables → Actions):
+#   SUPABASE_ACCESS_TOKEN  → token personal (supabase.com/dashboard/account/tokens)
+#   SUPABASE_DB_PASSWORD   → password de la base (Supabase → Project Settings → Database)
+# El project-ref (xebdkoqorgnjatyisvky) es público, va hardcodeado.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      PUBLIC_SUPABASE_ANON_KEY: placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+
+  migrate:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref xebdkoqorgnjatyisvky
+      - run: supabase db push
