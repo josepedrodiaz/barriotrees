@@ -471,6 +471,7 @@ export type Database = {
           creado_en: string | null
           deficit_mm: number | null
           dias_sin_riego: number | null
+          en_programa: boolean | null
           especie_cientifico: string | null
           especie_id: string | null
           especie_nombre: string | null
