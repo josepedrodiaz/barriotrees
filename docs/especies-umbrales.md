@@ -11,50 +11,39 @@
 
 La galería del centro de la plaza figura en el plano con otra especie, pero **esos árboles se murieron al plantarlos y se replantaron con jacarandás** (*Jacaranda mimosifolia*). Es la galería que da a la ventana de la oficina de Pedro. **Zona prioritaria del proyecto** — es la que más importa hacer prosperar. (Candidata natural a "bosquecito" adoptable por una familia en v2, y a tutela.)
 
-## Modelo de umbrales (cómo se calcula el estado)
+## Modelo de umbrales (cómo se calcula el estado) — VALIDADO por arbolado (ago 2026)
 
-Cada especie tiene una **frecuencia objetivo `F`**: días entre riegos para un **árbol joven en temporada de riego** (primavera–verano en La Plata). El estado sale de los **días desde el último riego (`d`)**:
+**Un solo criterio para todos los árboles del programa** (la comisión de arbolado simplificó la tabla por especie): apto para riego pasados **2 días** sin lluvia ni riego, sediento pasados **4**. El estado sale de los **días equivalentes de sed (`d`)** contra la frecuencia objetivo `F`:
 
-| Estado | Rango | Color |
+| Estado | Rango (con F=2) | Color |
 |--------|-------|-------|
-| feliz | `d ≤ 0.5·F` | verde |
-| bien | `0.5·F < d ≤ F` | neutro |
-| **sediento** | `F < d ≤ 2·F` | amarillo |
-| **muy sediento** (cuenta para Rescatista) | `d > 2·F` | rojo |
+| feliz | `d ≤ 1 día` | verde |
+| bien | `1 < d ≤ 2` | neutro |
+| **sediento** | `2 < d ≤ 4` | amarillo |
+| **muy sediento** (cuenta para Rescatista) | `d > 4` | rojo |
 
-**Todo administrable:**
-- `F` por especie (tabla de abajo). Es el valor por defecto; el admin lo edita.
-- Los multiplicadores de las bandas (`0.5`, `1`, `2`) son globales por defecto, y se pueden afinar por especie si hace falta.
-- **Multiplicador estacional:** fuera de temporada `F` se agranda (ej. ×2 en otoño, ×3 en invierno). El lanzamiento es en primavera, así que los valores de la tabla (verano) son los que rigen al arrancar.
+Con las bandas de siempre (`0.5 / 1 / 2`), ese criterio 2/4 es exactamente **F = 2 para todas las especies del programa**. Antes la tabla proponía 2/3/4 según especie; arbolado lo unificó en 2.
 
-> Los valores son un punto de partida horticultural, **a validar con la comisión de arbolado** (son los que saben). La app los toma como valor por defecto editable, no como verdad fija.
+**`d` no es días de calendario: es días *reales* de sed.** El balance hídrico (BT-33) mide el déficit de agua real (evapotranspiración diaria − lluvia, de Open-Meteo) y lo divide por `et0_referencia_mm` para pasarlo a "días equivalentes". Por eso:
+- Si llueve, el árbol tarda más en ponerse sediento (la lluvia riega por vos).
+- En una ola de calor se seca más rápido que el calendario.
+- En un día seco de verano, 1 día real ≈ 1 día de sed → se cumple el 2/4 tal cual.
 
-## Tabla de especies y frecuencia objetivo (árbol joven, verano)
+**Todo administrable:** `F` por especie, las bandas (`0.5 / 1 / 2`) y `et0_referencia_mm` son config editable por el admin. El admin puede subir la F de un árbol puntual si hace falta (`frecuencia_dias_override`).
 
-| # ref | Especie | Común | F (días) | sediento | muy sediento |
-|-------|---------|-------|:--------:|:--------:|:------------:|
-| — | *Jacaranda mimosifolia* | **Jacarandá** (galería central) | **2** | >2 d | >4 d |
-| A5 | *Paulownia tomentosa* | Kiri | 2 | >2 d | >4 d |
-| A6 | *Liquidambar styraciflua* | Liquidámbar | 2 | >2 d | >4 d |
-| A3 | *Fraxinus pennsylvanica* | Fresno rojo | 2 | >2 d | >4 d |
-| A11 | *Citrus reticulata* | Mandarino | 2 | >2 d | >4 d |
-| A12 | *Citrus × sinensis* | Naranjo | 2 | >2 d | >4 d |
-| A13 | *Citrus × paradisi* | Pomelo | 2 | >2 d | >4 d |
-| A2 | *Tabebuia impetiginosa* | Lapacho rosado | 3 | >3 d | >6 d |
-| A4 | *Tipuana tipu* | Tipa | 3 | >3 d | >6 d |
-| A7 | *Bauhinia forficata* | Pezuña de vaca | 3 | >3 d | >6 d |
-| A8 | *Bauhinia variegata* | Pezuña de vaca rosa | 3 | >3 d | >6 d |
-| A10 | *Prunus cerasifera* Atropurpurea | Ciruelo de jardín | 3 | >3 d | >6 d |
-| A14 | *Prunus armeniaca* | Damasco | 3 | >3 d | >6 d |
-| A15 | *Ginkgo biloba* | Ginkgo | 3 | >3 d | >6 d |
-| A9 | *Washingtonia filifera* | Palmera washingtonia | 4 | >4 d | >8 d |
-| A1 | Preexistencia | (árboles ya establecidos) | 7 | — | — |
+### `et0_referencia_mm` = 4.5 (la vara de conversión)
 
-**Criterio de los grupos:**
-- **F=2 (alta):** crecimiento rápido y/o alta demanda de agua (Kiri, Liquidámbar), cítricos (sensibles al estrés hídrico), fresno, y el **jacarandá joven** mientras se establece.
-- **F=3 (media):** especies rústicas de crecimiento medio; de adultas toleran sequía, pero de jóvenes necesitan riego sostenido (Tipa, Lapacho, Bauhinias, Prunus, Ginkgo).
-- **F=4 (baja):** tolerante a sequía (palmera), aun así de joven pide agua.
-- **Preexistencia:** ya establecidos, fuera del programa activo (riego de emergencia solo); `F` alto o directamente excluidos del ranking de sedientos.
+Es el ET0 de un día típico de verano en La Plata: cuánto seca el suelo un día pleno de riego. Traduce la F de la especie (en días) al déficit en mm que tolera. **No cambia por estación** — el ET0 real diario ya hace ese trabajo (en invierno evapora ~1 mm/día y el árbol casi no se pone sediento; en verano ~4.5 y se cumple el 2/4). Por eso el multiplicador estacional quedó redundante (config en 1).
+
+Fuente de autoridad: **INTA Balcarce** (el clima más parecido a La Plata en la provincia), ET0 de enero (verano pleno) ≈ **4.9 mm/día**, julio (invierno) ≈ 0.8. El 4.5 queda apenas por debajo del pico de enero — prudente, y el lanzamiento es en primavera (ET0 aún menor).
+
+## Especies del programa (todas F=2)
+
+Todas estas van a **F=2** (sediento >2 d, muy sediento >4 d):
+
+*Jacaranda mimosifolia* (Jacarandá, galería central) · Kiri (A5) · Liquidámbar (A6) · Fresno rojo (A3) · Mandarino (A11) · Naranjo (A12) · Pomelo (A13) · Lapacho rosado (A2) · Tipa (A4) · Pezuña de vaca (A7) · Pezuña de vaca rosa (A8) · Ciruelo de jardín (A10) · Damasco (A14) · Ginkgo (A15) · Palmera washingtonia (A9).
+
+**Preexistencias (A1, árboles ya establecidos): fuera del programa.** No participan del riego colectivo — quedan solo como referencia/información. Marcadas `en_programa = false`, no entran al ranking de sedientos.
 
 ## Tutela (Tutor) — capacidades sobre la ficha del árbol
 
