@@ -1,9 +1,9 @@
 name: CI
 
+# Corre en cada PR (el portón antes de mergear). El push a main lo maneja
+# deploy.yml, que vuelve a correr estos checks antes de tocar producción.
 on:
   pull_request:
-  push:
-    branches: [main]
 
 jobs:
   ci:
