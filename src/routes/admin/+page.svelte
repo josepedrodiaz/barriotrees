@@ -117,6 +117,21 @@
 			<input type="date" bind:value={editando.fecha_plantacion} />
 		</label>
 
+		<label>
+			Frecuencia propia (días)
+			<input
+				type="number"
+				step="any"
+				min="0"
+				bind:value={editando.frecuencia_dias_override}
+				placeholder="vacío = la de la especie"
+			/>
+			<small>
+				Cada cuántos días necesita agua ESTE árbol, si difiere de su especie. Vacío usa la de la
+				especie. Un valor chico (0.4) lo pone sediento enseguida: sirve para los árboles de prueba.
+			</small>
+		</label>
+
 		<div class="coords">
 			<label>
 				Latitud
