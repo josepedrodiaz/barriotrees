@@ -25,24 +25,16 @@ language sql stable security definer set search_path = public as $$
     (select p.entregador from perfiles p where p.id = auth.uid()), false)
 $$;
 
--- ---------- cerrar el agujero: nadie se pone el rol solo ----------
--- El vecino puede editar su propio perfil (nombre). Sin esto, podría meter un
--- update/insert poniéndose entregador = true. Los roles solo cambian por las
--- RPC security definer de abajo, gateadas por es_admin().
-create or replace function proteger_campos_perfil() returns trigger
-language plpgsql as $$
-begin
-  if not es_admin() and current_setting('role', true) <> 'service_role' then
-    new.es_admin := old.es_admin;
-    new.puntos := old.puntos;
-    new.entregador := old.entregador;
-  end if;
-  return new;
-end $$;
-
-drop policy perfil_propio_insert on perfiles;
-create policy perfil_propio_insert on perfiles for insert
-  with check (id = auth.uid() and es_admin = false and puntos = 0 and entregador = false);
+-- ---------- por qué la columna entregador ya es segura ----------
+-- No hace falta trigger ni policy para proteger `entregador`. Desde
+-- 20260716030000 la tabla `perfiles` NO tiene policies de escritura para el
+-- cliente: el trigger de auto-protección y las policies de auto-edición se
+-- sacaron a propósito ("cerrar la puerta en vez de vigilarla"). Solo la tocan
+-- RPC security-definer: el trigger de auth crea el perfil con nombre;
+-- registrar_riego/reclamar suman puntos; actualizar_mi_nombre cambia el nombre.
+-- Ninguna toca `entregador` salvo hacer/quitar_entregador (abajo), que exigen
+-- es_admin(). La columna nace en false y no hay camino desde el cliente para
+-- autoasignársela.
 
 -- ---------- el admin da de alta un entregador por mail ----------
 -- La persona ya tiene que haber entrado a la app una vez (así existe su
