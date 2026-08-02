@@ -553,6 +553,7 @@ export type Database = {
         }
         Returns: Json
       }
+      revertir_canje: { Args: { p_token: string }; Returns: Json }
       ver_canje: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
