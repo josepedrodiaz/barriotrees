@@ -31,6 +31,45 @@
 		data.usuarios.filter((u) => u.nombre.toLowerCase().includes(busca.trim().toLowerCase()))
 	);
 
+	// --- Sandbox de pruebas (BT-40) ---
+	let trabajandoPruebas = $state(false);
+	let avisoPruebas: string | null = $state(null);
+
+	async function poblarPruebas() {
+		trabajandoPruebas = true;
+		avisoPruebas = null;
+		const { data: res } = await supabase.rpc('poblar_pruebas', { p_cantidad: 10 });
+		const r = res as { ok?: boolean; creados?: number; total?: number } | null;
+		trabajandoPruebas = false;
+		avisoPruebas = r?.ok
+			? `Listo: ${r.creados} árboles nuevos (${r.total} en total).`
+			: 'No se pudo poblar.';
+		await invalidateAll();
+	}
+
+	async function limpiarPruebas() {
+		if (
+			!confirm(
+				'Borra los árboles test-*, sus riegos, y devuelve puntos e insignias a como estaban.\n\nLos pines YA ENTREGADOS no se tocan. ¿Seguimos?'
+			)
+		)
+			return;
+		trabajandoPruebas = true;
+		avisoPruebas = null;
+		const { data: res } = await supabase.rpc('limpiar_pruebas');
+		const r = res as {
+			ok?: boolean;
+			riegos_borrados?: number;
+			arboles_borrados?: number;
+			perfiles_ajustados?: number;
+		} | null;
+		trabajandoPruebas = false;
+		avisoPruebas = r?.ok
+			? `Limpio: ${r.arboles_borrados} árboles y ${r.riegos_borrados} riegos borrados. ${r.perfiles_ajustados} perfil(es) con puntos e insignias corregidos.`
+			: 'No se pudo limpiar.';
+		await invalidateAll();
+	}
+
 	async function setEntregador(id: string, valor: boolean) {
 		tocando = id;
 		await supabase.rpc('poner_entregador', { p_perfil: id, p_valor: valor });
@@ -190,6 +229,28 @@
 <p class="pie">
 	{data.arboles.length} árboles · {data.arboles.filter((a) => a.activo).length} activos
 </p>
+
+<div class="entregadores panel">
+	<h2>🧪 Sandbox de pruebas</h2>
+	<p class="intro">
+		Árboles de mentira (código <code>test-NN</code>) para ensayar el circuito sin ir a la plaza: no
+		exigen proximidad y piden agua aunque acabe de llover. Cada árbol se puede regar una vez cada
+		12&nbsp;h, por eso conviene tener varios.
+	</p>
+	<div class="acciones-pruebas">
+		<button class="btn sm" disabled={trabajandoPruebas} onclick={poblarPruebas}>
+			🌱 Crear 10 árboles de prueba
+		</button>
+		<button class="btn ghost sm" disabled={trabajandoPruebas} onclick={limpiarPruebas}>
+			🧹 Borrar todo lo de prueba
+		</button>
+	</div>
+	{#if avisoPruebas}<p class="aviso-pruebas">{avisoPruebas}</p>{/if}
+	<p class="intro">
+		Borrar limpia los árboles, sus riegos, y devuelve puntos e insignias a como estaban. Los pines
+		<b>ya entregados</b> no se tocan: ese pin está en la mano de alguien.
+	</p>
+</div>
 
 <div class="entregadores panel">
 	<h2>🎖 Entregadores de pin</h2>
@@ -378,6 +439,21 @@
 	.busca {
 		width: 100%;
 		margin: 0;
+	}
+	.acciones-pruebas {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-bottom: 0.8rem;
+	}
+	.aviso-pruebas {
+		margin: 0 0 0.8rem;
+		font-size: 0.9rem;
+		color: var(--feliz);
+	}
+	code {
+		font-family: var(--read);
+		color: var(--gold);
 	}
 	.tag-ok {
 		margin-left: 0.5rem;

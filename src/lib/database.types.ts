@@ -525,10 +525,12 @@ export type Database = {
         }[]
       }
       hacer_entregador: { Args: { p_email: string }; Returns: Json }
+      limpiar_pruebas: { Args: never; Returns: Json }
       listar_entregadores: { Args: never; Returns: Json }
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
       obtener_clima_token: { Args: never; Returns: Json }
+      poblar_pruebas: { Args: { p_cantidad?: number }; Returns: Json }
       poner_entregador: { Args: { p_perfil: string; p_valor: boolean }; Returns: Json }
       puede_canjear: { Args: never; Returns: boolean }
       quitar_entregador: { Args: { p_perfil: string }; Returns: Json }
