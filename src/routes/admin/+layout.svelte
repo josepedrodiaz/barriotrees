@@ -11,14 +11,7 @@
      policies de admin en Postgres (BT-10). -->
 {#if sesion.cargando}
 	<p class="esperando">…</p>
-{:else if !sesion.perfil?.es_admin}
-	<h1>Panel de la comisión</h1>
-	<p>Esta parte es para quienes administran los árboles.</p>
-	{#if !sesion.session}
-		<p><a href={resolve('/entrar')}>Entrar →</a></p>
-	{/if}
-	<p><a href={resolve('/')}>← volver a los árboles</a></p>
-{:else}
+{:else if sesion.perfil?.es_admin}
 	<nav class="panel">
 		<a href={resolve('/admin')} class:activo={page.url.pathname === '/admin'}>Árboles</a>
 		<a href={resolve('/admin/qrs')} class:activo={page.url.pathname === '/admin/qrs'}>Chapitas QR</a
@@ -26,6 +19,22 @@
 		<a href={resolve('/')}>Salir del panel</a>
 	</nav>
 	{@render children()}
+{:else if sesion.perfil?.entregador}
+	<!-- Entregador: solo el validador de canje. Al resto del panel no entra. -->
+	{#if page.url.pathname.startsWith('/admin/canje')}
+		{@render children()}
+	{:else}
+		<h1>🎖 Entregador de pines</h1>
+		<p>Escaneá con la cámara del teléfono el QR que te muestra el vecino y entregale su pin.</p>
+		<p><a href={resolve('/')}>← volver a los árboles</a></p>
+	{/if}
+{:else}
+	<h1>Panel de la comisión</h1>
+	<p>Esta parte es para quienes administran los árboles.</p>
+	{#if !sesion.session}
+		<p><a href={resolve('/entrar')}>Entrar →</a></p>
+	{/if}
+	<p><a href={resolve('/')}>← volver a los árboles</a></p>
 {/if}
 
 <style>

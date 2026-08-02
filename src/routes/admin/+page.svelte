@@ -21,6 +21,36 @@
 
 	const especieDe = (id: string) => data.especies.find((e) => e.id === id)?.nombre_comun ?? '—';
 
+	// --- Entregadores de pin (BT-39): la comisión que valida canjes en el evento ---
+	let emailNuevo = $state('');
+	let sumando = $state(false);
+	let avisoEntregador: string | null = $state(null);
+
+	async function agregarEntregador(evento: SubmitEvent) {
+		evento.preventDefault();
+		const email = emailNuevo.trim();
+		if (!email) return;
+		sumando = true;
+		avisoEntregador = null;
+		const { data: res } = await supabase.rpc('hacer_entregador', { p_email: email });
+		const r = res as { ok?: boolean; motivo?: string; nombre?: string } | null;
+		sumando = false;
+		if (r?.ok) {
+			emailNuevo = '';
+			await invalidateAll();
+		} else if (r?.motivo === 'sin_cuenta' || r?.motivo === 'sin_perfil') {
+			avisoEntregador =
+				'Esa persona todavía no entró a la app. Que entre una vez con Google y reintentá.';
+		} else {
+			avisoEntregador = 'No se pudo agregar.';
+		}
+	}
+
+	async function quitarEntregador(id: string) {
+		await supabase.rpc('quitar_entregador', { p_perfil: id });
+		await invalidateAll();
+	}
+
 	function nuevo() {
 		error = null;
 		editando = {
@@ -159,6 +189,38 @@
 	{data.arboles.length} árboles · {data.arboles.filter((a) => a.activo).length} activos
 </p>
 
+<div class="entregadores panel">
+	<h2>🎖 Entregadores de pin</h2>
+	<p class="intro">
+		Quienes pueden validar y entregar pines en el evento. Solo entran al validador de canje, nada
+		más. La persona tiene que haber entrado a la app una vez con Google antes de agregarla.
+	</p>
+
+	<form class="alta" onsubmit={agregarEntregador}>
+		<input
+			type="email"
+			bind:value={emailNuevo}
+			placeholder="mail con el que entró"
+			autocomplete="off"
+		/>
+		<button class="btn sm" type="submit" disabled={sumando}>
+			{sumando ? 'Agregando…' : '+ Agregar'}
+		</button>
+	</form>
+	{#if avisoEntregador}<p class="error">{avisoEntregador}</p>{/if}
+
+	<ul class="lista">
+		{#each data.entregadores as e (e.id)}
+			<li>
+				<span><strong>{e.nombre}</strong> · <span class="suave">{e.email}</span></span>
+				<button class="enlace" onclick={() => quitarEntregador(e.id)}>quitar</button>
+			</li>
+		{:else}
+			<li class="suave">Todavía no hay entregadores.</li>
+		{/each}
+	</ul>
+</div>
+
 <div class="ayuda-canje panel">
 	<h2>🎖 Para entregar un pin</h2>
 	<p>
@@ -293,6 +355,41 @@
 	}
 	.error {
 		color: var(--sed);
+		font-size: 0.9rem;
+	}
+	.entregadores {
+		margin-top: 24px;
+		padding: 14px;
+	}
+	.entregadores h2 {
+		color: var(--gold);
+	}
+	.entregadores .intro {
+		font-size: 0.85rem;
+		color: var(--dim);
+		margin: 0 0 1rem;
+	}
+	.alta {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+	.alta input {
+		flex: 1;
+		margin: 0;
+	}
+	.lista {
+		list-style: none;
+		padding: 0;
+		margin: 1rem 0 0;
+	}
+	.lista li {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.5rem 0;
+		border-top: 2px solid var(--edge-l);
 		font-size: 0.9rem;
 	}
 	.ayuda-canje {

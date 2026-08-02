@@ -276,6 +276,7 @@ export type Database = {
         Row: {
           cambios_nombre: number
           creado_en: string
+          entregador: boolean
           es_admin: boolean
           id: string
           nombre: string
@@ -284,6 +285,7 @@ export type Database = {
         Insert: {
           cambios_nombre?: number
           creado_en?: string
+          entregador?: boolean
           es_admin?: boolean
           id: string
           nombre: string
@@ -292,6 +294,7 @@ export type Database = {
         Update: {
           cambios_nombre?: number
           creado_en?: string
+          entregador?: boolean
           es_admin?: boolean
           id?: string
           nombre?: string
@@ -521,9 +524,13 @@ export type Database = {
           f_efectiva: number
         }[]
       }
+      hacer_entregador: { Args: { p_email: string }; Returns: Json }
+      listar_entregadores: { Args: never; Returns: Json }
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
       obtener_clima_token: { Args: never; Returns: Json }
+      puede_canjear: { Args: never; Returns: boolean }
+      quitar_entregador: { Args: { p_perfil: string }; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
       reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
       registrar_clima: {

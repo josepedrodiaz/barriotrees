@@ -26,7 +26,8 @@
 
 	$effect(() => {
 		const id = sesion.session?.user.id;
-		if (sesion.cargando || !id || !sesion.perfil?.es_admin || cargadoPara === token) return;
+		const puedeCanjear = sesion.perfil?.es_admin || sesion.perfil?.entregador;
+		if (sesion.cargando || !id || !puedeCanjear || cargadoPara === token) return;
 		cargadoPara = token;
 		ver();
 	});
