@@ -9,6 +9,8 @@ export interface ArbolAdmin {
 	fecha_plantacion: string | null;
 	lat: number | null;
 	lng: number | null;
+	/** F propia de este árbol, pisa la de la especie. Vacío = la de la especie. */
+	frecuencia_dias_override: number | null;
 	activo: boolean;
 }
 
@@ -37,6 +39,7 @@ export async function guardarArbol(arbol: Partial<ArbolAdmin>): Promise<Guardado
 		fecha_plantacion: arbol.fecha_plantacion || null,
 		lat: arbol.lat ?? null,
 		lng: arbol.lng ?? null,
+		frecuencia_dias_override: arbol.frecuencia_dias_override || null,
 		activo: arbol.activo ?? true
 	};
 

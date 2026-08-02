@@ -6,7 +6,9 @@ export const load = async () => {
 	const [{ data: arboles }, { data: especies }, { data: usuarios }] = await Promise.all([
 		supabase
 			.from('arboles')
-			.select('id, codigo, especie_id, nombre, sector, fecha_plantacion, lat, lng, activo')
+			.select(
+				'id, codigo, especie_id, nombre, sector, fecha_plantacion, lat, lng, frecuencia_dias_override, activo'
+			)
 			.order('codigo'),
 		supabase.from('especies').select('id, nombre_comun, frecuencia_dias').order('nombre_comun'),
 		// Perfiles es de lectura pública: la lista de registrados para elegir
