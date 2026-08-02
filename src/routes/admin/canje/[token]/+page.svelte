@@ -20,6 +20,7 @@
 
 	let canje: Canje | null = $state(null);
 	let entregando = $state(false);
+	let revirtiendo = $state(false);
 	let cargadoPara: string | null = $state(null);
 
 	const token = $derived(page.params.token!);
@@ -42,6 +43,16 @@
 		const { data } = await supabase.rpc('canjear_pin', { p_token: token });
 		canje = data as unknown as Canje;
 		entregando = false;
+	}
+
+	// El undo del evento: deshace una entrega marcada por error. Solo el admin
+	// (el entregador entrega, no des-entrega). Vuelve el canje a pendiente y el
+	// validador queda mostrando el pin listo para entregar de nuevo.
+	async function revertir() {
+		revirtiendo = true;
+		const { data } = await supabase.rpc('revertir_canje', { p_token: token });
+		canje = data as unknown as Canje;
+		revirtiendo = false;
 	}
 
 	function fecha(iso?: string): string {
@@ -77,6 +88,12 @@
 				por {canje.entregado_por}{/if}
 		</p>
 		<p class="aviso">No corresponde entregar otro pin por esta insignia.</p>
+		{#if sesion.perfil?.es_admin}
+			<button class="btn ghost sm revertir" onclick={revertir} disabled={revirtiendo}>
+				{revirtiendo ? 'Revirtiendo…' : '↩ Revertir entrega'}
+			</button>
+			<p class="aviso">Solo si se marcó por error. Vuelve el canje a pendiente.</p>
+		{/if}
 	</div>
 {:else}
 	<div class="resultado panel">
@@ -144,6 +161,9 @@
 		color: var(--dim);
 		margin: 12px auto 0;
 		max-width: 32ch;
+	}
+	.revertir {
+		margin-top: 14px;
 	}
 	.volver {
 		text-align: center;
