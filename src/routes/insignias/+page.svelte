@@ -260,6 +260,17 @@
 		🎖 Ya tenés en tu poder {entregados.length}
 		{entregados.length === 1 ? 'pin' : 'pines'}: {entregados.map((c) => c.nombre).join(', ')}.
 	</p>
+	<!-- El QR de un pin entregado sigue accesible, plegado: si la comisión lo
+	     marcó entregado por error, el vecino tiene que poder mostrarlo de nuevo
+	     para que el admin lo escanee y revierta (BT-39). Escanearlo de más no
+	     riesga nada: el validador dice "ya se entregó". -->
+	<details class="qr-entregados">
+		<summary>Ver el QR de un pin ya entregado</summary>
+		<p class="bajada">Solo hace falta si la comisión marcó tu pin por error y hay que revisarlo.</p>
+		{#each entregados as c (c.insignia_id)}
+			<QrDeCanje nombre={c.nombre} token={c.token} urlBase={data.urlBase} />
+		{/each}
+	</details>
 {/if}
 
 <style>
@@ -439,5 +450,15 @@
 		padding: 12px 14px;
 		font-size: 17px;
 		text-align: center;
+	}
+	.qr-entregados {
+		margin-top: 8px;
+		text-align: center;
+	}
+	.qr-entregados summary {
+		font-size: 16px;
+		color: var(--dim);
+		text-decoration: underline;
+		cursor: pointer;
 	}
 </style>
