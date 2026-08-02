@@ -70,13 +70,19 @@
 <header>
 	<a class="logo" href={resolve('/')}><ArbolVoxel salud={1} px={34} />Árboles <b>Gigantes</b></a>
 	{#if !sesion.cargando}
-		{#if sesion.perfil}
-			<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
-				🎖 {sesion.perfil.puntos}
-			</a>
-		{:else}
-			<a class="entrar" href={resolve('/entrar')}>entrar</a>
-		{/if}
+		<div class="acciones">
+			{#if sesion.perfil?.es_admin}
+				<!-- Enlace discreto al panel, solo para el admin. El vecino no lo ve. -->
+				<a class="admin" href={resolve('/admin')} title="Panel de la comisión">⚙</a>
+			{/if}
+			{#if sesion.perfil}
+				<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
+					🎖 {sesion.perfil.puntos}
+				</a>
+			{:else}
+				<a class="entrar" href={resolve('/entrar')}>entrar</a>
+			{/if}
+		</div>
 	{/if}
 </header>
 
@@ -115,8 +121,20 @@
 		color: var(--violet-l);
 		text-shadow: 2px 2px 0 #2c1f52;
 	}
-	.puntos {
+	.acciones {
 		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: none;
+	}
+	.admin {
+		font-size: 18px;
+		text-decoration: none;
+		line-height: 1;
+		opacity: 0.75;
+	}
+	.puntos {
 		flex: none;
 		font-family: var(--pixel);
 		font-size: 10px;
@@ -134,9 +152,6 @@
 		text-decoration: underline;
 		flex: none;
 		white-space: nowrap;
-	}
-	.entrar {
-		margin-left: auto;
 	}
 
 	/* Imprimir es solo para las chapitas QR: la app desaparece y queda la hoja.
