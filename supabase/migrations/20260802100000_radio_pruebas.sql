@@ -1,0 +1,11 @@
+-- ⚠️ TEMPORAL — radio de proximidad ampliado para PROBAR desde casa (ago 2026).
+--
+-- El anti-trampa exige estar a menos de `radio_proximidad_metros` del árbol
+-- para regar. Para el período de pruebas (Pedro y la comisión juegan desde sus
+-- casas, al lado de la plaza) se amplía de 50 a 500 metros: cubre las casas
+-- linderas y la plaza entera.
+--
+-- ⚠️ VOLVER A 50 ANTES DEL LANZAMIENTO (21/09): con 500 cualquier vecino de la
+-- zona riega desde el sillón y el circuito pierde el sentido. Está anotado en
+-- los pendientes de CLAUDE.md. La vuelta atrás es otra migración con '50'.
+update config set valor = '500' where clave = 'radio_proximidad_metros';

@@ -96,10 +96,11 @@ Criterio de corte: **¿qué tiene que poder hacer la app el 21/09 en la plaza?**
 
 ## Pendientes / próximos pasos
 
+- [ ] ⚠️ **ANTES DEL LANZAMIENTO (21/09): volver `radio_proximidad_metros` a 50.** Está en 500 desde ago-2026 (migración `20260802100000_radio_pruebas`) para que Pedro y la comisión prueben el circuito desde sus casas. Con 500 en vivo, cualquier vecino riega desde el sillón — mata el anti-trampa. La vuelta es una migración con `'50'`.
 - [ ] Nombre del rol del vecino: candidatos "Cuidador" (favorito, tono elegido) o "Tutor" (doble sentido botánico: el tutor es el palo que sostiene al arbolito). Descartado "Guardián" por militar. Idea de niveles: Aprendiz → Cuidador → Gran Cuidador → Alma de la Plaza
 - [ ] Diseñar el ícono/árbol visual y sus estados
 - [ ] Idea suelta a evaluar: un resumen de temporada por árbol/vecino (tipo el resumen anual que hace Spotify)
-- [ ] MVP: validar con la comisión de arbolado los umbrales por especie ya propuestos en [docs/especies-umbrales.md](docs/especies-umbrales.md) (frecuencia F y bandas de estado)
+- [x] ~~MVP: validar con la comisión de arbolado los umbrales por especie~~ **Validado ago-2026: F=2 para todo el programa (2/4), aplicado en BT-37.**
 - [ ] MVP: confirmar qué insignias/pines entran en el lanzamiento (Primer riego seguro; Rescatista y Madrugador a confirmar)
 - [ ] Fijar N para la insignia Rescatista (propuesta: 5 rescates de árbol muy sediento)
 - [ ] Tutela (premio Tutor): definir si es a un solo árbol o a varios, y cómo se gana exactamente (más regado / tiempo sostenido)
