@@ -529,6 +529,7 @@ export type Database = {
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
       obtener_clima_token: { Args: never; Returns: Json }
+      poner_entregador: { Args: { p_perfil: string; p_valor: boolean }; Returns: Json }
       puede_canjear: { Args: never; Returns: boolean }
       quitar_entregador: { Args: { p_perfil: string }; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
