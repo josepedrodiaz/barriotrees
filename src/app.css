@@ -189,6 +189,19 @@ button.btn:disabled {
 		inset -3px -3px 0 #322a4f,
 		0 2px 0 #201a33;
 }
+.btn.danger {
+	background: #a5322f;
+	box-shadow:
+		inset 3px 3px 0 #d0605c,
+		inset -3px -3px 0 #6e1f1d,
+		0 5px 0 #4a1210;
+}
+.btn.danger:active {
+	box-shadow:
+		inset 3px 3px 0 #d0605c,
+		inset -3px -3px 0 #6e1f1d,
+		0 2px 0 #4a1210;
+}
 .btn.sm {
 	font-size: 9px;
 	padding: 10px;
