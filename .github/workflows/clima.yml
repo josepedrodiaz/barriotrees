@@ -1,7 +1,14 @@
-# Tarea diaria: trae el clima de la plaza de Open-Meteo y lo guarda en la base.
-# Es el cron del balance hídrico (BT-33). Corre del lado de GitHub, no del
-# navegador del vecino, así no depende de la señal en la plaza ni gasta el
-# límite de la API.
+# Trae el clima de la plaza de Open-Meteo y lo guarda en la base. Es el cron del
+# balance hídrico (BT-33). Corre del lado de GitHub, no del navegador del vecino,
+# así no depende de la señal en la plaza.
+#
+# Corre CADA HORA, no una vez al día: si a la mañana el pronóstico no tenía la
+# tormenta de verano y cae al mediodía, el que va a la plaza a la tarde tiene que
+# ver "la lluvia lo regó" — no enterarse recién mañana. Open-Meteo mezcla lo
+# observado en el total del día a medida que pasa, y el upsert por fecha
+# (registrar_clima) hace que re-traer el mismo día solo corrija, no duplique.
+# Costo: 24 llamadas/día (Open-Meteo gratis permite 10.000) y el repo es público
+# (minutos de Actions ilimitados). Cada corrida dura ~20s.
 #
 # Necesita dos secretos del repo (Settings → Secrets → Actions):
 #   SUPABASE_URL        → https://xebdkoqorgnjatyisvky.supabase.co
@@ -12,8 +19,7 @@ name: clima
 
 on:
   schedule:
-    # 09:12 UTC ≈ 06:12 en La Plata: ya cerró el día anterior en Open-Meteo.
-    - cron: '12 9 * * *'
+    - cron: '0 * * * *' # cada hora, en punto (UTC)
   workflow_dispatch: {} # permite correrla a mano desde la pestaña Actions
 
 jobs:
