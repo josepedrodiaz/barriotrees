@@ -12,7 +12,9 @@ export const load = async () => {
 				'codigo, nombre, sector, especie_nombre, dias_sin_riego, f_efectiva, estado, lat, lng'
 			)
 			// Las preexistencias no participan del riego colectivo: fuera del ranking.
-			.eq('en_programa', true),
+			.eq('en_programa', true)
+			// Un árbol muerto no se riega: fuera de la lista de sedientos.
+			.is('fecha_defuncion', null),
 		// Para saber en qué escalón está el vecino y cuánto le falta para el
 		// siguiente, sin pedirle nada al servidor de más.
 		supabase

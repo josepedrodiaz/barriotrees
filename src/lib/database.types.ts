@@ -43,9 +43,11 @@ export type Database = {
         Row: {
           activo: boolean
           altura_cm: number | null
+          causa_defuncion: string | null
           codigo: string
           creado_en: string
           especie_id: string
+          fecha_defuncion: string | null
           fecha_plantacion: string | null
           frecuencia_dias_override: number | null
           id: string
@@ -58,9 +60,11 @@ export type Database = {
         Insert: {
           activo?: boolean
           altura_cm?: number | null
+          causa_defuncion?: string | null
           codigo: string
           creado_en?: string
           especie_id: string
+          fecha_defuncion?: string | null
           fecha_plantacion?: string | null
           frecuencia_dias_override?: number | null
           id?: string
@@ -73,9 +77,11 @@ export type Database = {
         Update: {
           activo?: boolean
           altura_cm?: number | null
+          causa_defuncion?: string | null
           codigo?: string
           creado_en?: string
           especie_id?: string
+          fecha_defuncion?: string | null
           fecha_plantacion?: string | null
           frecuencia_dias_override?: number | null
           id?: string
@@ -143,6 +149,7 @@ export type Database = {
           en_programa: boolean
           frecuencia_dias: number
           id: string
+          kc: number
           nombre_cientifico: string
           nombre_comun: string
           ref_plano: string | null
@@ -152,6 +159,7 @@ export type Database = {
           en_programa?: boolean
           frecuencia_dias: number
           id?: string
+          kc?: number
           nombre_cientifico: string
           nombre_comun: string
           ref_plano?: string | null
@@ -161,6 +169,7 @@ export type Database = {
           en_programa?: boolean
           frecuencia_dias?: number
           id?: string
+          kc?: number
           nombre_cientifico?: string
           nombre_comun?: string
           ref_plano?: string | null
@@ -470,6 +479,7 @@ export type Database = {
         Row: {
           activo: boolean | null
           altura_cm: number | null
+          causa_defuncion: string | null
           codigo: string | null
           creado_en: string | null
           deficit_mm: number | null
@@ -480,6 +490,7 @@ export type Database = {
           especie_nombre: string | null
           estado: Database["public"]["Enums"]["estado_arbol"] | null
           f_efectiva: number | null
+          fecha_defuncion: string | null
           fecha_plantacion: string | null
           frecuencia_dias_override: number | null
           id: string | null

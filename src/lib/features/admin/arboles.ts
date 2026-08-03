@@ -11,6 +11,9 @@ export interface ArbolAdmin {
 	lng: number | null;
 	/** F propia de este árbol, pisa la de la especie. Vacío = la de la especie. */
 	frecuencia_dias_override: number | null;
+	/** Null = vivo. Con fecha, el árbol se da por muerto (no se riega más). */
+	fecha_defuncion: string | null;
+	causa_defuncion: string | null;
 	activo: boolean;
 }
 
@@ -40,6 +43,8 @@ export async function guardarArbol(arbol: Partial<ArbolAdmin>): Promise<Guardado
 		lat: arbol.lat ?? null,
 		lng: arbol.lng ?? null,
 		frecuencia_dias_override: arbol.frecuencia_dias_override || null,
+		fecha_defuncion: arbol.fecha_defuncion || null,
+		causa_defuncion: arbol.causa_defuncion?.trim() || null,
 		activo: arbol.activo ?? true
 	};
 
