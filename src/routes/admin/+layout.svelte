@@ -16,6 +16,7 @@
 		<a href={resolve('/admin')} class:activo={page.url.pathname === '/admin'}>Árboles</a>
 		<a href={resolve('/admin/qrs')} class:activo={page.url.pathname === '/admin/qrs'}>Chapitas QR</a
 		>
+		<a href={resolve('/observatorio')}>Observatorio</a>
 		<a href={resolve('/')}>Salir del panel</a>
 	</nav>
 	{@render children()}

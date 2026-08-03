@@ -7,7 +7,7 @@ export const load = async () => {
 		supabase
 			.from('arboles')
 			.select(
-				'id, codigo, especie_id, nombre, sector, fecha_plantacion, lat, lng, frecuencia_dias_override, activo'
+				'id, codigo, especie_id, nombre, sector, fecha_plantacion, lat, lng, frecuencia_dias_override, fecha_defuncion, causa_defuncion, activo'
 			)
 			.order('codigo'),
 		supabase.from('especies').select('id, nombre_comun, frecuencia_dias').order('nombre_comun'),

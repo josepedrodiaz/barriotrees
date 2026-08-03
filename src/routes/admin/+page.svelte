@@ -214,6 +214,24 @@
 			Activo (se ve en la app)
 		</label>
 
+		<fieldset class="defuncion">
+			<legend>Defunción</legend>
+			<small
+				>Si el árbol murió, cargá la fecha. Deja de recibir riegos y cuenta como baja en el
+				observatorio. Vacío = sigue vivo.</small
+			>
+			<div class="coords">
+				<label>
+					Fecha de defunción
+					<input type="date" bind:value={editando.fecha_defuncion} />
+				</label>
+				<label>
+					Causa
+					<input bind:value={editando.causa_defuncion} placeholder="seca, plaga, vandalismo…" />
+				</label>
+			</div>
+		</fieldset>
+
 		{#if error}<p class="error">{error}</p>{/if}
 
 		<div class="acciones">
@@ -233,7 +251,8 @@
 		{#each data.arboles as a (a.id)}
 			<tr class:inactivo={!a.activo}>
 				<td
-					><strong>{a.codigo}</strong>{#if !a.activo}<span class="tag">inactivo</span>{/if}</td
+					><strong>{a.codigo}</strong>{#if a.fecha_defuncion}<span class="tag muerto">✝ muerto</span
+						>{:else if !a.activo}<span class="tag">inactivo</span>{/if}</td
 				>
 				<td>{especieDe(a.especie_id)}</td>
 				<td class="suave">{a.sector ?? '—'}</td>
@@ -447,6 +466,22 @@
 		margin-left: 0.4rem;
 		font-size: 0.7rem;
 		color: var(--dim);
+	}
+	.tag.muerto {
+		color: var(--sed);
+	}
+	.defuncion {
+		margin: 1rem 0 0.5rem;
+		padding: 0.75rem;
+		border: 2px solid var(--edge-l);
+	}
+	.defuncion legend {
+		font-size: 0.8rem;
+		color: var(--sed);
+		padding: 0 0.4rem;
+	}
+	.defuncion small {
+		margin-bottom: 0.6rem;
 	}
 	.suave {
 		color: var(--dim);

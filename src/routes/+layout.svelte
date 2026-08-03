@@ -32,9 +32,13 @@
 	);
 	// Si llegó escaneando una chapita, el paso 2 le habla de SU árbol.
 	const arbolDelQr = $derived(page.data.arbol?.nombre ?? page.data.arbol?.especie_nombre);
+
+	// El observatorio es la cara "seria" del proyecto: sale del juego por
+	// completo, sin el header pixelado ni la bienvenida.
+	const esObservatorio = $derived(page.url.pathname.startsWith('/observatorio'));
 </script>
 
-{#if mostrarBienvenida}
+{#if mostrarBienvenida && !esObservatorio}
 	<Bienvenida arbol={arbolDelQr} />
 {/if}
 
@@ -67,24 +71,26 @@
 <!-- Como la demo: el logo manda y a la derecha va lo mínimo. El nombre y el
      nivel del vecino viven en el panel de la home, no acá — repetirlos era lo
      que apretaba la barra. -->
-<header>
-	<a class="logo" href={resolve('/')}><ArbolVoxel salud={1} px={34} />Árboles <b>Gigantes</b></a>
-	{#if !sesion.cargando}
-		<div class="acciones">
-			{#if sesion.perfil?.es_admin}
-				<!-- Enlace discreto al panel, solo para el admin. El vecino no lo ve. -->
-				<a class="admin" href={resolve('/admin')} title="Panel de la comisión">⚙</a>
-			{/if}
-			{#if sesion.perfil}
-				<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
-					🎖 {sesion.perfil.puntos}
-				</a>
-			{:else}
-				<a class="entrar" href={resolve('/entrar')}>entrar</a>
-			{/if}
-		</div>
-	{/if}
-</header>
+{#if !esObservatorio}
+	<header>
+		<a class="logo" href={resolve('/')}><ArbolVoxel salud={1} px={34} />Árboles <b>Gigantes</b></a>
+		{#if !sesion.cargando}
+			<div class="acciones">
+				{#if sesion.perfil?.es_admin}
+					<!-- Enlace discreto al panel, solo para el admin. El vecino no lo ve. -->
+					<a class="admin" href={resolve('/admin')} title="Panel de la comisión">⚙</a>
+				{/if}
+				{#if sesion.perfil}
+					<a class="puntos" href={resolve('/insignias')} title="Tus insignias y tu cuenta">
+						🎖 {sesion.perfil.puntos}
+					</a>
+				{:else}
+					<a class="entrar" href={resolve('/entrar')}>entrar</a>
+				{/if}
+			</div>
+		{/if}
+	</header>
+{/if}
 
 <main>
 	{@render children()}
