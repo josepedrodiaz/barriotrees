@@ -70,6 +70,26 @@
 		await invalidateAll();
 	}
 
+	// La opción nuclear: borra TODO el estado de juego, incluidos los pines ya
+	// entregados. Confirmación tipeada porque no tiene vuelta atrás.
+	async function resetearJuego() {
+		if (
+			prompt(
+				'Esto borra TODOS los riegos, TODAS las insignias (incluso las entregadas) y pone los puntos en cero. Deja solo los árboles reales.\n\nEscribí RESETEAR para confirmar:'
+			) !== 'RESETEAR'
+		)
+			return;
+		trabajandoPruebas = true;
+		avisoPruebas = null;
+		const { data: res } = await supabase.rpc('resetear_juego');
+		const r = res as { ok?: boolean; riegos_borrados?: number; insignias_borradas?: number } | null;
+		trabajandoPruebas = false;
+		avisoPruebas = r?.ok
+			? `Reseteo total: ${r.riegos_borrados} riegos y ${r.insignias_borradas} insignias borradas, puntos en cero.`
+			: 'No se pudo resetear.';
+		await invalidateAll();
+	}
+
 	async function setEntregador(id: string, valor: boolean) {
 		tocando = id;
 		await supabase.rpc('poner_entregador', { p_perfil: id, p_valor: valor });
@@ -247,9 +267,20 @@
 	</div>
 	{#if avisoPruebas}<p class="aviso-pruebas">{avisoPruebas}</p>{/if}
 	<p class="intro">
-		Borrar limpia los árboles, sus riegos, y devuelve puntos e insignias a como estaban. Los pines
-		<b>ya entregados</b> no se tocan: ese pin está en la mano de alguien.
+		Borrar limpia los árboles de prueba, sus riegos, y devuelve puntos e insignias a como estaban.
+		Los pines <b>ya entregados</b> no se tocan: ese pin está en la mano de alguien.
 	</p>
+
+	<div class="zona-peligro">
+		<p class="intro">
+			<b>Reseteo total.</b> Borra TODO el estado del juego —todos los riegos, todas las insignias (incluso
+			las entregadas) y los puntos a cero—, dejando solo los árboles reales de la plaza. Es para dejar
+			la base limpia antes del lanzamiento. No tiene vuelta atrás.
+		</p>
+		<button class="btn danger sm" disabled={trabajandoPruebas} onclick={resetearJuego}>
+			💣 Resetear todo el juego
+		</button>
+	</div>
 </div>
 
 <div class="entregadores panel">
@@ -450,6 +481,14 @@
 		margin: 0 0 0.8rem;
 		font-size: 0.9rem;
 		color: var(--feliz);
+	}
+	.zona-peligro {
+		margin-top: 1rem;
+		padding-top: 0.8rem;
+		border-top: 2px solid var(--sed);
+	}
+	.zona-peligro .intro {
+		margin-bottom: 0.6rem;
 	}
 	code {
 		font-family: var(--read);
