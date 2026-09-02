@@ -24,7 +24,7 @@
 			<div class="name">ÁRBOLES GIGANTES</div>
 			<p>Este es un juego del barrio para cuidar entre todos a los árboles y hacerlos crecer. 🌱</p>
 			<div class="dots"><i class="on"></i><i></i><i></i></div>
-			<button class="btn gold wide" onclick={() => (paso = 2)}>SIGUIENTE ▶</button>
+			<button class="btn gold wide" onclick={() => (paso = 2)}>SIGUIENTE<span class="flecha" aria-hidden="true"></span></button>
 		{:else if paso === 2}
 			<div class="medal">💧</div>
 			{#if arbol}
@@ -56,7 +56,7 @@
 				</div>
 			</div>
 			<div class="dots"><i></i><i class="on"></i><i></i></div>
-			<button class="btn gold wide" onclick={() => (paso = 3)}>SIGUIENTE ▶</button>
+			<button class="btn gold wide" onclick={() => (paso = 3)}>SIGUIENTE<span class="flecha" aria-hidden="true"></span></button>
 		{:else}
 			<div class="pinbadge"><Pin px={96} alt="El pin que se entrega en mano" /></div>
 			<h3>REGÁS Y GANÁS</h3>
@@ -82,6 +82,15 @@
 </div>
 
 <style>
+	/* flecha dibujada por CSS: se centra sola con el align-items del botón,
+	   sin depender del glyph ▶ que caía a otra fuente y quedaba desalineado */
+	.flecha {
+		width: 0;
+		height: 0;
+		border-top: 5px solid transparent;
+		border-bottom: 5px solid transparent;
+		border-left: 8px solid currentColor;
+	}
 	.scrim {
 		position: fixed;
 		inset: 0;
