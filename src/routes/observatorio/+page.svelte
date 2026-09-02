@@ -81,7 +81,7 @@
 <div class="obs">
 	<div class="ancho">
 		<header class="cab">
-			<p class="institucion">Plaza Gigante del Oeste · La Plata · Comisión de arbolado</p>
+			<p class="institucion">Plaza Gigante del Oeste · La Plata</p>
 			<h1>Observatorio del arbolado joven</h1>
 			<p class="sub">
 				Monitoreo del balance hídrico del arbolado en establecimiento. Los datos surgen del riego
