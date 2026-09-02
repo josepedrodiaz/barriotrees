@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+	<body
+		style="
+			margin: 0;
+			background: #f4f1ea;
+			font-family: Arial, Helvetica, sans-serif;
+			color: #2b2440;
+		"
+	>
+		<table
+			role="presentation"
+			width="100%"
+			cellpadding="0"
+			cellspacing="0"
+			style="background: #f4f1ea; padding: 24px 12px"
+		>
+			<tr>
+				<td align="center">
+					<table
+						role="presentation"
+						width="100%"
+						cellpadding="0"
+						cellspacing="0"
+						style="
+							max-width: 460px;
+							background: #ffffff;
+							border: 3px solid #2c1f52;
+							border-radius: 4px;
+						"
+					>
+						<tr>
+							<td
+								style="
+									background: #3a2d6b;
+									padding: 22px 24px;
+									text-align: center;
+									color: #ffffff;
+									font-size: 20px;
+									font-weight: bold;
+								"
+							>
+								🌳 Árboles Gigantes
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 28px 24px 8px">
+								<p style="margin: 0 0 14px; font-size: 17px; line-height: 1.5">
+									¡Hola! Tocá el botón para entrar a Árboles Gigantes y guardar tus riegos y tu
+									puntaje.
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td align="center" style="padding: 8px 24px 24px">
+								<a
+									href="{{ .ConfirmationURL }}"
+									style="
+										display: inline-block;
+										background: #e3b53d;
+										color: #2b2440;
+										font-size: 16px;
+										font-weight: bold;
+										text-decoration: none;
+										padding: 14px 28px;
+										border: 3px solid #6b4e08;
+										border-radius: 4px;
+									"
+								>
+									ENTRAR ▶
+								</a>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 0 24px 24px">
+								<p style="margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #6b6480">
+									Si el botón no funciona, copiá y pegá este enlace en tu navegador:
+								</p>
+								<p style="margin: 0; font-size: 12px; line-height: 1.4; word-break: break-all">
+									<a href="{{ .ConfirmationURL }}" style="color: #3a2d6b">{{ .ConfirmationURL }}</a>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 16px 24px; border-top: 1px solid #e5e0d5">
+								<p style="margin: 0; font-size: 12px; line-height: 1.5; color: #9a94ab">
+									Si no pediste este mail, ignoralo tranquilo: nadie va a entrar a tu cuenta sin
+									este enlace.
+								</p>
+							</td>
+						</tr>
+					</table>
+					<p style="margin: 16px 0 0; font-size: 11px; color: #9a94ab">
+						Plaza Gigante del Oeste · La Plata
+					</p>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
