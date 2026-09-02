@@ -5,7 +5,10 @@
 
 	// --- selección de árbol para la curva ---
 	const vivos = $derived(data.arboles.filter((a) => !a.muerto));
-	let codigoSel = $state<string | null>(null);
+	// arranca en el mismo default que usa la gráfica, para que el select no quede vacío
+	let codigoSel = $state<string | null>(
+		data.arboles.find((a) => !a.muerto)?.codigo ?? data.arboles[0]?.codigo ?? null
+	);
 	const sel = $derived(
 		data.arboles.find((a) => a.codigo === codigoSel) ?? vivos[0] ?? data.arboles[0] ?? null
 	);

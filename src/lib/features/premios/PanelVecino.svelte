@@ -58,7 +58,7 @@
 		     es la invitación a que lo suyo no se pierda. -->
 		<div class="usr">🙋 Vecino sin cuenta</div>
 		<div class="next sin">
-			Podés regar igual. Creá tu cuenta cuando quieras y tus riegos se van con vos.
+			Podés regar igual. Creá tu cuenta cuando quieras y guardá tu puntaje.
 		</div>
 		<div class="badges">
 			<a class="badge empty" href={resolve('/entrar')}>ENTRAR Y GUARDAR MIS PUNTOS</a>
