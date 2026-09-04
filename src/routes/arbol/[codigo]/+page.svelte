@@ -225,27 +225,6 @@
 				<p class="rescate">Era un rescate: este árbol te necesitaba de verdad.</p>
 			{/if}
 
-			{#each resultado.insignias_nuevas as insignia (insignia.id)}
-				<div class="magic panel">
-					<span class="spark s1">✦</span>
-					<span class="spark s2">✦</span>
-					<span class="spark s3">✦</span>
-					<div class="pin-ganado"><Pin px={64} alt="Pin de {insignia.nombre}" /></div>
-					<div class="mh">{insignia.nombre.toUpperCase()}</div>
-					<p class="copy">{insignia.copy}</p>
-				</div>
-			{/each}
-
-			{#if resultado.insignias_nuevas.length}
-				<a class="btn gold wide canjear" href={resolve('/premios')}
-					>🎁 CANJEÁ TU PIN <span class="fl">▶</span></a
-				>
-				<p class="pin-nota">
-					Ganaste un <b>pin de verdad</b>. Entrá a <b>Premios</b> y mostrale el QR a la comisión para
-					tenerlo en la mano.
-				</p>
-			{/if}
-
 			{#if resultado.total_puntos === null}
 				<div class="card2 panel">
 					<p class="guardar">Tus puntos quedaron guardados solo en este teléfono.</p>
@@ -254,6 +233,25 @@
 			{:else}
 				<p class="acumulado">Llevás {resultado.total_puntos} puntos</p>
 			{/if}
+
+			{#each resultado.insignias_nuevas as insignia (insignia.id)}
+				<div class="magic panel">
+					<span class="spark s1">✦</span>
+					<span class="spark s2">✦</span>
+					<span class="spark s3">✦</span>
+					<div class="pin-ganado"><Pin px={64} alt="Pin de {insignia.nombre}" /></div>
+					<div class="mh">¡GANASTE UN PIN!</div>
+					<div class="pin-nombre">{insignia.nombre.toUpperCase()}</div>
+					<p class="copy">{insignia.copy}</p>
+				</div>
+			{/each}
+
+			{#if resultado.insignias_nuevas.length}
+				<a class="btn gold wide canjear" href={resolve('/premios')}
+					>🎁 CANJEÁ TU PIN <span class="fl">▶</span></a
+				>
+			{/if}
+
 			<a class="btn ghost wide" href={resolve('/')}><span class="fl">◀</span>VER OTRO ÁRBOL</a>
 		</div>
 	{:else}
@@ -596,16 +594,19 @@
 	a.btn.canjear {
 		margin-top: 4px;
 	}
-	.pin-nota {
-		text-align: center;
-		font-size: 16px;
-		color: var(--dim);
-		margin: 8px 4px 0;
-		line-height: 1.35;
-	}
 	.pin-ganado {
 		display: flex;
 		justify-content: center;
+		margin-bottom: 6px;
+	}
+	.pin-nombre {
+		position: relative;
+		z-index: 2;
+		font-family: var(--pixel);
+		font-size: 7px;
+		line-height: 1.5;
+		color: var(--gold);
+		text-align: center;
 		margin-bottom: 6px;
 	}
 </style>
