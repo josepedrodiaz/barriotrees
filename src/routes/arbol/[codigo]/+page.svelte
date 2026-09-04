@@ -142,8 +142,7 @@
 		<div class="magic panel">
 			<div class="mh">🌧️ HOY NO HACE FALTA REGAR</div>
 			<div class="mr">
-				<span class="e">💧</span>Llovió y el suelo está mojado: regar ahora sería tirar agua sobre
-				barro. Volvé cuando se seque.
+				<span class="e">💧</span>Llovió y el suelo está mojado. Volvé cuando se seque.
 			</div>
 		</div>
 		<p class="lockmsg">Pasa en toda la plaza, no solo en este árbol.</p>
