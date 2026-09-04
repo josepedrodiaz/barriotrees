@@ -3,6 +3,7 @@
 	import { supabase } from '$lib/supabase';
 	import { sesion } from '$lib/features/auth/sesion.svelte';
 	import { progresoEscalera, type Escalon } from '$lib/domain/insignias';
+	import Pin from '$lib/ui/Pin.svelte';
 
 	interface Props {
 		escalera: Escalon[];
@@ -48,7 +49,10 @@
 		</div>
 		<div class="badges">
 			{#each ganadas as g (g.insignia_id)}
-				<a class="badge" href={resolve('/insignias')}>🎖 {g.nombre.toUpperCase()}</a>
+				<a class="badge" href={resolve('/insignias')}>
+					<Pin px={26} alt="Pin de {g.nombre}" />
+					<span>{g.nombre.toUpperCase()}</span>
+				</a>
 			{:else}
 				<a class="badge empty" href={resolve('/insignias')}>SIN LOGROS — REGÁ TU 1ER ÁRBOL</a>
 			{/each}
@@ -124,18 +128,20 @@
 		margin-top: 12px;
 		flex-wrap: wrap;
 	}
+	/* El pin real (dorado) se luce sobre oscuro, como en la intro: por eso el
+	   badge dejó de ser un chip amarillo con emoji y ahora muestra el Pin de
+	   verdad con el nombre al lado. */
 	.badge {
 		font-family: var(--pixel);
 		font-size: 8px;
 		line-height: 1.5;
-		color: #3a2c00;
-		background: var(--gold);
-		border: 2px solid #8a6a10;
-		padding: 6px 8px;
+		color: var(--gold);
+		background: #2b2542;
+		border: 2px solid var(--edge-d);
+		padding: 4px 10px 4px 4px;
 		display: inline-flex;
-		gap: 5px;
+		gap: 6px;
 		align-items: center;
-		box-shadow: inset 2px 2px 0 #ffe08a;
 		text-decoration: none;
 	}
 	.badge.empty {

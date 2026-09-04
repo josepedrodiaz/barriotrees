@@ -4,6 +4,7 @@
 	import { supabase } from '$lib/supabase';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import { reclamarRiegos, type ReclamoResultado } from '$lib/features/auth/reclamo';
+	import Pin from '$lib/ui/Pin.svelte';
 
 	type Fase = 'entrando' | 'listo' | 'error';
 	let fase: Fase = $state('entrando');
@@ -70,7 +71,10 @@
 
 		{#each reclamo.insignias_nuevas as insignia (insignia.id)}
 			<div class="insignia panel">
-				<h2>🎖 {insignia.nombre}</h2>
+				<div style="display:flex;justify-content:center;margin-bottom:6px">
+					<Pin px={56} alt="Pin de {insignia.nombre}" />
+				</div>
+				<h2>{insignia.nombre}</h2>
 				<p class="copy">{insignia.copy}</p>
 			</div>
 		{/each}
