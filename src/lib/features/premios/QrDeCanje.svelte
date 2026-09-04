@@ -6,8 +6,16 @@
 		nombre: string;
 		token: string;
 		urlBase: string;
+		// El texto bajo el QR cambia según el caso: entrega normal (default) o
+		// devolución de un pin marcado por error.
+		nota?: string;
 	}
-	let { nombre, token, urlBase }: Props = $props();
+	let {
+		nombre,
+		token,
+		urlBase,
+		nota = 'Mostrale esta pantalla a quien te entrega el pin. La escanea, y el pin es tuyo.'
+	}: Props = $props();
 
 	let qr = $state('');
 
@@ -32,9 +40,7 @@
 			<div class="hueco"></div>
 		{/if}
 	</div>
-	<p class="como">
-		Mostrale esta pantalla a quien te entrega el pin. La escanea, y el pin es tuyo.
-	</p>
+	<p class="como">{nota}</p>
 </div>
 
 <style>

@@ -115,7 +115,12 @@
 			<summary>¿La comisión marcó un pin por error?</summary>
 			<p>Volvé a mostrarle este QR para que lo escanee y lo devuelva a pendiente:</p>
 			{#each entregados as c (c.insignia_id)}
-				<QrDeCanje nombre={c.nombre} token={c.token} urlBase={data.urlBase} />
+				<QrDeCanje
+					nombre={c.nombre}
+					token={c.token}
+					urlBase={data.urlBase}
+					nota="Mostrásela a la comisión para que la escanee y devuelva el pin a pendiente."
+				/>
 			{/each}
 		</details>
 	{/if}
@@ -207,7 +212,9 @@
 	}
 	.como p {
 		font-size: 16px;
-		color: var(--dim);
+		/* Va sobre el fondo claro de la página (no sobre panel oscuro): color
+		   oscuro para que se lea, no el lila --dim. */
+		color: #2b2542;
 		line-height: 1.4;
 		margin: 10px 0 0;
 	}
