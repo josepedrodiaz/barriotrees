@@ -86,10 +86,6 @@
 </div>
 
 <button class="btn wide escanear" onclick={() => (escaneando = true)}>📷 ESCANEAR QR</button>
-<p class="cta-note">
-	Para sumar hay que estar en el árbol y escanear su chapita. ·
-	<a href={resolve('/ranking')}>🏆 Ranking del barrio</a>
-</p>
 
 {#if escaneando}
 	<EscanerQr onCodigo={alEscanear} onCancelar={() => (escaneando = false)} />
@@ -145,6 +141,8 @@
 		</ul>
 	{/if}
 {/if}
+
+<a class="btn gold wide ranking-btn" href={resolve('/ranking')}>🏆 RANKING DEL BARRIO</a>
 
 {#snippet fila(arbol: (typeof arboles)[number])}
 	{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
@@ -206,11 +204,8 @@
 	.escanear {
 		margin-top: 4px;
 	}
-	.cta-note {
-		text-align: center;
-		font-size: 16px;
-		color: #2c4a1e;
-		margin: 9px 4px 0;
+	.ranking-btn {
+		margin-top: 26px;
 	}
 	.section-h .n {
 		color: var(--sed);
