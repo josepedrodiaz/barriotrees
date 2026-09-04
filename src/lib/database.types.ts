@@ -106,6 +106,7 @@ export type Database = {
           creado_en: string
           et0_mm: number
           fecha: string
+          humedad_suelo: number | null
           lluvia_mm: number
           temp_max: number | null
         }
@@ -113,6 +114,7 @@ export type Database = {
           creado_en?: string
           et0_mm?: number
           fecha: string
+          humedad_suelo?: number | null
           lluvia_mm?: number
           temp_max?: number | null
         }
@@ -120,6 +122,7 @@ export type Database = {
           creado_en?: string
           et0_mm?: number
           fecha?: string
+          humedad_suelo?: number | null
           lluvia_mm?: number
           temp_max?: number | null
         }
@@ -493,6 +496,7 @@ export type Database = {
           fecha_defuncion: string | null
           fecha_plantacion: string | null
           frecuencia_dias_override: number | null
+          humedad_suelo: number | null
           id: string | null
           lat: number | null
           lluvia_3d: number | null
@@ -500,6 +504,7 @@ export type Database = {
           nombre: string | null
           notas: string | null
           sector: string | null
+          suelo_saturado: boolean | null
         }
         Relationships: [
           {
@@ -535,28 +540,44 @@ export type Database = {
           f_efectiva: number
         }[]
       }
+      f_suelo_saturado: { Args: never; Returns: boolean }
       hacer_entregador: { Args: { p_email: string }; Returns: Json }
       limpiar_pruebas: { Args: never; Returns: Json }
       listar_entregadores: { Args: never; Returns: Json }
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
       obtener_clima_token: { Args: never; Returns: Json }
-      poblar_pruebas: { Args: { p_cantidad?: number }; Returns: Json }
-      poner_entregador: { Args: { p_perfil: string; p_valor: boolean }; Returns: Json }
-      puede_canjear: { Args: never; Returns: boolean }
-      quitar_entregador: { Args: { p_perfil: string }; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
-      reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
-      registrar_clima: {
-        Args: {
-          p_et0: number
-          p_fecha: string
-          p_lluvia: number
-          p_temp?: number
-          p_token: string
-        }
+      poblar_pruebas: { Args: { p_cantidad?: number }; Returns: Json }
+      poner_entregador: {
+        Args: { p_perfil: string; p_valor: boolean }
         Returns: Json
       }
+      puede_canjear: { Args: never; Returns: boolean }
+      quitar_entregador: { Args: { p_perfil: string }; Returns: Json }
+      reclamar_riegos: { Args: { p_dispositivo_id: string }; Returns: Json }
+      registrar_clima:
+        | {
+            Args: {
+              p_et0: number
+              p_fecha: string
+              p_lluvia: number
+              p_temp?: number
+              p_token: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_et0: number
+              p_fecha: string
+              p_humedad?: number
+              p_lluvia: number
+              p_temp?: number
+              p_token: string
+            }
+            Returns: Json
+          }
       registrar_riego: {
         Args: {
           p_codigo: string
@@ -591,12 +612,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -620,11 +641,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -645,11 +666,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -670,11 +691,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -687,11 +708,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

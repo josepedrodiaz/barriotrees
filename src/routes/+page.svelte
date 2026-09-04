@@ -28,6 +28,9 @@
 	// Se recalcula solo cada vez que el GPS reporta una posición nueva: si el
 	// vecino camina, la lista se reacomoda sola (y las filas se deslizan).
 	const arboles = $derived(ordenarArboles(data.arboles, gps.fix));
+	// El suelo mojado es global de la plaza: si llovió, no se manda a regar a
+	// nadie hoy, aunque los árboles tengan sed de fondo (BT: riego suelo mojado).
+	const sueloMojado = $derived(data.arboles[0]?.suelo_saturado ?? false);
 	const sedientos = $derived(
 		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento').length
 	);
@@ -68,8 +71,13 @@
 
 <div class="stat">
 	<div class="box panel">
-		<div class="num sed">{sedientos}</div>
-		<div class="lab">CON SED</div>
+		{#if sueloMojado}
+			<div class="num fel">🌧️</div>
+			<div class="lab">LLOVIÓ</div>
+		{:else}
+			<div class="num sed">{sedientos}</div>
+			<div class="lab">CON SED</div>
+		{/if}
 	</div>
 	<div class="box panel">
 		<div class="num fel">{regadosHoy}</div>
@@ -97,45 +105,72 @@
 	</p>
 {/if}
 
-<h1 class="section-h">
-	💧 Necesitan agua <span class="n">({sedientos})</span>{#if gps.fix}
-		· cerca tuyo{/if}
-</h1>
+{#if sueloMojado}
+	<div class="lluvia-hoy panel">
+		<div class="lh-h">🌧️ Hoy no hace falta regar</div>
+		<p>
+			Llovió y el suelo está tomando agua. Volvé cuando se seque — podés verlo desde tu casa, en
+			esta app.
+		</p>
+	</div>
 
-{#if conSed.length}
+	<h2 class="section-h">La plaza</h2>
 	<ul class="arboles">
-		{#each conSed as arbol (arbol.codigo)}
+		{#each arboles as arbol (arbol.codigo)}
 			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
 		{/each}
 	</ul>
 {:else}
-	<p class="vacio panel">Ninguno urgente 🎉</p>
-{/if}
+	<h1 class="section-h">
+		💧 Necesitan agua <span class="n">({sedientos})</span>{#if gps.fix}
+			· cerca tuyo{/if}
+	</h1>
 
-{#if yaEstan.length}
-	<h2 class="section-h">Ya están bien</h2>
-	<ul class="arboles">
-		{#each yaEstan as arbol (arbol.codigo)}
-			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
-		{/each}
-	</ul>
+	{#if conSed.length}
+		<ul class="arboles">
+			{#each conSed as arbol (arbol.codigo)}
+				<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
+			{/each}
+		</ul>
+	{:else}
+		<p class="vacio panel">Ninguno urgente 🎉</p>
+	{/if}
+
+	{#if yaEstan.length}
+		<h2 class="section-h">Ya están bien</h2>
+		<ul class="arboles">
+			{#each yaEstan as arbol (arbol.codigo)}
+				<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
+			{/each}
+		</ul>
+	{/if}
 {/if}
 
 {#snippet fila(arbol: (typeof arboles)[number])}
 	{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
 	<a class="panel" href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
 		<span class="mini"
-			><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={52} /></span
+			><ArbolVoxel
+				estado={sueloMojado ? 'feliz' : ((arbol.estado ?? 'muy_sediento') as Estado)}
+				px={52}
+			/></span
 		>
 		<span class="info">
 			<span class="nm">{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</span>
 			<span class="st">
-				<span class="chip {info.clase}">{info.etiqueta}</span>
-				<span class="datos"
-					>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
-						· 📍
-						{distanciaA(arbol.lat, arbol.lng)}{/if}</span
-				>
+				{#if sueloMojado}
+					<span class="chip mojado">🌧 Mojado</span>
+					<span class="datos"
+						>{#if distanciaA(arbol.lat, arbol.lng)}📍 {distanciaA(arbol.lat, arbol.lng)}{/if}</span
+					>
+				{:else}
+					<span class="chip {info.clase}">{info.etiqueta}</span>
+					<span class="datos"
+						>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
+							· 📍
+							{distanciaA(arbol.lat, arbol.lng)}{/if}</span
+					>
+				{/if}
 			</span>
 		</span>
 		<span class="go">▶</span>
@@ -231,6 +266,9 @@
 		display: inline-block;
 		text-transform: uppercase;
 	}
+	.chip.mojado {
+		color: var(--violet-l);
+	}
 	.datos {
 		color: var(--dim);
 		font-size: 15px;
@@ -245,6 +283,23 @@
 	.vacio {
 		padding: 16px;
 		text-align: center;
+		color: var(--dim);
+	}
+	.lluvia-hoy {
+		padding: 18px 16px;
+		text-align: center;
+		border: 2px solid var(--violet-d);
+	}
+	.lluvia-hoy .lh-h {
+		font-family: var(--pixel);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--violet-l);
+		margin-bottom: 10px;
+	}
+	.lluvia-hoy p {
+		margin: 0;
+		font-size: 18px;
 		color: var(--dim);
 	}
 	.ubicacion {
