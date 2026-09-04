@@ -63,8 +63,8 @@
 			>
 		{:else}
 			<div class="pinbadge"><Pin px={96} alt="El pin que se entrega en mano" /></div>
-			<h3>REGÁS Y GANÁS</h3>
-			<div class="name">INSIGNIAS EN LA VIDA REAL</div>
+			<div class="name">REGÁS Y GANÁS INSIGNIAS</div>
+			<div class="name-real">en la vida real</div>
 			<div class="wsteps">
 				<div class="wstep">
 					<span class="em"><BroteEnMano px={32} /></span>
@@ -119,7 +119,8 @@
 	}
 	.pinbadge {
 		animation: pixpop 0.5s steps(4);
-		margin: 2px auto;
+		/* aire abajo para que el resplandor del pin no pise el título */
+		margin: 6px auto 22px;
 	}
 	@keyframes pixpop {
 		from {
@@ -141,11 +142,18 @@
 		font-size: 15px;
 		line-height: 1.5;
 		color: #fff;
-		margin: 0 0 12px;
+		margin: 0 0 4px;
 		text-shadow: 2px 2px 0 #000;
 	}
 	.name.chico {
 		font-size: 12px;
+	}
+	.name-real {
+		font-family: var(--pixel);
+		font-size: 10px;
+		color: var(--gold);
+		margin: 0 0 14px;
+		text-shadow: 2px 2px 0 #6b4e08;
 	}
 	p {
 		font-size: 19px;
