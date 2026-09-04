@@ -142,7 +142,7 @@
 	{/if}
 {/if}
 
-<a class="btn gold wide ranking-btn" href={resolve('/ranking')}>🏆 RANKING DEL BARRIO</a>
+<a class="btn wide ranking-btn" href={resolve('/ranking')}>🏆 RANKING DEL BARRIO</a>
 
 {#snippet fila(arbol: (typeof arboles)[number])}
 	{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
