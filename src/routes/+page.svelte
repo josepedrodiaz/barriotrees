@@ -202,7 +202,9 @@
 		margin-top: 6px;
 	}
 	.escanear {
-		margin-top: 4px;
+		/* Sin la sombra de elevación de .panel, el botón quedaba pegado al
+		   contenido de abajo: le devuelvo el aire con un margen. */
+		margin: 4px 0 20px;
 	}
 	.ranking-btn {
 		margin-top: 26px;
