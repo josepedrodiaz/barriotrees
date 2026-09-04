@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
-	import { tipAlAzar, otroTip } from './tips';
+	import { tipAlAzar } from './tips';
 
 	interface Props {
 		segundos: number;
@@ -13,22 +13,15 @@
 	// la demo y lo que hace que estos segundos no se sientan un castigo.
 	const SALUD_INICIAL = 0.16;
 	let salud = $state(SALUD_INICIAL);
-	let tip = $state(tipAlAzar());
-	let entrando = $state(0);
+	// Una sola frase durante toda la espera, elegida al azar al empezar (sin rotar).
+	const tip = tipAlAzar();
 
 	onMount(() => {
 		const paso = 500;
 		const crecer = setInterval(() => {
 			salud = Math.min(1, salud + (1 - SALUD_INICIAL) / ((segundos * 1000) / paso));
 		}, paso);
-		const rotar = setInterval(() => {
-			tip = otroTip(tip);
-			entrando++;
-		}, 5200);
-		return () => {
-			clearInterval(crecer);
-			clearInterval(rotar);
-		};
+		return () => clearInterval(crecer);
 	});
 </script>
 
@@ -42,9 +35,7 @@
 		<div class="barra"><i style="animation-duration: {segundos}s"></i></div>
 		<div class="dialogo">
 			<div class="quien">SABÍAS QUE…</div>
-			{#key entrando}
-				<p class="tip">{tip}</p>
-			{/key}
+			<p class="tip">{tip}</p>
 		</div>
 		<p class="nota">Ya lo regaste ✓ — dale un segundo, lo estamos guardando 💧</p>
 	</div>
