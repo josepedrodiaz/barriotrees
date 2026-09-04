@@ -118,10 +118,12 @@ h3 {
 	color: var(--ink);
 }
 
-button.btn {
+button.btn,
+a.btn {
 	font-family: var(--pixel);
 	font-size: 11px;
 	color: #fff;
+	text-decoration: none;
 	background: var(--violet);
 	border: 3px solid var(--edge-d);
 	padding: 13px 12px;
@@ -145,6 +147,16 @@ button.btn:active {
 }
 button.btn:disabled {
 	opacity: 0.55;
+}
+/* Las flechas (◀ ▶) usan una fuente fallback —la pixel no las tiene— que cae
+   con otra línea base y queda baja. Envolverlas en <span class="fl"> las vuelve
+   ítem flex propio (se centran por caja) y este ajuste corrige lo que resta.
+   Clase única para todos los botones con flecha. */
+.btn .fl {
+	display: inline-block;
+	line-height: 1;
+	position: relative;
+	top: -4px;
 }
 .btn.wide {
 	width: 100%;
