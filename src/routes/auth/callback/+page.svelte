@@ -114,6 +114,10 @@
 		text-shadow: 3px 3px 0 #000;
 		margin: 8px 0;
 	}
+	/* Sobre el panel oscuro el violeta del link rinde poco: blanco contrasta. */
+	.centro p a {
+		color: #fff;
+	}
 	.emoji {
 		font-size: 3rem;
 		display: block;
