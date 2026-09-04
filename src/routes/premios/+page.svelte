@@ -63,7 +63,7 @@
 	<title>Premios · Árboles Gigantes</title>
 </svelte:head>
 
-<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
+<p class="volver"><a href={resolve('/')}><span class="fl">◀</span> volver</a></p>
 
 <h1 class="titulo">Tus premios</h1>
 

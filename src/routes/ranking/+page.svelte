@@ -14,7 +14,7 @@
 	<title>Ranking · Árboles Gigantes</title>
 </svelte:head>
 
-<a class="back" href={resolve('/')}>◀ VOLVER</a>
+<a class="back" href={resolve('/')}><span class="fl">◀</span> VOLVER</a>
 
 <h1 class="titulo">RANKING DEL BARRIO</h1>
 <p class="bajada">Quién cuidó más la plaza. Se ordena por puntos, en vivo.</p>

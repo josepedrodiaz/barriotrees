@@ -108,7 +108,7 @@
 	</div>
 {/if}
 
-<p class="volver"><a href={resolve('/admin')}>◀ volver al panel</a></p>
+<p class="volver"><a href={resolve('/admin')}><span class="fl">◀</span> volver al panel</a></p>
 
 <style>
 	.esperando {

@@ -110,7 +110,7 @@
 {/if}
 
 {#if fase === 'ficha'}
-	<a class="back" href={resolve('/')}>◀ VOLVER</a>
+	<a class="back" href={resolve('/')}><span class="fl">◀</span> VOLVER</a>
 
 	<div class="hero">
 		<div class="big">
