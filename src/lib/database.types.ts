@@ -568,6 +568,7 @@ export type Database = {
       }
       resetear_juego: { Args: never; Returns: Json }
       revertir_canje: { Args: { p_token: string }; Returns: Json }
+      set_radio_proximidad: { Args: { p_metros: number }; Returns: Json }
       ver_canje: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
