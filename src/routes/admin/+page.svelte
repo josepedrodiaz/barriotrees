@@ -90,6 +90,39 @@
 		await invalidateAll();
 	}
 
+	// --- Radio de proximidad (anti-trampa): editable en vivo, sin migraciones. ---
+	// `config.valor` es jsonb, pero acá llega como número; el RPC lo deja en 50 o 500.
+	let radioActual = $state<number | null>(null);
+	let tocandoRadio = $state(false);
+	let avisoRadio: string | null = $state(null);
+
+	async function cargarRadio() {
+		const { data } = await supabase
+			.from('config')
+			.select('valor')
+			.eq('clave', 'radio_proximidad_metros')
+			.single();
+		radioActual = data ? Number(data.valor) : null;
+	}
+
+	async function setRadio(metros: number) {
+		tocandoRadio = true;
+		avisoRadio = null;
+		const { data: res } = await supabase.rpc('set_radio_proximidad', { p_metros: metros });
+		const r = res as { ok?: boolean; metros?: number; motivo?: string } | null;
+		tocandoRadio = false;
+		if (r?.ok) {
+			radioActual = r.metros ?? metros;
+			avisoRadio = `Listo: el radio quedó en ${radioActual} m.`;
+		} else {
+			avisoRadio =
+				r?.motivo === 'no_admin' ? 'No se pudo (¿sos admin?).' : 'No se pudo cambiar el radio.';
+		}
+	}
+
+	// ssr = false: corre en el navegador apenas se monta la página.
+	cargarRadio();
+
 	async function setEntregador(id: string, valor: boolean) {
 		tocando = id;
 		await supabase.rpc('poner_entregador', { p_perfil: id, p_valor: valor });
@@ -300,6 +333,38 @@
 			💣 Resetear todo el juego
 		</button>
 	</div>
+</div>
+
+<div class="entregadores panel">
+	<h2>📡 Radio de proximidad</h2>
+	<p class="intro">
+		Cuánto podés alejarte del árbol para que el riego cuente. Producción: <b>50 m</b> (parado en la
+		plaza). Pruebas: <b>500 m</b> (para jugar desde casa). Se cambia acá al toque, sin migraciones.
+	</p>
+	<div class="acciones-pruebas">
+		<button
+			class="btn sm"
+			class:gold={radioActual === 500}
+			class:ghost={radioActual !== 500}
+			disabled={tocandoRadio}
+			onclick={() => setRadio(500)}>⚠ Modo pruebas (500 m)</button
+		>
+		<button
+			class="btn sm"
+			class:green={radioActual === 50}
+			class:ghost={radioActual !== 50}
+			disabled={tocandoRadio}
+			onclick={() => setRadio(50)}>✓ Producción (50 m)</button
+		>
+	</div>
+	{#if radioActual != null}
+		<p class="intro">
+			Actual: <b>{radioActual} m {radioActual === 50 ? '✓ producción' : '⚠ pruebas'}</b>
+		</p>
+	{:else}
+		<p class="intro">Leyendo el radio actual…</p>
+	{/if}
+	{#if avisoRadio}<p class="aviso-pruebas">{avisoRadio}</p>{/if}
 </div>
 
 <div class="entregadores panel">
