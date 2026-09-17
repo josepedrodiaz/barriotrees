@@ -27,8 +27,20 @@
 		demo = true;
 		const p = data.pines;
 		const falsos: Canje[] = [];
-		if (p[0]) falsos.push({ insignia_id: p[0].id, nombre: p[0].nombre, estado: 'pendiente', token: 'demo-0000-0000-0000-000000000001' });
-		if (p[1]) falsos.push({ insignia_id: p[1].id, nombre: p[1].nombre, estado: 'entregado', token: 'demo-0000-0000-0000-000000000002' });
+		if (p[0])
+			falsos.push({
+				insignia_id: p[0].id,
+				nombre: p[0].nombre,
+				estado: 'pendiente',
+				token: 'demo-0000-0000-0000-000000000001'
+			});
+		if (p[1])
+			falsos.push({
+				insignia_id: p[1].id,
+				nombre: p[1].nombre,
+				estado: 'entregado',
+				token: 'demo-0000-0000-0000-000000000002'
+			});
 		canjes = falsos;
 	});
 
@@ -54,9 +66,7 @@
 
 	// La galería: todos los pines del catálogo, marcando cuáles ganó el vecino.
 	// Los que faltan se muestran muy grises — se ve lo que hay para conseguir.
-	const galeria = $derived(
-		data.pines.map((p) => ({ ...p, ganado: ganados.has(p.id) }))
-	);
+	const galeria = $derived(data.pines.map((p) => ({ ...p, ganado: ganados.has(p.id) })));
 </script>
 
 <svelte:head>

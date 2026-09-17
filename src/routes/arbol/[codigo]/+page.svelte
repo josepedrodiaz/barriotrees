@@ -10,6 +10,8 @@
 	import EscanerQr from '$lib/features/riego/EscanerQr.svelte';
 	import { escaneadoReciente, registrarEscaneo } from '$lib/features/riego/escaneo.svelte';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
+	import { dispositivoId } from '$lib/features/riego/dispositivo';
+	import { supabase } from '$lib/supabase';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import Pin from '$lib/ui/Pin.svelte';
 
@@ -31,7 +33,11 @@
 		if (import.meta.env.DEV) {
 			const demo = new URLSearchParams(location.search).get('demo');
 			if (demo === 'error') {
-				resultado = { ok: false, motivo: 'cooldown_arbol', proximo_riego: new Date(Date.now() + 3 * 3600e3).toISOString() };
+				resultado = {
+					ok: false,
+					motivo: 'cooldown_arbol',
+					proximo_riego: new Date(Date.now() + 3 * 3600e3).toISOString()
+				};
 				fase = 'resultado';
 			} else if (demo) {
 				resultado = {
@@ -41,12 +47,20 @@
 					estado_anterior: 'muy_sediento',
 					insignias_nuevas:
 						demo === 'insignia'
-							? [{ id: 'demo', nombre: 'Rescatista', copy: 'No es una medalla: es haber estado cuando el árbol de verdad te necesitaba.' }]
+							? [
+									{
+										id: 'demo',
+										nombre: 'Rescatista',
+										copy: 'No es una medalla: es haber estado cuando el árbol de verdad te necesitaba.'
+									}
+								]
 							: []
 				};
 				fase = 'resultado';
 			}
 		}
+
+		cargarMisRiegos();
 	});
 
 	const arbol = $derived(data.arbol);
@@ -91,7 +105,7 @@
 		fase = 'resultado';
 		// El riego cambió el estado del árbol y, si hay sesión, los puntos del
 		// vecino: hay que refrescar los dos o el header queda con el total viejo.
-		if (res.ok) await Promise.all([invalidateAll(), cargarPerfil()]);
+		if (res.ok) await Promise.all([invalidateAll(), cargarPerfil(), cargarMisRiegos()]);
 	}
 
 	function horaLocal(iso: string | undefined): string {
@@ -99,6 +113,27 @@
 		return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 	}
 
+	// Los riegos de ESTE vecino (este teléfono) a ESTE árbol, más nuevo primero.
+	let misRiegos = $state<string[]>([]);
+
+	async function cargarMisRiegos() {
+		const { data } = await supabase
+			.from('riegos')
+			.select('creado_en')
+			.eq('arbol_id', arbol.id!)
+			.eq('dispositivo_id', dispositivoId())
+			.order('creado_en', { ascending: false });
+		misRiegos = (data ?? []).map((r) => r.creado_en as string);
+	}
+
+	function fechaHoraLocal(iso: string): string {
+		return new Date(iso).toLocaleString('es-AR', {
+			day: 'numeric',
+			month: 'short',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
 </script>
 
 <svelte:head>
@@ -204,12 +239,16 @@
 		<button class="btn ghost wide" onclick={seguirPosicion}>📍 DAR MI UBICACIÓN</button>
 	{/if}
 
+	<!-- TODO: "Leyenda del árbol" aún no implementada. Comentada para que no se vea.
 	<div class="card2 panel">
 		<div class="row">
 			<span class="k">Leyenda del árbol</span>
 			<span class="v pronto">— pronto 🚩</span>
 		</div>
 	</div>
+	-->
+
+	{@render miHistoria()}
 {:else if fase === 'regando'}
 	<PantallaRegando segundos={data.duracionSegundos} />
 {:else if resultado}
@@ -232,6 +271,8 @@
 			{:else}
 				<p class="acumulado">Llevás {resultado.total_puntos} puntos</p>
 			{/if}
+
+			{@render miHistoria()}
 
 			{#each resultado.insignias_nuevas as insignia (insignia.id)}
 				<div class="magic panel">
@@ -305,6 +346,21 @@
 		</div>
 	{/if}
 {/if}
+
+{#snippet miHistoria()}
+	{#if misRiegos.length === 0}
+		<p class="mi-historia">Nunca lo regaste hasta hoy.</p>
+	{:else}
+		<details class="mi-historia panel">
+			<summary>Lo regaste {misRiegos.length} {misRiegos.length === 1 ? 'vez' : 'veces'} ▾</summary>
+			<ul>
+				{#each misRiegos as iso (iso)}
+					<li>{fechaHoraLocal(iso)}</li>
+				{/each}
+			</ul>
+		</details>
+	{/if}
+{/snippet}
 
 <style>
 	.back {
@@ -527,6 +583,7 @@
 		padding: 12px 14px;
 		margin: 14px 0;
 	}
+	/* TODO: estilos de "Leyenda del árbol", comentados junto con la vista.
 	.card2 .row {
 		display: flex;
 		justify-content: space-between;
@@ -543,6 +600,7 @@
 	.pronto {
 		color: var(--dim);
 	}
+	*/
 
 	.resultado {
 		text-align: center;
@@ -607,5 +665,35 @@
 		color: var(--gold);
 		text-align: center;
 		margin-bottom: 6px;
+	}
+
+	.mi-historia {
+		font-size: 16px;
+		color: var(--dim);
+		text-align: center;
+		margin: 14px 0;
+	}
+	details.mi-historia {
+		text-align: left;
+		padding: 12px 14px;
+	}
+	details.mi-historia summary {
+		font-family: var(--pixel);
+		font-size: 9px;
+		color: var(--violet-l);
+		cursor: pointer;
+		list-style: none;
+	}
+	details.mi-historia ul {
+		list-style: none;
+		padding: 0;
+		margin: 10px 0 0;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	details.mi-historia li {
+		font-size: 16px;
+		color: var(--ink);
 	}
 </style>

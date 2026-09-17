@@ -98,7 +98,7 @@
 	<div class="centro panel">
 		<span class="emoji">🌳</span>
 		<h1>Hola{nombre ? `, ${nombre}` : ''}</h1>
-		<p>Ya estás dentro. Todo lo que riegues de ahora en más queda a tu nombre.</p>
+		<p>Ya estás dentro. Bienvenido al equipo que cuida la plaza. A regar!</p>
 		<p><a href={resolve('/')}>Ver los árboles sedientos →</a></p>
 	</div>
 {/if}

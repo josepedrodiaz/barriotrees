@@ -37,15 +37,6 @@
 	const regadosHoy = $derived(
 		arboles.filter((a) => a.dias_sin_riego !== null && a.dias_sin_riego < 1).length
 	);
-	// Como la demo: los que piden agua arriba y el resto abajo. Adentro de cada
-	// grupo sigue mandando la cercanía, así que la lista se reacomoda al caminar.
-	const conSed = $derived(
-		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento')
-	);
-	const yaEstan = $derived(
-		arboles.filter((a) => a.estado !== 'sediento' && a.estado !== 'muy_sediento')
-	);
-
 	onMount(() => {
 		if (quiereDistancias()) seguirPosicion();
 	});
@@ -118,27 +109,18 @@
 	</ul>
 {:else}
 	<h1 class="section-h">
-		💧 Necesitan agua <span class="n">({sedientos})</span>{#if gps.fix}
+		💧 La plaza <span class="n">({sedientos})</span>{#if gps.fix}
 			· cerca tuyo{/if}
 	</h1>
 
-	{#if conSed.length}
+	{#if arboles.length}
 		<ul class="arboles">
-			{#each conSed as arbol (arbol.codigo)}
+			{#each arboles as arbol (arbol.codigo)}
 				<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
 			{/each}
 		</ul>
 	{:else}
 		<p class="vacio panel">Ninguno urgente 🎉</p>
-	{/if}
-
-	{#if yaEstan.length}
-		<h2 class="section-h">Ya están bien</h2>
-		<ul class="arboles">
-			{#each yaEstan as arbol (arbol.codigo)}
-				<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
-			{/each}
-		</ul>
 	{/if}
 {/if}
 
