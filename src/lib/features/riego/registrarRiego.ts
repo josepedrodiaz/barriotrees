@@ -25,6 +25,7 @@ export type RiegoResultado =
 				| 'lejos'
 				| 'cooldown_arbol'
 				| 'cooldown_vecino'
+				| 'suelo_saturado'
 				| 'error_red';
 			distancia_m?: number;
 			proximo_riego?: string;

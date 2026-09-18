@@ -36,13 +36,20 @@ jobs:
           LAT=-34.9787
           LNG=-58.0202
           # past_days=2 cubre el día de ayer aunque la Action falle un día.
-          URL="https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LNG&daily=precipitation_sum,temperature_2m_max,et0_fao_evapotranspiration&past_days=2&forecast_days=1&timezone=America/Argentina/Buenos_Aires"
+          # current=soil_moisture: la humedad de suelo AHORA (0–7 cm), para no
+          # mandar a regar sobre barro. Es un valor instantáneo, no diario, así
+          # que va solo con el día de hoy. Evita bregar con índices horarios.
+          URL="https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LNG&daily=precipitation_sum,temperature_2m_max,et0_fao_evapotranspiration&current=soil_moisture_0_to_7cm&past_days=2&forecast_days=1&timezone=America/Argentina/Buenos_Aires"
           curl -sS "$URL" -o clima.json
 
           # Un registrar_clima por cada día que trajo la API (upsert idempotente).
           node --input-type=module <<'JS'
           import { readFileSync } from 'node:fs';
-          const d = JSON.parse(readFileSync('clima.json', 'utf8')).daily;
+          const clima = JSON.parse(readFileSync('clima.json', 'utf8'));
+          const d = clima.daily;
+          const humedad = clima.current?.soil_moisture_0_to_7cm ?? null;
+          // Hoy en hora de la plaza, para saber a qué fila pegarle la humedad.
+          const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
           const { SUPABASE_URL, SUPABASE_ANON_KEY, CLIMA_TOKEN } = process.env;
           let ok = 0;
           for (let i = 0; i < d.time.length; i++) {
@@ -58,7 +65,8 @@ jobs:
                 p_fecha: d.time[i],
                 p_lluvia: d.precipitation_sum[i],
                 p_et0: d.et0_fao_evapotranspiration[i],
-                p_temp: d.temperature_2m_max[i]
+                p_temp: d.temperature_2m_max[i],
+                p_humedad: d.time[i] === hoy ? humedad : null
               })
             });
             const j = await res.json();

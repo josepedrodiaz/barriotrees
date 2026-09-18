@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
@@ -12,7 +13,11 @@
 
 	let { children } = $props();
 
-	seguirSesion();
+	// La sesión vive en el localStorage del cliente: en el server no existe. Si
+	// seguirSesion() corriera en SSR, getSession resolvería null y el HTML saldría
+	// con "sin cuenta" congelado. Corriéndolo solo en el browser, el primer render
+	// (server y cliente) queda en "cargando" hasta que el cliente sabe la verdad.
+	if (browser) seguirSesion();
 
 	// PWA (BT-32): registra el service worker que deja la app instalada y con el
 	// shell precacheado — abre al toque aunque la señal de la plaza esté floja.

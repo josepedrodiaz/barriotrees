@@ -3,7 +3,7 @@
 	import { supabase } from '$lib/supabase';
 	import { sesion, salir, cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import { progresoEscalera, gano, type Escalon } from '$lib/domain/insignias';
-	import QrDeCanje from '$lib/features/premios/QrDeCanje.svelte';
+	import Pin from '$lib/ui/Pin.svelte';
 
 	let { data } = $props();
 
@@ -54,15 +54,7 @@
 		canje_estado: string;
 	}
 
-	interface Canje {
-		insignia_id: string;
-		nombre: string;
-		estado: string;
-		token: string;
-	}
-
 	let ganadas: Ganada[] = $state([]);
-	let canjes: Canje[] = $state([]);
 	let conteos: Record<string, number> = $state({});
 	let cargadoPara: string | null = $state(null);
 
@@ -76,25 +68,17 @@
 	});
 
 	async function cargarMio(id: string) {
-		// Los tokens de canje no se leen de la tabla (son privados): los da una
-		// RPC que solo devuelve los del vecino logueado.
-		const [{ data: g }, { data: progreso }, { data: mis }] = await Promise.all([
+		const [{ data: g }, { data: progreso }] = await Promise.all([
 			supabase
 				.from('insignias_ganadas')
 				.select('insignia_id, ganada_en, canje_estado')
 				.eq('perfil_id', id),
-			supabase.rpc('mi_progreso'),
-			supabase.rpc('mis_canjes')
+			supabase.rpc('mi_progreso')
 		]);
 		ganadas = g ?? [];
 		const p = progreso as { ok?: boolean; conteos?: Record<string, number> } | null;
 		if (p?.ok) conteos = p.conteos ?? {};
-		const c = mis as { ok?: boolean; canjes?: Canje[] } | null;
-		if (c?.ok) canjes = c.canjes ?? [];
 	}
-
-	const pendientes = $derived(canjes.filter((c) => c.estado === 'pendiente'));
-	const entregados = $derived(canjes.filter((c) => c.estado === 'entregado'));
 
 	const puntos = $derived(sesion.perfil?.puntos ?? 0);
 	const escalera = $derived(data.escalera as unknown as Escalon[]);
@@ -134,7 +118,7 @@
 	<title>Insignias · Árboles Gigantes</title>
 </svelte:head>
 
-<p class="volver"><a href={resolve('/')}>◀ volver</a></p>
+<p class="volver"><a href={resolve('/')}><span class="fl">◀</span> volver</a></p>
 
 {#if sesion.session}
 	<div class="perfil">
@@ -196,7 +180,9 @@
 		{@const ganada = gano(ganadas, escalon.id)}
 		{@const proxima = progreso.siguiente?.id === escalon.id}
 		<li class="panel" class:ganada class:proxima>
-			<span class="marca">{ganada ? '🎖' : escalon.orden}</span>
+			<span class="marca">
+				{#if ganada}<Pin px={28} alt="Pin ganado" />{:else}{escalon.orden}{/if}
+			</span>
 			<div class="cuerpo">
 				<h3>{escalon.nombre}</h3>
 				{#if ganada}
@@ -221,7 +207,9 @@
 		{@const objetivo = objetivoDe(merito.criterio)}
 		{@const actual = Math.min(actualDe(merito.criterio), objetivo)}
 		<li class="panel" class:ganada>
-			<span class="marca">{ganada ? '🎖' : '·'}</span>
+			<span class="marca">
+				{#if ganada}<Pin px={28} alt="Pin ganado" />{:else}·{/if}
+			</span>
 			<div class="cuerpo">
 				<h3>{merito.nombre}</h3>
 				{#if ganada}
@@ -241,36 +229,10 @@
 	<p class="cuenta"><button class="salir" onclick={salir}>Cerrar sesión</button></p>
 {/if}
 
-{#if pendientes.length}
-	<h2 class="section-h">
-		{pendientes.length === 1
-			? 'Tenés un pin esperándote'
-			: `Tenés ${pendientes.length} pines esperándote`}
-	</h2>
-	<p class="bajada">
-		Te los entrega la comisión en mano. Mostrá el QR y es tuyo — cada uno se canjea una sola vez.
-	</p>
-	{#each pendientes as c (c.insignia_id)}
-		<QrDeCanje nombre={c.nombre} token={c.token} urlBase={data.urlBase} />
-	{/each}
-{/if}
-
-{#if entregados.length}
-	<p class="pines">
-		🎖 Ya tenés en tu poder {entregados.length}
-		{entregados.length === 1 ? 'pin' : 'pines'}: {entregados.map((c) => c.nombre).join(', ')}.
-	</p>
-	<!-- El QR de un pin entregado sigue accesible, plegado: si la comisión lo
-	     marcó entregado por error, el vecino tiene que poder mostrarlo de nuevo
-	     para que el admin lo escanee y revierta (BT-39). Escanearlo de más no
-	     riesga nada: el validador dice "ya se entregó". -->
-	<details class="qr-entregados">
-		<summary>Ver el QR de un pin ya entregado</summary>
-		<p class="bajada">Solo hace falta si la comisión marcó tu pin por error y hay que revisarlo.</p>
-		{#each entregados as c (c.insignia_id)}
-			<QrDeCanje nombre={c.nombre} token={c.token} urlBase={data.urlBase} />
-		{/each}
-	</details>
+{#if sesion.session}
+	<a class="btn gold wide premios-link" href={resolve('/premios')}
+		>Tus pines y cómo canjearlos <span class="fl">▶</span></a
+	>
 {/if}
 
 <style>
@@ -445,20 +407,7 @@
 		text-decoration: underline;
 		cursor: pointer;
 	}
-	.pines {
-		margin-top: 16px;
-		padding: 12px 14px;
-		font-size: 17px;
-		text-align: center;
-	}
-	.qr-entregados {
-		margin-top: 8px;
-		text-align: center;
-	}
-	.qr-entregados summary {
-		font-size: 16px;
-		color: var(--dim);
-		text-decoration: underline;
-		cursor: pointer;
+	.premios-link {
+		margin: 16px 0 6px;
 	}
 </style>

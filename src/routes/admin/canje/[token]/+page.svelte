@@ -98,7 +98,7 @@
 {:else}
 	<div class="resultado panel">
 		<div class="pin"><Pin px={90} /></div>
-		<div class="mh">🎖 PIN A ENTREGAR</div>
+		<div class="mh">PIN A ENTREGAR</div>
 		<p class="insignia">{canje.insignia}</p>
 		<p class="quien">para <b>{canje.vecino}</b></p>
 		<button class="btn gold wide" onclick={entregar} disabled={entregando}>
@@ -108,7 +108,7 @@
 	</div>
 {/if}
 
-<p class="volver"><a href={resolve('/admin')}>◀ volver al panel</a></p>
+<p class="volver"><a href={resolve('/admin')}><span class="fl">◀</span> volver al panel</a></p>
 
 <style>
 	.esperando {

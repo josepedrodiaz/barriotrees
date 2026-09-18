@@ -4,6 +4,7 @@
 	import { supabase } from '$lib/supabase';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import { reclamarRiegos, type ReclamoResultado } from '$lib/features/auth/reclamo';
+	import Pin from '$lib/ui/Pin.svelte';
 
 	type Fase = 'entrando' | 'listo' | 'error';
 	let fase: Fase = $state('entrando');
@@ -70,10 +71,20 @@
 
 		{#each reclamo.insignias_nuevas as insignia (insignia.id)}
 			<div class="insignia panel">
-				<h2>🎖 {insignia.nombre}</h2>
+				<div style="display:flex;justify-content:center;margin-bottom:6px">
+					<Pin px={56} alt="Pin de {insignia.nombre}" />
+				</div>
+				<h2>¡Ganaste un pin!</h2>
+				<div class="pin-nombre">{insignia.nombre.toUpperCase()}</div>
 				<p class="copy">{insignia.copy}</p>
 			</div>
 		{/each}
+
+		{#if reclamo.insignias_nuevas.length}
+			<a class="btn gold wide canjear" href={resolve('/premios')}
+				>🎁 CANJEÁ TU PIN <span class="fl">▶</span></a
+			>
+		{/if}
 
 		{#if reclamo.insignias_nuevas.length > 0}
 			<p class="chico">
@@ -87,7 +98,7 @@
 	<div class="centro panel">
 		<span class="emoji">🌳</span>
 		<h1>Hola{nombre ? `, ${nombre}` : ''}</h1>
-		<p>Ya estás dentro. Todo lo que riegues de ahora en más queda a tu nombre.</p>
+		<p>Ya estás dentro. Bienvenido al equipo que cuida la plaza. A regar!</p>
 		<p><a href={resolve('/')}>Ver los árboles sedientos →</a></p>
 	</div>
 {/if}
@@ -102,6 +113,10 @@
 		color: #fff;
 		text-shadow: 3px 3px 0 #000;
 		margin: 8px 0;
+	}
+	/* Sobre el panel oscuro el violeta del link rinde poco: blanco contrasta. */
+	.centro p a {
+		color: #fff;
 	}
 	.emoji {
 		font-size: 3rem;
@@ -126,6 +141,13 @@
 		margin: 0;
 		color: var(--gold);
 	}
+	.pin-nombre {
+		font-family: var(--pixel);
+		font-size: 9px;
+		color: var(--gold);
+		text-align: center;
+		margin: 4px 0 6px;
+	}
 	.copy {
 		font-style: italic;
 		max-width: 36ch;
@@ -134,5 +156,8 @@
 	.chico {
 		font-size: 16px;
 		color: var(--dim);
+	}
+	a.btn.canjear {
+		margin-top: 4px;
 	}
 </style>

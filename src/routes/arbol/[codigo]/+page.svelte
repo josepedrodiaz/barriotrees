@@ -10,7 +10,10 @@
 	import EscanerQr from '$lib/features/riego/EscanerQr.svelte';
 	import { escaneadoReciente, registrarEscaneo } from '$lib/features/riego/escaneo.svelte';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
+	import { dispositivoId } from '$lib/features/riego/dispositivo';
+	import { supabase } from '$lib/supabase';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
+	import Pin from '$lib/ui/Pin.svelte';
 
 	let { data } = $props();
 
@@ -23,10 +26,51 @@
 		// Acá el GPS no es un extra: es lo que decide si el riego cuenta, así que
 		// se pide apenas se abre la ficha.
 		seguirPosicion();
+
+		// Atajo SOLO de desarrollo para ver la pantalla de resultado sin regar de
+		// verdad: ?demo=1 (gracias + rescate), ?demo=insignia (suma una insignia
+		// nueva), ?demo=error (la pantalla de "no se pudo"). En producción no corre.
+		if (import.meta.env.DEV) {
+			const demo = new URLSearchParams(location.search).get('demo');
+			if (demo === 'error') {
+				resultado = {
+					ok: false,
+					motivo: 'cooldown_arbol',
+					proximo_riego: new Date(Date.now() + 3 * 3600e3).toISOString()
+				};
+				fase = 'resultado';
+			} else if (demo) {
+				resultado = {
+					ok: true,
+					puntos: 25,
+					total_puntos: 140,
+					estado_anterior: 'muy_sediento',
+					insignias_nuevas:
+						demo === 'insignia'
+							? [
+									{
+										id: 'demo',
+										nombre: 'Rescatista',
+										copy: 'No es una medalla: es haber estado cuando el árbol de verdad te necesitaba.'
+									}
+								]
+							: []
+				};
+				fase = 'resultado';
+			}
+		}
+
+		cargarMisRiegos();
 	});
 
 	const arbol = $derived(data.arbol);
 	const estado = $derived((arbol.estado ?? 'muy_sediento') as Estado);
+	// Llovió y el suelo está mojado (global de la plaza): no se riega, aunque el
+	// árbol tenga sed de fondo. El foco pasa de "cuánta sed" a "¿absorbe ahora?".
+	const sueloMojado = $derived(arbol.suelo_saturado ?? false);
+	// Con el suelo mojado el árbol acaba de recibir agua: se dibuja hidratado,
+	// aunque su déficit de fondo siga ahí (decisión de la auditoría, P2).
+	const estadoVisual = $derived(sueloMojado ? 'feliz' : estado);
 	const info = $derived(ESTADO_INFO[estado]);
 	const puntos = $derived(data.puntosPorEstado[estado] ?? 0);
 	const tieneCoords = $derived(arbol.lat != null && arbol.lng != null);
@@ -61,7 +105,7 @@
 		fase = 'resultado';
 		// El riego cambió el estado del árbol y, si hay sesión, los puntos del
 		// vecino: hay que refrescar los dos o el header queda con el total viejo.
-		if (res.ok) await Promise.all([invalidateAll(), cargarPerfil()]);
+		if (res.ok) await Promise.all([invalidateAll(), cargarPerfil(), cargarMisRiegos()]);
 	}
 
 	function horaLocal(iso: string | undefined): string {
@@ -69,11 +113,26 @@
 		return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 	}
 
-	function cuando(dias: number | null): string {
-		if (dias === null) return 'nunca';
-		if (dias < 1) return 'hoy';
-		const d = Math.floor(dias);
-		return d === 1 ? 'ayer' : `hace ${d} días`;
+	// Los riegos de ESTE vecino (este teléfono) a ESTE árbol, más nuevo primero.
+	let misRiegos = $state<string[]>([]);
+
+	async function cargarMisRiegos() {
+		const { data } = await supabase
+			.from('riegos')
+			.select('creado_en')
+			.eq('arbol_id', arbol.id!)
+			.eq('dispositivo_id', dispositivoId())
+			.order('creado_en', { ascending: false });
+		misRiegos = (data ?? []).map((r) => r.creado_en as string);
+	}
+
+	function fechaHoraLocal(iso: string): string {
+		return new Date(iso).toLocaleString('es-AR', {
+			day: 'numeric',
+			month: 'short',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
 	}
 </script>
 
@@ -86,32 +145,26 @@
 {/if}
 
 {#if fase === 'ficha'}
-	<a class="back" href={resolve('/')}>◀ VOLVER</a>
+	<a class="back" href={resolve('/')}><span class="fl">◀</span> VOLVER</a>
 
 	<div class="hero">
 		<div class="big">
-			<ArbolVoxel {estado} px={150} alt="Árbol {info.etiqueta.toLowerCase()}" />
+			<ArbolVoxel estado={estadoVisual} px={150} alt="Árbol {info.etiqueta.toLowerCase()}" />
 		</div>
 		<h1>{arbol.nombre ?? arbol.especie_nombre}</h1>
 		<div class="sci">{arbol.especie_cientifico}</div>
 		<div class="sector">📍 {arbol.sector ?? 'la plaza'} · {arbol.codigo}</div>
 	</div>
 
-	{#if estado !== 'feliz'}
+	{#if !sueloMojado && (estado === 'sediento' || estado === 'muy_sediento')}
 		<div class="statline">
 			<p class="statmsg">
-				{#if estado === 'bien'}
-					Está <b class="ok">bien</b>: fue regado {cuando(arbol.dias_sin_riego)}.
-				{:else if estado === 'sediento'}
-					Está <b class="mal">sediento</b>: hace {Math.floor(arbol.dias_sin_riego ?? 0)} días que nadie
-					lo riega.
+				{#if estado === 'sediento'}
+					Está <b class="mal">sediento</b>. Le falta agua.
+				{:else if arbol.dias_sin_riego === null}
+					¡Está <b class="mal">muy sediento</b>! Todavía nadie lo regó.
 				{:else}
-					¡Está <b class="mal">muy sediento</b>!
-					{#if arbol.dias_sin_riego === null}
-						Todavía nadie lo regó.
-					{:else}
-						Hace {Math.floor(arbol.dias_sin_riego)} días que nadie lo riega.
-					{/if}
+					¡Está <b class="mal">muy sediento</b>! Necesita agua ya.
 				{/if}
 			</p>
 		</div>
@@ -120,28 +173,25 @@
 	<!-- El anti-trampa contado como lo cuenta la demo: no es un candado, es el
 	     árbol reconociéndote. Y el reconocimiento arranca al escanear la chapita
 	     (decisión 17): sin eso, no hay botón de riego. -->
-	{#if estado === 'feliz'}
+	{#if sueloMojado}
 		<div class="magic panel">
-			{#if (arbol.lluvia_3d ?? 0) >= 3}
-				<div class="mh">🌧️ LA LLUVIA LO REGÓ</div>
-				<div class="mr">
-					<span class="e">💧</span>Llovió {Math.round(arbol.lluvia_3d ?? 0)} mm estos días — el suelo
-					tiene agua de sobra
-				</div>
-			{:else}
-				<div class="mh">🌳 ESTE JACARANDÁ ESTÁ FELIZ</div>
-				<div class="mr">
-					<span class="e">💧</span>Fue regado {cuando(arbol.dias_sin_riego)} — ya tomó suficiente agua
-				</div>
-			{/if}
+			<div class="mh">🌧️ HOY NO HACE FALTA REGAR</div>
+			<div class="mr">
+				<span class="e">💧</span>Llovió y el suelo está mojado. Volvé cuando se seque.
+			</div>
+		</div>
+		<p class="lockmsg">Pasa en toda la plaza, no solo en este árbol.</p>
+	{:else if estado === 'feliz' || estado === 'bien'}
+		<!-- Feliz y bien son los dos estados "sanos": no se riegan (no suman puntos)
+		     y comparten el mismo mensaje. El extra vive en los sedientos (decisión 12). -->
+		<div class="magic panel">
+			<div class="mh">🌳 ESTE JACARANDÁ ESTÁ BIEN</div>
+			<div class="mr">
+				<span class="e">💧</span>Tiene el agua que necesita — hoy no hace falta regarlo.
+			</div>
 		</div>
 		<p class="lockmsg">
-			{#if (arbol.lluvia_3d ?? 0) >= 3}
-				<!-- La lluvia es global: si a este lo regó, no hay sedientos a donde mandar. -->
-				🚫 Regarlo de más no suma. Hoy la lluvia trabajó por todos — volvé en unos días ⛅
-			{:else}
-				🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
-			{/if}
+			🚫 Regarlo de más no suma. <a href={resolve('/')}>Buscá uno sediento 👉</a>
 		</p>
 	{:else if !escaneado}
 		<!-- No escaneó todavía: este es el gate que faltaba. -->
@@ -189,12 +239,16 @@
 		<button class="btn ghost wide" onclick={seguirPosicion}>📍 DAR MI UBICACIÓN</button>
 	{/if}
 
+	<!-- TODO: "Leyenda del árbol" aún no implementada. Comentada para que no se vea.
 	<div class="card2 panel">
 		<div class="row">
 			<span class="k">Leyenda del árbol</span>
 			<span class="v pronto">— pronto 🚩</span>
 		</div>
 	</div>
+	-->
+
+	{@render miHistoria()}
 {:else if fase === 'regando'}
 	<PantallaRegando segundos={data.duracionSegundos} />
 {:else if resultado}
@@ -209,16 +263,6 @@
 				<p class="rescate">Era un rescate: este árbol te necesitaba de verdad.</p>
 			{/if}
 
-			{#each resultado.insignias_nuevas as insignia (insignia.id)}
-				<div class="magic panel">
-					<span class="spark s1">✦</span>
-					<span class="spark s2">✦</span>
-					<span class="spark s3">✦</span>
-					<div class="mh">🎖 {insignia.nombre.toUpperCase()}</div>
-					<p class="copy">{insignia.copy}</p>
-				</div>
-			{/each}
-
 			{#if resultado.total_puntos === null}
 				<div class="card2 panel">
 					<p class="guardar">Tus puntos quedaron guardados solo en este teléfono.</p>
@@ -227,11 +271,36 @@
 			{:else}
 				<p class="acumulado">Llevás {resultado.total_puntos} puntos</p>
 			{/if}
-			<a class="btn ghost wide" href={resolve('/')}>◀ VER OTRO ÁRBOL</a>
+
+			{@render miHistoria()}
+
+			{#each resultado.insignias_nuevas as insignia (insignia.id)}
+				<div class="magic panel">
+					<span class="spark s1">✦</span>
+					<span class="spark s2">✦</span>
+					<span class="spark s3">✦</span>
+					<div class="pin-ganado"><Pin px={64} alt="Pin de {insignia.nombre}" /></div>
+					<div class="mh">¡GANASTE UN PIN!</div>
+					<div class="pin-nombre">{insignia.nombre.toUpperCase()}</div>
+					<p class="copy">{insignia.copy}</p>
+				</div>
+			{/each}
+
+			{#if resultado.insignias_nuevas.length}
+				<a class="btn gold wide canjear" href={resolve('/premios')}
+					>🎁 CANJEÁ TU PIN <span class="fl">▶</span></a
+				>
+			{/if}
+
+			<a class="btn ghost wide" href={resolve('/')}><span class="fl">◀</span>VER OTRO ÁRBOL</a>
 		</div>
 	{:else}
+		{@const noHizoFalta =
+			resultado.motivo === 'cooldown_arbol' ||
+			resultado.motivo === 'cooldown_vecino' ||
+			resultado.motivo === 'suelo_saturado'}
 		<div class="resultado">
-			<h1>NO SE PUDO</h1>
+			<h1>{noHizoFalta ? 'ESTÁ TODO BIEN' : 'NO SE PUDO'}</h1>
 			<div class="magic panel fail">
 				{#if resultado.motivo === 'cooldown_arbol'}
 					<div class="mh">💚 YA TOMÓ AGUA</div>
@@ -257,6 +326,12 @@
 				{:else if resultado.motivo === 'sin_ubicacion'}
 					<div class="mh">🔒 SIN UBICACIÓN NO CUENTA</div>
 					<div class="mr no"><span class="e">📍</span>Activá el GPS y probá de nuevo.</div>
+				{:else if resultado.motivo === 'suelo_saturado'}
+					<div class="mh">🌧️ HOY NO HACE FALTA REGAR</div>
+					<div class="mr no">
+						<span class="e">💧</span>Llovió y el suelo está mojado — no absorbe más. Volvé cuando se
+						seque.
+					</div>
 				{:else}
 					<div class="mh">📡 NO PUDIMOS REGISTRARLO</div>
 					<div class="mr no">
@@ -264,11 +339,28 @@
 					</div>
 				{/if}
 			</div>
-			<button class="btn ghost wide" onclick={() => (fase = 'ficha')}>◀ VOLVER AL ÁRBOL</button>
+			<button class="btn ghost wide" onclick={() => (fase = 'ficha')}
+				><span class="fl">◀</span>VOLVER AL ÁRBOL</button
+			>
 			<p class="lockmsg"><a href={resolve('/')}>Ver los que sí necesitan agua</a></p>
 		</div>
 	{/if}
 {/if}
+
+{#snippet miHistoria()}
+	{#if misRiegos.length === 0}
+		<p class="mi-historia">Nunca lo regaste hasta hoy.</p>
+	{:else}
+		<details class="mi-historia panel">
+			<summary>Lo regaste {misRiegos.length} {misRiegos.length === 1 ? 'vez' : 'veces'} ▾</summary>
+			<ul>
+				{#each misRiegos as iso (iso)}
+					<li>{fechaHoraLocal(iso)}</li>
+				{/each}
+			</ul>
+		</details>
+	{/if}
+{/snippet}
 
 <style>
 	.back {
@@ -491,6 +583,7 @@
 		padding: 12px 14px;
 		margin: 14px 0;
 	}
+	/* TODO: estilos de "Leyenda del árbol", comentados junto con la vista.
 	.card2 .row {
 		display: flex;
 		justify-content: space-between;
@@ -507,6 +600,7 @@
 	.pronto {
 		color: var(--dim);
 	}
+	*/
 
 	.resultado {
 		text-align: center;
@@ -553,5 +647,53 @@
 	a.btn {
 		text-decoration: none;
 		margin-top: 14px;
+	}
+	a.btn.canjear {
+		margin-top: 4px;
+	}
+	.pin-ganado {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 6px;
+	}
+	.pin-nombre {
+		position: relative;
+		z-index: 2;
+		font-family: var(--pixel);
+		font-size: 7px;
+		line-height: 1.5;
+		color: var(--gold);
+		text-align: center;
+		margin-bottom: 6px;
+	}
+
+	.mi-historia {
+		font-size: 16px;
+		color: var(--dim);
+		text-align: center;
+		margin: 14px 0;
+	}
+	details.mi-historia {
+		text-align: left;
+		padding: 12px 14px;
+	}
+	details.mi-historia summary {
+		font-family: var(--pixel);
+		font-size: 9px;
+		color: var(--violet-l);
+		cursor: pointer;
+		list-style: none;
+	}
+	details.mi-historia ul {
+		list-style: none;
+		padding: 0;
+		margin: 10px 0 0;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	details.mi-historia li {
+		font-size: 16px;
+		color: var(--ink);
 	}
 </style>

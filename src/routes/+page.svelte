@@ -28,21 +28,15 @@
 	// Se recalcula solo cada vez que el GPS reporta una posición nueva: si el
 	// vecino camina, la lista se reacomoda sola (y las filas se deslizan).
 	const arboles = $derived(ordenarArboles(data.arboles, gps.fix));
+	// El suelo mojado es global de la plaza: si llovió, no se manda a regar a
+	// nadie hoy, aunque los árboles tengan sed de fondo (BT: riego suelo mojado).
+	const sueloMojado = $derived(data.arboles[0]?.suelo_saturado ?? false);
 	const sedientos = $derived(
 		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento').length
 	);
 	const regadosHoy = $derived(
 		arboles.filter((a) => a.dias_sin_riego !== null && a.dias_sin_riego < 1).length
 	);
-	// Como la demo: los que piden agua arriba y el resto abajo. Adentro de cada
-	// grupo sigue mandando la cercanía, así que la lista se reacomoda al caminar.
-	const conSed = $derived(
-		arboles.filter((a) => a.estado === 'sediento' || a.estado === 'muy_sediento')
-	);
-	const yaEstan = $derived(
-		arboles.filter((a) => a.estado !== 'sediento' && a.estado !== 'muy_sediento')
-	);
-
 	onMount(() => {
 		if (quiereDistancias()) seguirPosicion();
 	});
@@ -68,8 +62,13 @@
 
 <div class="stat">
 	<div class="box panel">
-		<div class="num sed">{sedientos}</div>
-		<div class="lab">CON SED</div>
+		{#if sueloMojado}
+			<div class="num fel">🌧️</div>
+			<div class="lab">LLOVIÓ</div>
+		{:else}
+			<div class="num sed">{sedientos}</div>
+			<div class="lab">CON SED</div>
+		{/if}
 	</div>
 	<div class="box panel">
 		<div class="num fel">{regadosHoy}</div>
@@ -78,10 +77,6 @@
 </div>
 
 <button class="btn wide escanear" onclick={() => (escaneando = true)}>📷 ESCANEAR QR</button>
-<p class="cta-note">
-	Para sumar hay que estar en el árbol y escanear su chapita. ·
-	<a href={resolve('/ranking')}>🏆 Ranking del barrio</a>
-</p>
 
 {#if escaneando}
 	<EscanerQr onCodigo={alEscanear} onCancelar={() => (escaneando = false)} />
@@ -97,45 +92,65 @@
 	</p>
 {/if}
 
-<h1 class="section-h">
-	💧 Necesitan agua <span class="n">({sedientos})</span>{#if gps.fix}
-		· cerca tuyo{/if}
-</h1>
+{#if sueloMojado}
+	<div class="lluvia-hoy panel">
+		<div class="lh-h">🌧️ Hoy no hace falta regar</div>
+		<p>
+			Llovió y el suelo está tomando agua. Volvé cuando se seque — podés verlo desde tu casa, en
+			esta app.
+		</p>
+	</div>
 
-{#if conSed.length}
+	<h2 class="section-h">La plaza</h2>
 	<ul class="arboles">
-		{#each conSed as arbol (arbol.codigo)}
+		{#each arboles as arbol (arbol.codigo)}
 			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
 		{/each}
 	</ul>
 {:else}
-	<p class="vacio panel">Ninguno urgente 🎉</p>
+	<h1 class="section-h">
+		💧 La plaza <span class="n">({sedientos})</span>{#if gps.fix}
+			· cerca tuyo{/if}
+	</h1>
+
+	{#if arboles.length}
+		<ul class="arboles">
+			{#each arboles as arbol (arbol.codigo)}
+				<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
+			{/each}
+		</ul>
+	{:else}
+		<p class="vacio panel">Ninguno urgente 🎉</p>
+	{/if}
 {/if}
 
-{#if yaEstan.length}
-	<h2 class="section-h">Ya están bien</h2>
-	<ul class="arboles">
-		{#each yaEstan as arbol (arbol.codigo)}
-			<li animate:flip={{ duration: 400 }}>{@render fila(arbol)}</li>
-		{/each}
-	</ul>
-{/if}
+<a class="btn wide ranking-btn" href={resolve('/ranking')}>🏆 RANKING DEL BARRIO</a>
 
 {#snippet fila(arbol: (typeof arboles)[number])}
 	{@const info = ESTADO_INFO[(arbol.estado ?? 'muy_sediento') as Estado]}
 	<a class="panel" href={resolve('/arbol/[codigo]', { codigo: arbol.codigo ?? '' })}>
 		<span class="mini"
-			><ArbolVoxel estado={(arbol.estado ?? 'muy_sediento') as Estado} px={52} /></span
+			><ArbolVoxel
+				estado={sueloMojado ? 'feliz' : ((arbol.estado ?? 'muy_sediento') as Estado)}
+				px={52}
+			/></span
 		>
 		<span class="info">
 			<span class="nm">{arbol.nombre ?? arbol.especie_nombre} · {arbol.codigo}</span>
 			<span class="st">
-				<span class="chip {info.clase}">{info.etiqueta}</span>
-				<span class="datos"
-					>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
-						· 📍
-						{distanciaA(arbol.lat, arbol.lng)}{/if}</span
-				>
+				{#if sueloMojado}
+					<span class="chip mojado">🌧 Mojado</span>
+					<span class="datos"
+						>{#if distanciaA(arbol.lat, arbol.lng)}📍 {distanciaA(arbol.lat, arbol.lng)}{/if}</span
+					>
+				{:else}
+					<span class="chip {info.clase}">{info.etiqueta}</span>
+					<span class="datos"
+						>{diasTexto(arbol.dias_sin_riego)}{#if distanciaA(arbol.lat, arbol.lng)}
+							· 📍
+							{distanciaA(arbol.lat, arbol.lng)}{/if}</span
+					>
+				{/if}
 			</span>
 		</span>
 		<span class="go">▶</span>
@@ -169,13 +184,12 @@
 		margin-top: 6px;
 	}
 	.escanear {
-		margin-top: 4px;
+		/* Sin la sombra de elevación de .panel, el botón quedaba pegado al
+		   contenido de abajo: le devuelvo el aire con un margen. */
+		margin: 4px 0 20px;
 	}
-	.cta-note {
-		text-align: center;
-		font-size: 16px;
-		color: #2c4a1e;
-		margin: 9px 4px 0;
+	.ranking-btn {
+		margin-top: 26px;
 	}
 	.section-h .n {
 		color: var(--sed);
@@ -231,6 +245,9 @@
 		display: inline-block;
 		text-transform: uppercase;
 	}
+	.chip.mojado {
+		color: var(--violet-l);
+	}
 	.datos {
 		color: var(--dim);
 		font-size: 15px;
@@ -245,6 +262,23 @@
 	.vacio {
 		padding: 16px;
 		text-align: center;
+		color: var(--dim);
+	}
+	.lluvia-hoy {
+		padding: 18px 16px;
+		text-align: center;
+		border: 2px solid var(--violet-d);
+	}
+	.lluvia-hoy .lh-h {
+		font-family: var(--pixel);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--violet-l);
+		margin-bottom: 10px;
+	}
+	.lluvia-hoy p {
+		margin: 0;
+		font-size: 18px;
 		color: var(--dim);
 	}
 	.ubicacion {

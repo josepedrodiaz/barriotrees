@@ -28,15 +28,22 @@ export function seguirSesion(): void {
 	if (iniciado) return;
 	iniciado = true;
 
-	supabase.auth.getSession().then(({ data }) => {
+	// SOLO getSession define `cargando`: lee el token del localStorage y, si hay
+	// sesión, espera también al perfil. Recién ahí sabemos el estado completo del
+	// vecino y apagamos `cargando`. Antes, sin sesión + perfil todavía null, la
+	// home mostraba un instante "sin cuenta" y saltaba.
+	supabase.auth.getSession().then(async ({ data }) => {
 		sesion.session = data.session;
+		if (data.session) await cargarPerfil();
 		sesion.cargando = false;
-		if (data.session) cargarPerfil();
 	});
 
+	// Cambios en vivo (login/logout). NO toca `cargando`: al arrancar este evento
+	// se dispara con session=null antes de que getSession resuelva, y apagar
+	// `cargando` acá era lo que colaba el "sin cuenta". Tampoco usa async directo:
+	// hacer await de otra llamada Supabase adentro del callback puede deadlockear.
 	supabase.auth.onAuthStateChange((_evento, s) => {
 		sesion.session = s;
-		sesion.cargando = false;
 		if (s) cargarPerfil();
 		else sesion.perfil = null;
 	});

@@ -106,22 +106,25 @@ h3 {
 	font-size: 10px;
 }
 
-/* El biselado de píxel: dos sombras internas (luz arriba-izquierda, sombra
-   abajo-derecha) y una externa que lo levanta del fondo. */
+/* Panel = superficie de CONTENIDO, no un botón. Antes tenía el mismo repujado
+   convexo + sombra de elevación que .btn (luz arriba-izq, sombra abajo-der,
+   0 4px 0 que lo levanta), así que toda caja parecía una tecla apretable.
+   Ahora: borde de marco + un único inset oscuro arriba-izq que lo lee como
+   hueco/hundido, sin sombra externa. Lo hundido es lo contrario del botón que
+   sobresale, así que deja de invitar al toque. */
 .panel {
 	background: var(--panel);
 	border: 3px solid var(--edge-d);
-	box-shadow:
-		inset 3px 3px 0 var(--edge-l),
-		inset -3px -3px 0 #1a1528,
-		0 4px 0 rgba(0, 0, 0, 0.25);
+	box-shadow: inset 2px 2px 0 #1a1528;
 	color: var(--ink);
 }
 
-button.btn {
+button.btn,
+a.btn {
 	font-family: var(--pixel);
 	font-size: 11px;
 	color: #fff;
+	text-decoration: none;
 	background: var(--violet);
 	border: 3px solid var(--edge-d);
 	padding: 13px 12px;
@@ -145,6 +148,21 @@ button.btn:active {
 }
 button.btn:disabled {
 	opacity: 0.55;
+}
+/* Las flechas (◀ ▶) usan una fuente fallback —la pixel no las tiene— que cae
+   con otra línea base y queda baja. Envolverlas en <span class="fl"> corrige la
+   baseline. Clase global: sirve en botones y en los links "◀ volver". */
+.fl {
+	display: inline-block;
+	line-height: 1;
+	position: relative;
+	top: -4px;
+}
+/* En los links "◀ volver" (texto inline, no flex como el botón) el -4px sube
+   de más: ahí la flecha se centra sin desplazarla. */
+.volver .fl,
+.back .fl {
+	top: 0;
 }
 .btn.wide {
 	width: 100%;

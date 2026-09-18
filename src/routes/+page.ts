@@ -9,7 +9,7 @@ export const load = async () => {
 		supabase
 			.from('v_arboles_estado')
 			.select(
-				'codigo, nombre, sector, especie_nombre, dias_sin_riego, f_efectiva, estado, lat, lng'
+				'codigo, nombre, sector, especie_nombre, dias_sin_riego, f_efectiva, estado, lat, lng, suelo_saturado'
 			)
 			// Las preexistencias no participan del riego colectivo: fuera del ranking.
 			.eq('en_programa', true)
