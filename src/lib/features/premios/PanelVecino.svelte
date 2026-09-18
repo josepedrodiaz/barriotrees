@@ -35,7 +35,11 @@
 </script>
 
 <div class="me panel">
-	{#if sesion.perfil}
+	{#if sesion.cargando}
+		<!-- Mientras no sabemos si hay sesión, no mostramos "sin cuenta": eso hacía
+		     un salto feo cuando resolvía el perfil de alguien logueado. -->
+		<div class="cargando">🌳 Buscando tu cuenta…</div>
+	{:else if sesion.perfil}
 		<div class="usr">🙋 {sesion.perfil.nombre}</div>
 		<div class="lvl">NIVEL: {(progreso.actual?.nombre ?? 'Sin regar').toUpperCase()}</div>
 		<div class="pts">{nro(puntos)} <small>PTS</small></div>
@@ -73,6 +77,14 @@
 <style>
 	.me {
 		padding: 14px;
+	}
+	.cargando {
+		font-family: var(--pixel);
+		font-size: 10px;
+		line-height: 1.5;
+		color: var(--dim);
+		text-align: center;
+		padding: 8px 0;
 	}
 	.usr {
 		font-family: var(--pixel);
