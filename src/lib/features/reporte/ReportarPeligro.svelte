@@ -61,8 +61,7 @@
 				bind:value={descripcion}
 				placeholder="Contanos un poco más (opcional)"
 				rows="2"
-				maxlength="280"
-			></textarea>
+				maxlength="280"></textarea>
 			{#if fase === 'error'}
 				<p class="err">No se pudo enviar. ¿Anda la conexión? Probá de nuevo.</p>
 			{/if}

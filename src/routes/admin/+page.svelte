@@ -82,7 +82,11 @@
 		trabajandoPruebas = true;
 		avisoPruebas = null;
 		const { data: res } = await supabase.rpc('resetear_juego');
-		const r = res as { ok?: boolean; perfiles_resetados?: number; insignias_borradas?: number } | null;
+		const r = res as {
+			ok?: boolean;
+			perfiles_resetados?: number;
+			insignias_borradas?: number;
+		} | null;
 		trabajandoPruebas = false;
 		avisoPruebas = r?.ok
 			? `Marcador reseteado: ${r.perfiles_resetados} usuarios en cero y ${r.insignias_borradas} insignias borradas. El historial quedó intacto.`
@@ -218,12 +222,14 @@
 						{r.arbolNombre ?? r.codigo ?? 'árbol'} · {r.codigo} · por {r.autor ?? 'anónimo'}
 					</div>
 					{#if r.descripcion}<p class="desc">“{r.descripcion}”</p>{/if}
-					<div class="fecha">{new Date(r.creado_en).toLocaleString('es-AR', {
+					<div class="fecha">
+						{new Date(r.creado_en).toLocaleString('es-AR', {
 							day: 'numeric',
 							month: 'short',
 							hour: '2-digit',
 							minute: '2-digit'
-						})}</div>
+						})}
+					</div>
 				</div>
 				<div class="acciones">
 					<button
@@ -394,9 +400,10 @@
 
 	<div class="zona-peligro">
 		<p class="intro">
-			<b>Reseteo del marcador.</b> Pone los puntos de todos en cero y borra todas las insignias (incluso
-			las entregadas), que van de la mano del puntaje. <b>No borra el historial</b>: los riegos y los
-			reportes quedan intactos. Para limpiar datos de prueba usá "Borrar todo lo de prueba".
+			<b>Reseteo del marcador.</b> Pone los puntos de todos en cero y borra todas las insignias
+			(incluso las entregadas), que van de la mano del puntaje. <b>No borra el historial</b>: los
+			riegos y los reportes quedan intactos. Para limpiar datos de prueba usá "Borrar todo lo de
+			prueba".
 		</p>
 		<button class="btn danger sm" disabled={trabajandoPruebas} onclick={resetearJuego}>
 			💣 Resetear marcador

@@ -7,7 +7,10 @@ type Raw = {
 	tipo: string;
 	descripcion: string | null;
 	creado_en: string;
-	arbol: { codigo: string | null; nombre: string | null } | { codigo: string | null; nombre: string | null }[] | null;
+	arbol:
+		| { codigo: string | null; nombre: string | null }
+		| { codigo: string | null; nombre: string | null }[]
+		| null;
 	autor: { nombre: string | null } | { nombre: string | null }[] | null;
 };
 
@@ -27,7 +30,9 @@ export const load = async () => {
 			// Reportes de peligro pendientes de revisar, más viejo primero.
 			supabase
 				.from('reportes')
-				.select('id, tipo, descripcion, creado_en, arbol:arboles(codigo, nombre), autor:perfiles(nombre)')
+				.select(
+					'id, tipo, descripcion, creado_en, arbol:arboles(codigo, nombre), autor:perfiles(nombre)'
+				)
 				.eq('estado', 'pendiente')
 				.order('creado_en', { ascending: true })
 		]);
