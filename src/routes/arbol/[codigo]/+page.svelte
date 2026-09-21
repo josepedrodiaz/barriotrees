@@ -11,6 +11,7 @@
 	import { escaneadoReciente, registrarEscaneo } from '$lib/features/riego/escaneo.svelte';
 	import { cargarPerfil } from '$lib/features/auth/sesion.svelte';
 	import { dispositivoId } from '$lib/features/riego/dispositivo';
+	import ReportarPeligro from '$lib/features/reporte/ReportarPeligro.svelte';
 	import { supabase } from '$lib/supabase';
 	import ArbolVoxel from '$lib/ui/ArbolVoxel.svelte';
 	import Pin from '$lib/ui/Pin.svelte';
@@ -194,13 +195,12 @@
 	{:else if !escaneado}
 		<!-- No escaneó todavía: este es el gate que faltaba. -->
 		<div class="magic panel fail">
-			<div class="mh">🔒 PARA REGAR, ESCANEÁ SU CHAPITA</div>
+			<div class="mh">🔒 PARA REGAR, ESCANEÁ SU QR</div>
 			<div class="mr no">
 				<span class="e">📷</span>El árbol te reconoce de cerca, con su QR — no a distancia
 			</div>
 		</div>
-		<button class="btn wide" onclick={() => (escaneando = true)}>📷 ESCANEAR LA CHAPITA</button>
-		<p class="lockmsg">Estás parado frente al árbol: apuntá la cámara a su chapita.</p>
+		<button class="btn wide" onclick={() => (escaneando = true)}>📷 ESCANEAR EL QR</button>
 	{:else if puedeRegar}
 		<div class="magic panel">
 			<span class="spark s1">✦</span>
@@ -208,7 +208,7 @@
 			<span class="spark s3">✦</span>
 			<span class="spark s4">✦</span>
 			<div class="mh">✨ EL ÁRBOL TE RECONOCIÓ ✨</div>
-			<div class="mr"><span class="e">🌳</span>Escaneaste su chapita: sabe que sos vos</div>
+			<div class="mr"><span class="e">🌳</span>Escaneaste su QR: sabe que sos vos</div>
 			{#if cerca}
 				<div class="mr"><span class="e">📍</span>Y siente que estás a su lado</div>
 			{/if}
@@ -218,7 +218,7 @@
 	{:else if distancia !== null}
 		<div class="magic panel fail">
 			<div class="mh">🔒 ESTE RIEGO NO CONTARÍA</div>
-			<div class="mr"><span class="e">🌳</span>Escaneaste su chapita ✓</div>
+			<div class="mr"><span class="e">🌳</span>Escaneaste su QR ✓</div>
 			<div class="mr no">
 				<span class="e">📍</span>Pero estás lejos (~{formatearDistancia(distancia)}) ✗
 			</div>
@@ -245,6 +245,8 @@
 		</div>
 	</div>
 	-->
+
+	<ReportarPeligro arbolId={arbol.id!} />
 
 	{@render miHistoria()}
 {:else if fase === 'regando'}
@@ -347,7 +349,7 @@
 
 {#snippet miHistoria()}
 	{#if misRiegos.length === 0}
-		<p class="mi-historia">Nunca lo regaste hasta hoy.</p>
+		<div class="mi-historia panel vacia">Nunca lo regaste hasta hoy.</div>
 	{:else}
 		<details class="mi-historia panel">
 			<summary>Lo regaste {misRiegos.length} {misRiegos.length === 1 ? 'vez' : 'veces'} ▾</summary>
@@ -667,9 +669,13 @@
 
 	.mi-historia {
 		font-size: 16px;
-		color: var(--dim);
+		color: #2c4a1e;
 		text-align: center;
 		margin: 14px 0;
+	}
+	.mi-historia.vacia {
+		padding: 12px 14px;
+		color: var(--dim);
 	}
 	details.mi-historia {
 		text-align: left;
