@@ -1,7 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
+	import { browser, dev } from '$app/environment';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { pwaInfo } from 'virtual:pwa-info';
@@ -12,6 +13,10 @@
 	import { bienvenida, yaLaVio } from '$lib/features/onboarding/vista.svelte';
 
 	let { children } = $props();
+
+	// Vercel Analytics: page views sin cookies. En dev usa el modo 'development'
+	// para no ensuciar las métricas de producción.
+	injectAnalytics({ mode: dev ? 'development' : 'production' });
 
 	// La sesión vive en el localStorage del cliente: en el server no existe. Si
 	// seguirSesion() corriera en SSR, getSession resolvería null y el HTML saldría
