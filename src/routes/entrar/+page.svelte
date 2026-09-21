@@ -54,6 +54,26 @@
 			estado = 'mail_enviado';
 		}
 	}
+
+	// Solo local (import.meta.env.DEV): entra como el admin dev que crea
+	// supabase/seed.sql, sin magic link ni Google. Evita el loop de PKCE en local.
+	// Ver docs/login-local-dev.md.
+	async function conDev() {
+		error = null;
+		estado = 'enviando';
+		const { error: e } = await supabase.auth.signInWithPassword({
+			// El email TIENE que ser el de admin: es_admin() decide por email, no por
+			// perfiles.es_admin. Con otro email entrás pero no podés escribir nada.
+			email: 'josepedrodiaz@gmail.com',
+			password: 'dev'
+		});
+		if (e) {
+			error = 'No existe el usuario dev. Corré `supabase db reset` para seedearlo.';
+			estado = 'form';
+		} else {
+			goto(resolve('/'));
+		}
+	}
 </script>
 
 <svelte:head>
@@ -87,6 +107,12 @@
 			<p>Para que tus riegos, tus puntos y tus insignias queden a tu nombre.</p>
 		{/if}
 	</div>
+
+	{#if import.meta.env.DEV}
+		<button class="btn wide dev" onclick={conDev} disabled={estado === 'enviando'}>
+			🛠 Entrar como dev (local)
+		</button>
+	{/if}
 
 	<button class="btn wide" onclick={conGoogle} disabled={estado === 'enviando'}>
 		Entrar con Google
