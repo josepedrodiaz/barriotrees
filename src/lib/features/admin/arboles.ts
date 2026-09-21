@@ -58,3 +58,14 @@ export async function guardarArbol(arbol: Partial<ArbolAdmin>): Promise<Guardado
 	if (error.code === '42501') return { ok: false, error: 'No tenés permisos de admin.' };
 	return { ok: false, error: error.message };
 }
+
+/**
+ * Mueve un árbol en el mapa tocando SOLO lat/lng. No pasa por guardarArbol a
+ * propósito: mover con la fila completa pisa los demás campos con null.
+ */
+export async function moverArbol(id: string, lat: number, lng: number): Promise<Guardado> {
+	const { error } = await supabase.from('arboles').update({ lat, lng }).eq('id', id);
+	if (!error) return { ok: true };
+	if (error.code === '42501') return { ok: false, error: 'No tenés permisos de admin.' };
+	return { ok: false, error: error.message };
+}

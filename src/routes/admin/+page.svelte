@@ -3,8 +3,14 @@
 	import { gps, seguirPosicion } from '$lib/geo.svelte';
 	import { supabase } from '$lib/supabase';
 	import { guardarArbol, type ArbolAdmin } from '$lib/features/admin/arboles';
+	import MapaArboles from '$lib/features/admin/MapaArboles.svelte';
 
 	let { data } = $props();
+
+	// Árboles en memoria (tabla + mapa). Es un $derived *escribible*: sigue a
+	// `data.arboles` (invalidateAll) pero se puede pisar al toque al guardar
+	// (alta = push, edición = reemplazo), sin esperar al round-trip del loader.
+	let arboles = $derived(data.arboles);
 
 	let editando: Partial<ArbolAdmin> | null = $state(null);
 	let guardando = $state(false);
@@ -167,17 +173,28 @@
 		tocando = null;
 	}
 
+	// Auto-número: el próximo código libre como serial neutro de 3 dígitos (001,
+	// 002…). Solo cuenta códigos numéricos; el usuario puede pisarlo a mano.
+	function proximoCodigo(): string {
+		const nums = arboles
+			.map((a) => a.codigo)
+			.filter((c): c is string => !!c && /^\d+$/.test(c))
+			.map((c) => parseInt(c, 10));
+		const max = nums.length ? Math.max(...nums) : 0;
+		return String(max + 1).padStart(3, '0');
+	}
+
 	function nuevo() {
 		error = null;
 		editando = {
-			codigo: '',
+			codigo: proximoCodigo(),
 			especie_id: data.especies[0]?.id ?? '',
 			sector: '',
 			activo: true
 		};
 	}
 
-	function editar(a: (typeof data.arboles)[number]) {
+	function editar(a: (typeof arboles)[number]) {
 		error = null;
 		editando = { ...a };
 	}
@@ -190,14 +207,44 @@
 		}
 	}
 
+	// "➕ Árbol acá (GPS)": abre el alta con lat/lng ya cargados en la posición
+	// actual, con el mismo formato que tomarUbicacion.
+	function nuevoEnGps(lat: number, lng: number) {
+		nuevo();
+		if (editando) {
+			editando.lat = Number(lat.toFixed(7));
+			editando.lng = Number(lng.toFixed(7));
+		}
+	}
+
+	// Al arrastrar un pin en el mapa: moverArbol ya persistió en la DB; acá
+	// reflejamos las coords nuevas en la tabla y, si la ficha de ese árbol está
+	// abierta, en el form (si no, quedaba desactualizado hasta recargar).
+	function onMover(id: string, lat: number, lng: number) {
+		arboles = arboles.map((a) => (a.id === id ? { ...a, lat, lng } : a));
+		if (editando && editando.id === id) {
+			editando = { ...editando, lat, lng };
+		}
+	}
+
 	async function guardar(evento: SubmitEvent) {
 		evento.preventDefault();
 		if (!editando) return;
 		guardando = true;
 		error = null;
-		const res = await guardarArbol(editando);
+		const previo = editando;
+		const res = await guardarArbol(previo);
 		guardando = false;
 		if (res.ok) {
+			// Reflejo en memoria (alta = push, edición = reemplazo) para que el
+			// mapa y la tabla se actualicen ya, sin esperar a invalidateAll.
+			if (previo.id) {
+				arboles = arboles.map((a) =>
+					a.id === previo.id ? ({ ...a, ...previo } as (typeof arboles)[number]) : a
+				);
+			} else {
+				arboles = [...arboles, { ...previo, id: crypto.randomUUID() } as (typeof arboles)[number]];
+			}
 			editando = null;
 			await invalidateAll();
 		} else {
@@ -258,13 +305,15 @@
 	{/if}
 </div>
 
+<MapaArboles {arboles} onEditar={editar} onNuevoEnGps={nuevoEnGps} {onMover} />
+
 {#if editando}
 	<form class="panel" onsubmit={guardar}>
 		<h2>{editando.id ? `Editar ${editando.codigo}` : 'Nuevo árbol'}</h2>
 
 		<label>
 			Código
-			<input bind:value={editando.codigo} placeholder="jaca-11" required />
+			<input bind:value={editando.codigo} placeholder="001" required />
 			<small>Es lo que va en la URL del QR. Corto y sin espacios.</small>
 		</label>
 
@@ -359,7 +408,7 @@
 		<tr><th>Código</th><th>Especie</th><th>Sector</th><th>GPS</th><th></th></tr>
 	</thead>
 	<tbody>
-		{#each data.arboles as a (a.id)}
+		{#each arboles as a (a.id)}
 			<tr class:inactivo={!a.activo}>
 				<td
 					><strong>{a.codigo}</strong>{#if a.fecha_defuncion}<span class="tag muerto">✝ muerto</span
@@ -377,7 +426,7 @@
 </table>
 
 <p class="pie">
-	{data.arboles.length} árboles · {data.arboles.filter((a) => a.activo).length} activos
+	{arboles.length} árboles · {arboles.filter((a) => a.activo).length} activos
 </p>
 
 <div class="entregadores panel">
