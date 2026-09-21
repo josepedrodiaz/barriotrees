@@ -29,7 +29,7 @@ También hay tabla de posiciones del barrio, y se viene más: títulos rotativos
 
 ## La plaza
 
-El proyecto arranca en la **Plaza Gigante del Oeste** (La Plata), junto a las comisiones de cultura y arbolado del barrio. Lanzamiento: **21 de septiembre de 2026**, Día de la Primavera, con el primer riego colectivo y la entrega de los primeros pines.
+El proyecto arranca en la **Plaza Gigante del Oeste** (La Plata), junto a las comisiones de cultura y arbolado del barrio. Lanzamiento: **sábado 26 de septiembre de 2026, 16.30 hs**, en la semana de la primavera, con el primer riego colectivo y la entrega de los primeros pines.
 
 ## Para curiosos técnicos
 
