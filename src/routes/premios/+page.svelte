@@ -118,11 +118,11 @@
 	</details>
 
 	{#if entregados.length}
-		<h2 class="section-h">Ya entregados</h2>
+		<h2 class="section-h entregados-h">Ya entregados</h2>
 		<!-- El QR de un pin entregado sigue accesible, plegado en su propio item:
 		     si la comisión lo marcó entregado por error, el vecino tiene que poder
 		     mostrarlo de nuevo para que el admin lo escanee y revierta (BT-39). -->
-		<details class="como">
+		<details class="como como--sin-linea">
 			<summary>¿La comisión marcó un pin por error?</summary>
 			<p>Volvé a mostrarle este QR para que lo escanee y lo devuelva a pendiente:</p>
 			{#each entregados as c (c.insignia_id)}
@@ -214,6 +214,16 @@
 		margin-top: 20px;
 		border-top: 2px solid var(--edge-d);
 		padding-top: 12px;
+	}
+	.entregados-h {
+		margin-top: 20px;
+		border-top: 2px solid var(--edge-d);
+		padding-top: 16px;
+	}
+	.como--sin-linea {
+		margin-top: 8px;
+		border-top: none;
+		padding-top: 0;
 	}
 	.como summary {
 		color: var(--violet-l);
