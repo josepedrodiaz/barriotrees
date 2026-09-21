@@ -84,7 +84,7 @@
 			<span class="esq bl"></span><span class="esq br"></span>
 		</div>
 		<p class="ayuda">
-			{#if ajeno}Ese QR no es de un árbol. Apuntá a la chapita.{:else}Apuntá a la chapita del árbol{/if}
+			{#if ajeno}Ese QR no es de un árbol. Apuntá al QR.{:else}Apuntá al QR del árbol{/if}
 		</p>
 	{:else if estado === 'pidiendo'}
 		<p class="msg">Pidiendo la cámara…</p>
