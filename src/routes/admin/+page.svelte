@@ -211,8 +211,11 @@
 </svelte:head>
 
 {#if data.reportes.length}
-	<section class="reportes">
-		<h2>🚨 Reportes de peligro <span class="cuenta">{data.reportes.length}</span></h2>
+	<details class="reportes panel">
+		<summary>
+			🚨 Reportes de peligro <span class="cuenta">{data.reportes.length}</span>
+			<span class="flecha">▾</span>
+		</summary>
 		{#if avisoReporte}<p class="aviso">{avisoReporte}</p>{/if}
 		{#each data.reportes as r (r.id)}
 			<div class="reporte">
@@ -245,7 +248,7 @@
 				</div>
 			</div>
 		{/each}
-	</section>
+	</details>
 {/if}
 
 <div class="titulo">
@@ -505,13 +508,34 @@
 <style>
 	.reportes {
 		margin-bottom: 1.75rem;
-		padding: 0.75rem 1rem 1rem;
-		border: 2px solid var(--sed, #e5484d);
-		border-radius: 6px;
-		background: rgba(229, 72, 77, 0.06);
+		padding: 14px;
 	}
-	.reportes h2 {
-		margin: 0.25rem 0 0.75rem;
+	.reportes summary {
+		cursor: pointer;
+		list-style: none;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-family: var(--pixel);
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.5;
+	}
+	.reportes[open] summary {
+		margin-bottom: 0.75rem;
+	}
+	.reportes summary::-webkit-details-marker {
+		display: none;
+	}
+	.reportes summary::marker {
+		content: '';
+	}
+	.reportes summary .flecha {
+		margin-left: auto;
+		transition: transform 0.2s ease;
+	}
+	.reportes[open] summary .flecha {
+		transform: rotate(180deg);
 	}
 	.reportes .cuenta {
 		display: inline-block;
