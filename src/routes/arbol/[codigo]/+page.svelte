@@ -117,13 +117,11 @@
 	let misRiegos = $state<string[]>([]);
 
 	async function cargarMisRiegos() {
-		const { data } = await supabase
-			.from('riegos')
-			.select('creado_en')
-			.eq('arbol_id', arbol.id!)
-			.eq('dispositivo_id', dispositivoId())
-			.order('creado_en', { ascending: false });
-		misRiegos = (data ?? []).map((r) => r.creado_en as string);
+		const { data } = await supabase.rpc('mis_riegos_arbol', {
+			p_dispositivo_id: dispositivoId(),
+			p_arbol_id: arbol.id!
+		});
+		misRiegos = (data as string[] | null) ?? [];
 	}
 
 	function fechaHoraLocal(iso: string): string {
