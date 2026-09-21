@@ -224,13 +224,13 @@
 </ul>
 
 {#if sesion.session}
-	<p class="cuenta"><button class="salir" onclick={salir}>Cerrar sesión</button></p>
-{/if}
-
-{#if sesion.session}
 	<a class="btn gold wide premios-link" href={resolve('/premios')}
 		>Tus pines y cómo canjearlos <span class="fl">▶</span></a
 	>
+{/if}
+
+{#if sesion.session}
+	<p class="cuenta"><button class="salir" onclick={salir}>Cerrar sesión</button></p>
 {/if}
 
 <style>
