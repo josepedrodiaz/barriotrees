@@ -61,6 +61,7 @@ export async function cargarPerfil(): Promise<void> {
 }
 
 export async function salir(): Promise<void> {
-	await supabase.auth.signOut();
+	await supabase.auth.signOut({ scope: 'local' });
+	sesion.session = null;
 	sesion.perfil = null;
 }
