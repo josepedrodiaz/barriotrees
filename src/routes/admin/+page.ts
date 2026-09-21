@@ -31,7 +31,7 @@ export const load = async () => {
 			supabase
 				.from('reportes')
 				.select(
-					'id, tipo, descripcion, creado_en, arbol:arboles(codigo, nombre), autor:perfiles(nombre)'
+					'id, tipo, descripcion, creado_en, arbol:arboles(codigo, nombre), autor:perfiles!perfil_id(nombre)'
 				)
 				.eq('estado', 'pendiente')
 				.order('creado_en', { ascending: true })
