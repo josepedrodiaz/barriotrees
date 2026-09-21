@@ -546,6 +546,10 @@ export type Database = {
       listar_entregadores: { Args: never; Returns: Json }
       mi_progreso: { Args: never; Returns: Json }
       mis_canjes: { Args: never; Returns: Json }
+      mis_riegos_arbol: {
+        Args: { p_dispositivo_id: string; p_arbol_id: string }
+        Returns: Json
+      }
       obtener_clima_token: { Args: never; Returns: Json }
       otorgar_insignias: { Args: { p_perfil: string }; Returns: Json }
       poblar_pruebas: { Args: { p_cantidad?: number }; Returns: Json }
@@ -589,6 +593,7 @@ export type Database = {
       }
       resetear_juego: { Args: never; Returns: Json }
       revertir_canje: { Args: { p_token: string }; Returns: Json }
+      riegos_por_reclamar: { Args: { p_dispositivo_id: string }; Returns: Json }
       set_radio_proximidad: { Args: { p_metros: number }; Returns: Json }
       ver_canje: { Args: { p_token: string }; Returns: Json }
     }

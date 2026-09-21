@@ -19,17 +19,11 @@
 		}
 		// Lo que este teléfono tiene guardado sin dueño: es el argumento para
 		// crear la cuenta, así que se lo mostramos.
-		const { data } = await supabase
-			.from('riegos')
-			.select('puntos')
-			.eq('dispositivo_id', dispositivoId())
-			.is('perfil_id', null);
-		if (data?.length) {
-			porReclamar = {
-				riegos: data.length,
-				puntos: data.reduce((t, r) => t + (r.puntos ?? 0), 0)
-			};
-		}
+		const { data } = await supabase.rpc('riegos_por_reclamar', {
+			p_dispositivo_id: dispositivoId()
+		});
+		const r = data as { riegos: number; puntos: number } | null;
+		if (r && r.riegos > 0) porReclamar = { riegos: r.riegos, puntos: r.puntos };
 	});
 
 	function volverUrl(): string {
