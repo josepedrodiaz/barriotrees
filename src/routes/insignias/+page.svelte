@@ -398,12 +398,25 @@
 		margin-top: 24px;
 	}
 	.salir {
-		font: inherit;
-		background: none;
-		border: none;
-		color: var(--dim);
-		text-decoration: underline;
+		font-family: var(--pixel);
+		font-size: 10px;
+		color: #fff;
+		background: #a5322f;
+		border: 3px solid var(--edge-d);
+		padding: 11px 14px;
 		cursor: pointer;
+		box-shadow:
+			inset 3px 3px 0 #d0605c,
+			inset -3px -3px 0 #6e1f1d,
+			0 5px 0 #4a1210;
+	}
+	/* Se hunde al apretarlo, igual que los .btn. */
+	.salir:active {
+		transform: translateY(3px);
+		box-shadow:
+			inset 3px 3px 0 #d0605c,
+			inset -3px -3px 0 #6e1f1d,
+			0 2px 0 #4a1210;
 	}
 	.premios-link {
 		margin: 16px 0 6px;
