@@ -33,3 +33,4 @@ vite.config.ts.timestamp-*
 .claude/tiempo/heartbeat-claude.txt
 supabase/.temp
 CLAUDE.md
+supabase/snippets/
