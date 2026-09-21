@@ -70,23 +70,56 @@
 		await invalidateAll();
 	}
 
-	// La opción nuclear: borra TODO el estado de juego, incluidos los pines ya
-	// entregados. Confirmación tipeada porque no tiene vuelta atrás.
+	// Reseteo del marcador: puntos a cero e insignias borradas (van juntos). NO
+	// borra el historial (riegos y reportes quedan). Confirmación tipeada.
 	async function resetearJuego() {
 		if (
 			prompt(
-				'Esto borra TODOS los riegos, TODAS las insignias (incluso las entregadas) y pone los puntos en cero. Deja solo los árboles reales.\n\nEscribí RESETEAR para confirmar:'
+				'Esto pone los puntos de TODOS en cero y borra todas las insignias (incluso las entregadas). No toca el historial: los riegos y reportes quedan.\n\nEscribí RESETEAR para confirmar:'
 			) !== 'RESETEAR'
 		)
 			return;
 		trabajandoPruebas = true;
 		avisoPruebas = null;
 		const { data: res } = await supabase.rpc('resetear_juego');
-		const r = res as { ok?: boolean; riegos_borrados?: number; insignias_borradas?: number } | null;
+		const r = res as { ok?: boolean; perfiles_resetados?: number; insignias_borradas?: number } | null;
 		trabajandoPruebas = false;
 		avisoPruebas = r?.ok
-			? `Reseteo total: ${r.riegos_borrados} riegos y ${r.insignias_borradas} insignias borradas, puntos en cero.`
+			? `Marcador reseteado: ${r.perfiles_resetados} usuarios en cero y ${r.insignias_borradas} insignias borradas. El historial quedó intacto.`
 			: 'No se pudo resetear.';
+		await invalidateAll();
+	}
+
+	// --- Reportes de peligro: la comisión verifica o rechaza. Verificar otorga
+	// puntos e insignia al que avisó (todo dentro del RPC resolver_reporte). ---
+	const ETIQUETA_TIPO: Record<string, string> = {
+		hormigas: '🐜 Hormigas',
+		plaga: '🐛 Plaga o bicho',
+		rama_rota: '🪵 Rama rota o caída',
+		vandalismo: '💔 Daño o vandalismo',
+		otro: '❓ Otra cosa'
+	};
+	let resolviendo: string | null = $state(null);
+	let avisoReporte: string | null = $state(null);
+
+	async function resolverReporte(id: string, verificar: boolean) {
+		if (!verificar && !confirm('¿Rechazar este reporte? No suma puntos.')) return;
+		resolviendo = id;
+		avisoReporte = null;
+		const { data: res } = await supabase.rpc('resolver_reporte', {
+			p_reporte_id: id,
+			p_verificar: verificar
+		});
+		const r = res as { ok?: boolean; estado?: string; puntos?: number } | null;
+		resolviendo = null;
+		if (r?.ok) {
+			avisoReporte =
+				r.estado === 'verificado'
+					? `Verificado: +${r.puntos} puntos para quien avisó.`
+					: 'Reporte rechazado.';
+		} else {
+			avisoReporte = 'No se pudo (¿sos admin?).';
+		}
 		await invalidateAll();
 	}
 
@@ -172,6 +205,42 @@
 <svelte:head>
 	<title>Árboles · Panel</title>
 </svelte:head>
+
+{#if data.reportes.length}
+	<section class="reportes">
+		<h2>🚨 Reportes de peligro <span class="cuenta">{data.reportes.length}</span></h2>
+		{#if avisoReporte}<p class="aviso">{avisoReporte}</p>{/if}
+		{#each data.reportes as r (r.id)}
+			<div class="reporte">
+				<div class="info">
+					<div class="tipo">{ETIQUETA_TIPO[r.tipo] ?? r.tipo}</div>
+					<div class="meta">
+						{r.arbolNombre ?? r.codigo ?? 'árbol'} · {r.codigo} · por {r.autor ?? 'anónimo'}
+					</div>
+					{#if r.descripcion}<p class="desc">“{r.descripcion}”</p>{/if}
+					<div class="fecha">{new Date(r.creado_en).toLocaleString('es-AR', {
+							day: 'numeric',
+							month: 'short',
+							hour: '2-digit',
+							minute: '2-digit'
+						})}</div>
+				</div>
+				<div class="acciones">
+					<button
+						class="btn green sm"
+						disabled={resolviendo === r.id}
+						onclick={() => resolverReporte(r.id, true)}>✓ Verificar</button
+					>
+					<button
+						class="btn ghost sm"
+						disabled={resolviendo === r.id}
+						onclick={() => resolverReporte(r.id, false)}>✕ Rechazar</button
+					>
+				</div>
+			</div>
+		{/each}
+	</section>
+{/if}
 
 <div class="titulo">
 	<h1>Árboles</h1>
@@ -325,12 +394,12 @@
 
 	<div class="zona-peligro">
 		<p class="intro">
-			<b>Reseteo total.</b> Borra TODO el estado del juego —todos los riegos, todas las insignias (incluso
-			las entregadas) y los puntos a cero—, dejando solo los árboles reales de la plaza. Es para dejar
-			la base limpia antes del lanzamiento. No tiene vuelta atrás.
+			<b>Reseteo del marcador.</b> Pone los puntos de todos en cero y borra todas las insignias (incluso
+			las entregadas), que van de la mano del puntaje. <b>No borra el historial</b>: los riegos y los
+			reportes quedan intactos. Para limpiar datos de prueba usá "Borrar todo lo de prueba".
 		</p>
 		<button class="btn danger sm" disabled={trabajandoPruebas} onclick={resetearJuego}>
-			💣 Resetear todo el juego
+			💣 Resetear marcador
 		</button>
 	</div>
 </div>
@@ -427,6 +496,63 @@
 </div>
 
 <style>
+	.reportes {
+		margin-bottom: 1.75rem;
+		padding: 0.75rem 1rem 1rem;
+		border: 2px solid var(--sed, #e5484d);
+		border-radius: 6px;
+		background: rgba(229, 72, 77, 0.06);
+	}
+	.reportes h2 {
+		margin: 0.25rem 0 0.75rem;
+	}
+	.reportes .cuenta {
+		display: inline-block;
+		min-width: 1.4em;
+		padding: 0 0.4em;
+		margin-left: 0.3em;
+		text-align: center;
+		font-size: 0.8em;
+		color: #fff;
+		background: var(--sed, #e5484d);
+		border-radius: 999px;
+	}
+	.reportes .aviso {
+		margin: 0 0 0.75rem;
+		font-size: 15px;
+	}
+	.reportes .reporte {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.75rem 0;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		flex-wrap: wrap;
+	}
+	.reportes .tipo {
+		font-weight: 700;
+	}
+	.reportes .meta {
+		font-size: 14px;
+		color: var(--dim);
+		margin-top: 2px;
+	}
+	.reportes .desc {
+		margin: 6px 0 0;
+		font-style: italic;
+	}
+	.reportes .fecha {
+		font-size: 13px;
+		color: var(--dim);
+		margin-top: 4px;
+	}
+	.reportes .acciones {
+		display: flex;
+		gap: 0.5rem;
+		flex: none;
+	}
+
 	.titulo {
 		display: flex;
 		align-items: center;

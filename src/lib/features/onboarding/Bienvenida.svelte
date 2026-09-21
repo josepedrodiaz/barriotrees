@@ -52,7 +52,7 @@
 				<div class="wstep">
 					<span class="em">📷</span>
 					<span class="tx">
-						<b>Escaneá la chapita</b> del árbol y tocá <b>YA REGUÉ</b>. Así el árbol sabe que fuiste
+						<b>Escaneá el QR</b> del árbol y tocá <b>YA REGUÉ</b>. Así el árbol sabe que fuiste
 						vos. ¡Ya sumaste tus primeros puntos!
 					</span>
 				</div>

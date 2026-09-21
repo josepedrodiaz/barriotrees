@@ -36,11 +36,11 @@
 </script>
 
 <svelte:head>
-	<title>Chapitas QR · Panel</title>
+	<title>Códigos QR · Panel</title>
 </svelte:head>
 
 <div class="barra panel">
-	<h1>Chapitas QR</h1>
+	<h1>Códigos QR</h1>
 	<p>
 		Elegí los árboles, imprimí y recortá por la línea punteada. Cada QR abre la ficha de ese árbol.
 	</p>
@@ -69,10 +69,10 @@
 	</ul>
 
 	<button class="btn wide" onclick={() => window.print()} disabled={elegidos.length === 0}>
-		Imprimir {elegidos.length} chapita{elegidos.length === 1 ? '' : 's'}
+		Imprimir {elegidos.length} código{elegidos.length === 1 ? '' : 's'} QR
 	</button>
 	<p class="consejo">
-		Consejo: papel grueso o etiqueta plástica. Y colgá cada chapita en el árbol que dice — el código
+		Consejo: papel grueso o etiqueta plástica. Y colgá cada QR en el árbol que dice — el código
 		tiene que coincidir con el del relevamiento.
 	</p>
 </div>

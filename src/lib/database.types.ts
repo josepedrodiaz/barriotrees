@@ -592,6 +592,10 @@ export type Database = {
         Returns: Json
       }
       resetear_juego: { Args: never; Returns: Json }
+      resolver_reporte: {
+        Args: { p_reporte_id: string; p_verificar: boolean }
+        Returns: Json
+      }
       revertir_canje: { Args: { p_token: string }; Returns: Json }
       riegos_por_reclamar: { Args: { p_dispositivo_id: string }; Returns: Json }
       set_radio_proximidad: { Args: { p_metros: number }; Returns: Json }
