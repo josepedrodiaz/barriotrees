@@ -221,7 +221,7 @@
 	}
 	.badge {
 		position: absolute;
-		top: 8px;
+		bottom: 8px;
 		left: 8px;
 		z-index: 1000;
 		font-family: var(--read);
