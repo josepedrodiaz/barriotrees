@@ -172,8 +172,7 @@
 	<p><a class="cta" href={resolve('/entrar')}>Entrá para empezar a ganarlas →</a></p>
 {/if}
 
-<h2 class="section-h">La escalera</h2>
-<p class="bajada">Siete peldaños por puntos acumulados. El primero se gana con el primer riego.</p>
+<h2 class="section-h">Pines por riego</h2>
 
 <ol class="escalera">
 	{#each escalera as escalon (escalon.id)}
@@ -198,8 +197,7 @@
 	{/each}
 </ol>
 
-<h2 class="section-h">Por cómo cuidás</h2>
-<p class="bajada">Estas no dependen de cuánto sumás, sino de qué hacés.</p>
+<h2 class="section-h">Pines por otros cuidados</h2>
 
 <ul class="meritos">
 	{#each data.meritos as merito (merito.id)}

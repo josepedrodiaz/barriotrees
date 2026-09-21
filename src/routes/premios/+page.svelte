@@ -118,6 +118,7 @@
 	</details>
 
 	{#if entregados.length}
+		<h2 class="section-h">Ya entregados</h2>
 		<!-- El QR de un pin entregado sigue accesible, plegado en su propio item:
 		     si la comisión lo marcó entregado por error, el vecino tiene que poder
 		     mostrarlo de nuevo para que el admin lo escanee y revierta (BT-39). -->
