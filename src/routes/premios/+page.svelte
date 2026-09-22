@@ -90,7 +90,11 @@
 	<div class="galeria">
 		{#each galeria as p (p.id)}
 			<div class="celda" class:falta={!p.ganado}>
-				<Pin px={72} alt={p.ganado ? `Pin ${p.nombre}` : ''} />
+				{#if p.imagen}
+					<img class="pin-img" src={p.imagen} alt={p.ganado ? `Pin ${p.nombre}` : ''} />
+				{:else}
+					<Pin px={72} alt={p.ganado ? `Pin ${p.nombre}` : ''} />
+				{/if}
 				<span class="pn">{p.nombre}</span>
 			</div>
 		{/each}
@@ -183,6 +187,14 @@
 	.celda.falta {
 		filter: grayscale(1) brightness(0.55);
 		opacity: 0.28;
+	}
+	/* Arte propio del pin: circular en el JPEG, el radio 50% recorta las esquinas
+	   blancas. El grayscale/opacity de .falta lo apaga igual que al Pin genérico. */
+	.pin-img {
+		width: 84px;
+		height: 84px;
+		border-radius: 50%;
+		display: block;
 	}
 	.pn {
 		font-family: var(--pixel);

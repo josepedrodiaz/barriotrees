@@ -52,7 +52,8 @@
 									{
 										id: 'demo',
 										nombre: 'Rescatista',
-										copy: 'No es una medalla: es haber estado cuando el árbol de verdad te necesitaba.'
+										copy: 'No es una medalla: es haber estado cuando el árbol de verdad te necesitaba.',
+										imagen: null
 									}
 								]
 							: []

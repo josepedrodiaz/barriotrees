@@ -72,7 +72,11 @@
 		{#each reclamo.insignias_nuevas as insignia (insignia.id)}
 			<div class="insignia panel">
 				<div style="display:flex;justify-content:center;margin-bottom:6px">
-					<Pin px={56} alt="Pin de {insignia.nombre}" />
+					{#if insignia.imagen}
+						<img class="pin-img" src={insignia.imagen} alt="Pin de {insignia.nombre}" />
+					{:else}
+						<Pin px={56} alt="Pin de {insignia.nombre}" />
+					{/if}
 				</div>
 				<h2>¡Ganaste un pin!</h2>
 				<div class="pin-nombre">{insignia.nombre.toUpperCase()}</div>
@@ -136,6 +140,14 @@
 	.insignia {
 		margin: 18px 0;
 		padding: 14px;
+	}
+	/* Arte propio del pin: es circular en el JPEG (esquinas blancas), el radio
+	   50% recorta a la circunferencia y lo deja limpio sobre el panel oscuro. */
+	.pin-img {
+		width: 120px;
+		height: 120px;
+		border-radius: 50%;
+		display: block;
 	}
 	.insignia h2 {
 		margin: 0;

@@ -6,6 +6,8 @@ export interface InsigniaNueva {
 	id: string;
 	nombre: string;
 	copy: string;
+	/** Arte propio del pin (/pines/<slug>.jpeg). Null = usa el Pin genérico. */
+	imagen: string | null;
 }
 
 export type RiegoResultado =

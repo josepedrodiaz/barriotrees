@@ -7,7 +7,7 @@ export const load = async () => {
 	const [{ data: pines }, { data: config }] = await Promise.all([
 		supabase
 			.from('insignias')
-			.select('id, nombre, orden, copy_desbloqueo')
+			.select('id, nombre, orden, copy_desbloqueo, imagen')
 			.eq('activa', true)
 			.eq('es_pin', true)
 			.order('orden', { ascending: true, nullsFirst: false }),

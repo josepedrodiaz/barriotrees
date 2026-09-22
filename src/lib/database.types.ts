@@ -185,6 +185,7 @@ export type Database = {
           copy_desbloqueo: string
           criterio: Json | null
           es_pin: boolean
+          imagen: string | null
           id: string
           nombre: string
           orden: number | null
@@ -196,6 +197,7 @@ export type Database = {
           copy_desbloqueo: string
           criterio?: Json | null
           es_pin?: boolean
+          imagen?: string | null
           id: string
           nombre: string
           orden?: number | null
@@ -207,6 +209,7 @@ export type Database = {
           copy_desbloqueo?: string
           criterio?: Json | null
           es_pin?: boolean
+          imagen?: string | null
           id?: string
           nombre?: string
           orden?: number | null
