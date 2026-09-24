@@ -66,6 +66,14 @@
 		const pos = marcador.getLatLng();
 		const lat = Number(pos.lat.toFixed(7));
 		const lng = Number(pos.lng.toFixed(7));
+
+		if (!confirm(`¿Mover el árbol ${arbol.codigo} a esta ubicación?`)) {
+			if (arbol.lat != null && arbol.lng != null) {
+				marcador.setLatLng([arbol.lat, arbol.lng]);
+			}
+			return;
+		}
+
 		const res = await moverArbol(arbol.id, lat, lng);
 		if (res.ok) {
 			// El padre actualiza la lista (tabla + mapa) y la ficha si está abierta,
