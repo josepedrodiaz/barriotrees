@@ -1,6 +1,6 @@
 # Árboles Gigantes 🌳
 
-**[arboles-gigantes.vercel.app](https://arboles-gigantes.vercel.app)**
+**[[arboles-gigantes.vercel.app](https://arboles-gigantes.vercel.app)](https://arboles.josepedrodiaz.com/)**
 
 Un juego del barrio para cuidar los árboles jóvenes de la plaza. Regás un arbolito con el balde, escaneás su chapita QR y sumás puntos. El árbol te lo agradece a su manera: su ícono se pone más verde, le crece follaje y, si está bien cuidado, florece.
 
